@@ -3,28 +3,12 @@
     {
       "id": "CAT001",
       "name": "Hantaran"
-    },
-    {
-      "id": "CAT002",
-      "name": "Parcel"
-    },
-    {
-      "id": "CAT003",
-      "name": "Nampan"
-    },
-    {
-      "id": "CAT004",
-      "name": "Snack"
     }
   ],
   "packagingTypes": [
     {
       "id_tipe": "Standard",
       "harga_tambahan": 0
-    },
-    {
-      "id_tipe": "Premium",
-      "harga_tambahan": 30000
     },
     {
       "id_tipe": "Artificial bunga",
@@ -629,7 +613,7 @@
   "profile": {
     "name": "Djandes",
     "description": "DJANDES adalah home made kue basah lokal yang menyajikan berbagai macam kue tradisional dan modern dengan cita rasa autentik dan kualitas terbaik.",
-    "logo": "https://djandes.vercel.app/img/favicon.ico",
+    "logo": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/logo.png",
     "whatsapp": "6285812006225",
     "instagram": "djandes15",
     "tiktok": "djandes15",
