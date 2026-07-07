@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - GitHub Storage & CDN Sync</title>
+    <!-- Tailwind CSS untuk UI Modern & Responsif -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- FontAwesome untuk Icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans antialiased">
+
+    <!-- Top Navbar -->
+    <header class="bg-indigo-600 text-white shadow-md sticky top-0 z-50 px-4 py-3 flex flex-wrap items-center justify-between">
+        <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-gauge-high text-xl"></i>
+            <span class="font-bold text-lg tracking-wide">Djandes Admin Cloud</span>
+        </div>
+        <div class="flex items-center space-x-3 mt-2 sm:mt-0">
+            <!-- Github Config Quick Inputs -->
+            <input type="password" id="ghTokenInput" placeholder="GitHub Token (PAT)" class="bg-indigo-700 text-white placeholder-indigo-300 text-xs rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-white w-40">
+            <button onclick="saveSettings()" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold px-3 py-1.5 rounded shadow transition">
+                <i class="fa-solid fa-floppy-disk mr-1"></i> Hubungkan
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="max-w-7xl mx-auto p-4 grid grid-cols-1 md:grid-cols-4 gap-6">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 h-fit">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Menu Navigasi</h2>
+            <nav class="space-y-1">
+                <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-indigo-50 text-indigo-600">
+                    <i class="fa-solid fa-chart-pie w-5 text-center"></i> <span>Dashboard</span>
+                </button>
+                <button onclick="switchTab('products')" id="tab-products" class="tab-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50">
+                    <i class="fa-solid fa-box w-5 text-center"></i> <span>Produk</span>
+                </button>
+                <button onclick="switchTab('variants')" id="tab-variants" class="tab-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50">
+                    <i class="fa-solid fa-layer-group w-5 text-center"></i> <span>Varian Kemasan</span>
+                </button>
+                <button onclick="switchTab('categories')" id="tab-categories" class="tab-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50">
+                    <i class="fa-solid fa-tags w-5 text-center"></i> <span>Kategori & Tipe</span>
+                </button>
+                <button onclick="switchTab('profile')" id="tab-profile" class="tab-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50">
+                    <i class="fa-solid fa-store w-5 text-center"></i> <span>Profil Toko</span>
+                </button>
+            </nav>
+            <hr class="my-4 border-gray-200">
+            <!-- Cloud Sync Controls -->
+            <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                <div class="text-xs text-gray-500 font-semibold mb-2 flex items-center justify-between">
+                    <span>SINKRONISASI REPO</span>
+                    <span id="syncStatus" class="w-2 h-2 rounded-full bg-red-500"></span>
+                </div>
+                <button onclick="loadDataFromGithub()" class="w-full bg-white hover:bg-gray-100 text-gray-700 text-xs font-medium border border-gray-300 py-1.5 rounded mb-2 transition flex items-center justify-center">
+                    <i class="fa-solid fa-rotate mr-2"></i> Tarik Data (Fetch)
+                </button>
+                <button onclick="pushDataToGithub()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold py-2 rounded shadow transition flex items-center justify-center">
+                    <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Simpan ke GitHub
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="md:col-span-3 space-y-6">
+
+            <!-- LOADING INDICATOR -->
+            <div id="loadingOverlay" class="hidden fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50">
+                <div class="bg-white px-6 py-4 rounded-xl shadow-xl flex items-center space-x-3">
+                    <i class="fa-solid fa-spinner fa-spin text-indigo-600 text-2xl"></i>
+                    <span class="font-medium text-gray-700" id="loadingText">Sedang memproses cloud...</span>
+                </div>
+            </div>
+
+            <!-- TAB: DASHBOARD -->
+            <section id="content-dashboard" class="tab-content block space-y-6">
+                <!-- Repo Configuration Widget -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Username GitHub</label>
+                        <input type="text" id="ghUser" placeholder="Contoh: djandes-dev" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-indigo-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nama Repositori</label>
+                        <input type="text" id="ghRepo" placeholder="Contoh: katalog-kue" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-indigo-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Branch Utama</label>
+                        <input type="text" id="ghBranch" value="main" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-indigo-600">
+                    </div>
+                </div>
+                <!-- Stats Overview -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center space-x-4">
+                        <div class="p-3 bg-indigo-100 text-indigo-600 rounded-lg text-xl"><i class="fa-solid fa-box"></i></div>
+                        <div><p class="text-xs text-gray-400 font-medium">Total Produk</p><p id="stat-products" class="text-xl font-bold">0</p></div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center space-x-4">
+                        <div class="p-3 bg-pink-100 text-pink-600 rounded-lg text-xl"><i class="fa-solid fa-layer-group"></i></div>
+                        <div><p class="text-xs text-gray-400 font-medium">Varian Kemasan</p><p id="stat-variants" class="text-xl font-bold">0</p></div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center space-x-4">
+                        <div class="p-3 bg-amber-100 text-amber-600 rounded-lg text-xl"><i class="fa-solid fa-tags"></i></div>
+                        <div><p class="text-xs text-gray-400 font-medium">Kategori</p><p id="stat-categories" class="text-xl font-bold">0</p></div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center space-x-4">
+                        <div class="p-3 bg-emerald-100 text-emerald-600 rounded-lg text-xl"><i class="fa-solid fa-globe"></i></div>
+                        <div><p class="text-xs text-gray-400 font-medium">Status CDN</p><p class="text-xs font-bold text-emerald-600">Aktif (jsDelivr)</p></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: PRODUCTS -->
+            <section id="content-products" class="tab-content hidden space-y-4">
+                <div class="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                    <h3 class="font-bold text-gray-700 text-lg">Daftar Produk</h3>
+                    <button onclick="openProductModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow transition">
+                        <i class="fa-solid fa-plus mr-1"></i> Tambah Produk Baru
+                    </button>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                <th class="p-4 w-20">Gambar</th>
+                                <th class="p-4">Nama Produk</th>
+                                <th class="p-4">Kategori</th>
+                                <th class="p-4">Harga</th>
+                                <th class="p-4 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productTableBody" class="text-sm divide-y divide-gray-100">
+                            <!-- Data injected via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- TAB: VARIANTS -->
+            <section id="content-variants" class="tab-content hidden space-y-4">
+                <div class="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                    <h3 class="font-bold text-gray-700 text-lg">Varian Kemasan (Packaging Variants)</h3>
+                    <button onclick="openVariantModal()" class="bg-pink-600 hover:bg-pink-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow transition">
+                        <i class="fa-solid fa-plus mr-1"></i> Tambah Varian Baru
+                    </button>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                <th class="p-4 w-20">Gambar</th>
+                                <th class="p-4">Nama Varian</th>
+                                <th class="p-4">Tipe Tipe</th>
+                                <th class="p-4">Deskripsi Singkat</th>
+                                <th class="p-4 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="variantTableBody" class="text-sm divide-y divide-gray-100">
+                            <!-- Data injected via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- TAB: CATEGORIES & PACKAGING TYPES -->
+            <section id="content-categories" class="tab-content hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Categories Card -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-4">
+                    <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+                        <h4 class="font-bold text-gray-700">Kategori Menu</h4>
+                        <button onclick="addCategoryPrompt()" class="text-indigo-600 hover:text-indigo-800 text-xs font-bold"><i class="fa-solid fa-plus"></i> Tambah</button>
+                    </div>
+                    <ul id="categoryList" class="divide-y divide-gray-100 text-sm"></ul>
+                </div>
+                <!-- Packaging Types Card -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-4">
+                    <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+                        <h4 class="font-bold text-gray-700">Tipe Pengemasan & Harga</h4>
+                        <button onclick="addTypePrompt()" class="text-pink-600 hover:text-pink-800 text-xs font-bold"><i class="fa-solid fa-plus"></i> Tambah</button>
+                    </div>
+                    <ul id="typeList" class="divide-y divide-gray-100 text-sm"></ul>
+                </div>
+            </section>
+
+            <!-- TAB: PROFILE -->
+            <section id="content-profile" class="tab-content hidden bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-4">
+                <h3 class="font-bold text-gray-700 text-lg border-b border-gray-100 pb-2">Profil Rumah Produksi</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Nama Toko / Brand</label>
+                        <input type="text" id="profName" class="w-full border border-gray-300 rounded p-2 text-sm focus:outline-indigo-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">WhatsApp (Format: 62xx)</label>
+                        <input type="text" id="profWA" class="w-full border border-gray-300 rounded p-2 text-sm focus:outline-indigo-600">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Deskripsi Ringkas</label>
+                        <textarea id="profDesc" rows="2" class="w-full border border-gray-300 rounded p-2 text-sm focus:outline-indigo-600"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Instagram Username</label>
+                        <input type="text" id="profIG" class="w-full border border-gray-300 rounded p-2 text-sm focus:outline-indigo-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">TikTok Username</label>
+                        <input type="text" id="profTikTok" class="w-full border border-gray-300 rounded p-2 text-sm focus:outline-indigo-600">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Alamat Fisik Lengkap</label>
+                        <input type="text" id="profAddress" class="w-full border border-gray-300 rounded p-2 text-sm focus:outline-indigo-600">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Logo URL (Atau Upload via Local)</label>
+                        <div class="flex space-x-2">
+                            <input type="text" id="profLogo" class="flex-1 border border-gray-300 rounded p-2 text-sm focus:outline-indigo-600">
+                            <input type="file" id="uploadLogoFile" onchange="handleDirectUpload('uploadLogoFile', 'profLogo')" class="hidden">
+                            <label for="uploadLogoFile" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 text-xs font-semibold rounded cursor-pointer flex items-center shadow-xs"><i class="fa-solid fa-upload mr-1"></i> Upload</label>
+                        </div>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Google Maps Embed URL</label>
+                        <textarea id="profMaps" rows="2" class="w-full border border-gray-300 rounded p-2 text-sm focus:outline-indigo-600"></textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end pt-2">
+                    <button onclick="saveProfileData()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-6 py-2.5 rounded-lg shadow transition">Simpan Konfigurasi Profil</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 space-y-2 z-50"></div>
+
+    <!-- MODAL: PRODUCT (ADD/EDIT) -->
+    <dialog id="productModal" class="rounded-xl border border-gray-200 shadow-2xl p-6 w-full max-w-2xl bg-white backdrop:bg-black/50">
+        <div class="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
+            <h3 id="prodModalTitle" class="text-lg font-bold text-gray-700">Tambah Produk</h3>
+            <button onclick="document.getElementById('productModal').close()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <form id="productForm" onsubmit="saveProductForm(event)" class="space-y-4">
+            <input type="hidden" id="prodId">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">Nama Produk</label>
+                    <input type="text" id="prodNameInput" required class="w-full border border-gray-300 rounded p-2 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">Kategori</label>
+                    <select id="prodCatInput" required class="w-full border border-gray-300 rounded p-2 text-sm"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">Harga Utama (Rp)</label>
+                    <input type="number" id="prodPriceInput" required class="w-full border border-gray-300 rounded p-2 text-sm">
+                </div>
+                <div class="flex items-center space-x-4 pt-5">
+                    <label class="flex items-center space-x-2 text-xs font-bold text-gray-600"><input type="checkbox" id="prodBest"> <span>Bestseller</span></label>
+                    <label class="flex items-center space-x-2 text-xs font-bold text-gray-600"><input type="checkbox" id="prodNew"> <span>Produk Baru</span></label>
+                    <label class="flex items-center space-x-2 text-xs font-bold text-gray-600"><input type="checkbox" id="prodPromo"> <span>Promo</span></label>
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-bold text-gray-500 mb-1">Deskripsi Produk</label>
+                    <textarea id="prodDescInput" rows="2" class="w-full border border-gray-300 rounded p-2 text-sm"></textarea>
+                </div>
+                <!-- Thumbnail Utama -->
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-bold text-gray-500 mb-1">Gambar Utama (Thumbnail URL)</label>
+                    <div class="flex space-x-2">
+                        <input type="text" id="prodImgInput" required class="flex-1 border border-gray-300 rounded p-2 text-sm">
+                        <input type="file" id="uploadProdThumb" onchange="handleDirectUpload('uploadProdThumb', 'prodImgInput')" class="hidden">
+                        <label for="uploadProdThumb" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 text-xs font-semibold rounded cursor-pointer flex items-center shadow-xs"><i class="fa-solid fa-cloud-arrow-up"></i></label>
+                    </div>
+                </div>
+                <!-- Multi-Images Gallery Array -->
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-bold text-gray-500 mb-1">Galeri Foto Produk (Multi-Image URL / Baris)</label>
+                    <div class="flex gap-2 items-start">
+                        <textarea id="prodImagesInput" rows="3" placeholder="Satu URL per baris" class="flex-1 border border-gray-300 rounded p-2 text-sm font-mono text-xs"></textarea>
+                        <div class="flex flex-col space-y-1">
+                            <input type="file" id="uploadProdGallery" multiple onchange="handleMultipleUpload('uploadProdGallery', 'prodImagesInput')" class="hidden">
+                            <label for="uploadProdGallery" class="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 p-2.5 rounded cursor-pointer text-center text-xs font-bold shadow-xs"><i class="fa-solid fa-images block"></i> + Multi</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-2 pt-2 border-t border-gray-100">
+                <button type="button" onclick="document.getElementById('productModal').close()" class="px-4 py-2 border border-gray-300 text-xs font-semibold text-gray-600 rounded">Batal</button>
+                <button type="submit" class="px-5 py-2 bg-indigo-600 text-white text-xs font-bold rounded shadow">Simpan Produk</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- MODAL: VARIANT (ADD/EDIT) -->
+    <dialog id="variantModal" class="rounded-xl border border-gray-200 shadow-2xl p-6 w-full max-w-xl bg-white backdrop:bg-black/50">
+        <div class="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
+            <h3 id="varModalTitle" class="text-lg font-bold text-gray-700">Tambah Varian</h3>
+            <button onclick="document.getElementById('variantModal').close()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <form id="variantForm" onsubmit="saveVariantForm(event)" class="space-y-4">
+            <input type="hidden" id="varId">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">Nama Varian Warna / Rasa</label>
+                    <input type="text" id="varNameInput" required class="w-full border border-gray-300 rounded p-2 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">Tipe Packaging</label>
+                    <select id="varTypeInput" required class="w-full border border-gray-300 rounded p-2 text-sm"></select>
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-bold text-gray-500 mb-1">Gambar Varian</label>
+                    <div class="flex space-x-2">
+                        <input type="text" id="varImgInput" required class="flex-1 border border-gray-300 rounded p-2 text-sm">
+                        <input type="file" id="uploadVarImg" onchange="handleDirectUpload('uploadVarImg', 'varImgInput')" class="hidden">
+                        <label for="uploadVarImg" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 text-xs font-semibold rounded cursor-pointer flex items-center shadow-xs"><i class="fa-solid fa-cloud-arrow-up"></i></label>
+                    </div>
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-bold text-gray-500 mb-1">Deskripsi Varian</label>
+                    <textarea id="varDescInput" rows="2" class="w-full border border-gray-300 rounded p-2 text-sm"></textarea>
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-bold text-gray-500 mb-1">Fitur Unggulan Varian (Satu per baris)</label>
+                    <textarea id="varFeaturesInput" rows="3" placeholder="Contoh: Material premium" class="w-full border border-gray-300 rounded p-2 text-sm font-sans"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-2 pt-2 border-t border-gray-100">
+                <button type="button" onclick="document.getElementById('variantModal').close()" class="px-4 py-2 border border-gray-300 text-xs font-semibold text-gray-600 rounded">Batal</button>
+                <button type="submit" class="px-5 py-2 bg-pink-600 text-white text-xs font-bold rounded shadow">Simpan Varian</button>
+            </div>
+        </form>
+    </dialog>
+
+
+    <!-- JAVASCRIPT LOGIC BACKEND SCRIPT -->
+    <script>
+        // Memastikan variabel 'data' memiliki struktur default awal yang lengkap[cite: 2]
+        let data = {
+            categories: [],
+            packagingTypes: [],
+            packagingVariants: [],
+            products: [],
+            profile: {}
+        };
+
+        // Konfigurasi nama file target di GitHub Repo Anda
+        const FILENAME_JSON = 'data.json';
+        let currentTab = 'dashboard';
+
+        // Inisialisasi Aplikasi Saat Halaman Selesai Dimuat
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load Konfigurasi Akses dari Local Storage Browser Anda
+            document.getElementById('ghUser').value = localStorage.getItem('gh_user') || '';
+            document.getElementById('ghRepo').value = localStorage.getItem('gh_repo') || '';
+            document.getElementById('ghBranch').value = localStorage.getItem('gh_branch') || 'main';
+            document.getElementById('ghTokenInput').value = localStorage.getItem('gh_token') || '';
+
+            if(localStorage.getItem('gh_token') && localStorage.getItem('gh_repo')) {
+                document.getElementById('syncStatus').className = "w-2 h-2 rounded-full bg-emerald-500";
+                loadDataFromGithub();
+            } else {
+                showToast("Pengaturan GitHub belum dikonfigurasi, menggunakan data dummy.", "warning");
+            }
+        });
+
+        // Menyimpan Pengaturan Akses GitHub Repo secara Lokal di Browser Anda
+        function saveSettings() {
+            localStorage.setItem('gh_user', document.getElementById('ghUser').value.trim());
+            localStorage.setItem('gh_repo', document.getElementById('ghRepo').value.trim());
+            localStorage.setItem('gh_branch', document.getElementById('ghBranch').value.trim());
+            localStorage.setItem('gh_token', document.getElementById('ghTokenInput').value.trim());
+            
+            showToast("Konfigurasi Akses GitHub Disimpan!", "success");
+            document.getElementById('syncStatus').className = "w-2 h-2 rounded-full bg-emerald-500";
+            loadDataFromGithub();
+        }
+
+        // Shortcut Mendapatkan Nilai Variabel Kunci Sinkronisasi
+        function getRepoConfig() {
+            return {
+                user: localStorage.getItem('gh_user') || '',
+                repo: localStorage.getItem('gh_repo') || '',
+                branch: localStorage.getItem('gh_branch') || 'main',
+                token: localStorage.getItem('gh_token') || ''
+            }
+        }
+
+        // ==========================================
+        // CORE SINKRONISASI CLOUD API GITHUB (PULL & PUSH)
+        // ==========================================
+
+        // Fungsi Memuat data.json menggunakan Kombinasi Kecepatan CDN & API Fallback
+        async function loadDataFromGithub() {
+            const conf = getRepoConfig();
+            if(!conf.user || !conf.repo) {
+                showToast("Gagal Fetch! Username dan Repositori GitHub wajib diisi.", "error");
+                return;
+            }
+            toggleLoading(true, "Menarik data terenkripsi dari Cloud CDN...");
+
+            try {
+                // Gunakan Trick Cache-Buster t=Date.now() agar Data Selalu yang Terbaru Tanpa Delay Cache CDN
+                const urlCDN = `https://cdn.jsdelivr.net/gh/${conf.user}/${conf.repo}@${conf.branch}/${FILENAME_JSON}?t=${Date.now()}`;
+                let response = await fetch(urlCDN);
+                
+                if (response.ok) {
+                    data = await response.json();
+                } else {
+                    // Jika CDN Belum Terbuat, Langsung Tembak API Resmi GitHub Core
+                    const urlAPI = `https://api.github.com/repos/${conf.user}/${conf.repo}/contents/${FILENAME_JSON}?ref=${conf.branch}`;
+                    const headers = conf.token ? { 'Authorization': `token ${conf.token}` } : {};
+                    let resAPI = await fetch(urlAPI, { headers });
+                    if(resAPI.ok) {
+                        let resJSON = await resAPI.json();
+                        let cleanJsonString = decodeURIComponent(escape(atob(resJSON.content)));
+                        data = JSON.parse(cleanJsonString);
+                    } else {
+                        throw new Error("File data.json tidak ditemukan di repositori.");
+                    }
+                }
+                
+                sanitizeDataStructure();
+                renderAllData();
+                showToast("Koneksi Sinkronisasi CDN & Repo Berhasil!", "success");
+            } catch (error) {
+                console.error(error);
+                showToast("Gagal memuat berkas JSON: " + error.message, "error");
+            } finally {
+                toggleLoading(false);
+            }
+        }
+
+        // Fungsi Menyimpan dan Mem-push Otomatis Seluruh Objek JSON ke GitHub Repo Anda
+        async function pushDataToGithub() {
+            const conf = getRepoConfig();
+            if(!conf.token || !conf.user || !conf.repo) {
+                showToast("Token Otorisasi Akses GitHub Tidak Ditemukan!", "error");
+                return;
+            }
+            toggleLoading(true, "Menyimpan data & Memperbarui CDN Global...");
+
+            try {
+                const url = `https://api.github.com/repos/${conf.user}/${conf.repo}/contents/${FILENAME_JSON}`;
+                
+                // Langkah 1: Ambil SHA dari Versi File Terakhir (Wajib Hukumnya di GitHub API)
+                let sha = "";
+                let resGet = await fetch(`${url}?ref=${conf.branch}`, {
+                    headers: { 'Authorization': `token ${conf.token}` }
+                });
+                if(resGet.ok) {
+                    let fileData = await resGet.json();
+                    sha = fileData.sha;
+                }
+
+                // Langkah 2: Encode String Data JSON ke Base64 UTF-8 Aman
+                let jsonString = JSON.stringify(data, null, 2);
+                let base64Content = btoa(unescape(encodeURIComponent(jsonString)));
+
+                // Langkah 3: Kirim Data via PUT Method
+                let resPut = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${conf.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `Update master data.json via Admin Panel [${new Date().toLocaleString()}]`,
+                        content: base64Content,
+                        sha: sha,
+                        branch: conf.branch
+                    })
+                });
+
+                if(resPut.ok) {
+                    showToast("Data Tersimpan Permanen di GitHub Cloud & CDN!", "success");
+                    updateDashboardStats();
+                } else {
+                    let errRes = await resPut.json();
+                    throw new Error(errRes.message || "Gagal Push.");
+                }
+            } catch (error) {
+                showToast("Gagal sinkronisasi data: " + error.message, "error");
+            } finally {
+                toggleLoading(false);
+            }
+        }
+
+        // ==========================================
+        // ENGINE UPLOAD & DELETE GAMBAR / FILE FISIK REPO
+        // ==========================================
+
+        // Handler Upload Gambar Tunggal (Thumbnail / Logo)
+        async function handleDirectUpload(fileElementId, targetInputId) {
+            const conf = getRepoConfig();
+            const fileCtrl = document.getElementById(fileElementId);
+            if (!fileCtrl.files.length) return;
+            if(!conf.token) { return showToast("Isi GitHub Token dahulu!", "error"); }
+
+            const file = fileCtrl.files[0];
+            toggleLoading(true, "Sedang mengunggah file gambar ke GitHub...");
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const b64 = e.target.result.split(',')[1];
+                const cleanName = `img_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
+                const pathTarget = `img/${cleanName}`;
+
+                const targetUrl = `https://api.github.com/repos/${conf.user}/${conf.repo}/contents/${pathTarget}`;
+
+                try {
+                    let res = await fetch(targetUrl, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `token ${conf.token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            message: `Upload media ${cleanName} dari panel admin`,
+                            content: b64,
+                            branch: conf.branch
+                        })
+                    });
+
+                    if(res.ok) {
+                        // Otomatis Konversi Output URL ke Link CDN Super Cepat
+                        const cdnUrl = `https://cdn.jsdelivr.net/gh/${conf.user}/${conf.repo}@${conf.branch}/${pathTarget}`;
+                        document.getElementById(targetInputId).value = cdnUrl;
+                        showToast("Gambar Berhasil Terunggah ke Repo & CDN!", "success");
+                    } else {
+                        showToast("Upload gagal di sisi API GitHub.", "error");
+                    }
+                } catch (err) {
+                    showToast("Error upload: " + err.message, "error");
+                } finally {
+                    toggleLoading(false);
+                    fileCtrl.value = ""; // Reset
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Handler Upload Banyak Gambar Sekaligus untuk Gallery Array Produk
+        async function handleMultipleUpload(fileElementId, targetTextAreaId) {
+            const conf = getRepoConfig();
+            const fileCtrl = document.getElementById(fileElementId);
+            if (!fileCtrl.files.length) return;
+            if(!conf.token) { return showToast("Isi GitHub Token dahulu!", "error"); }
+
+            toggleLoading(true, `Mengunggah ${fileCtrl.files.length} foto galeri...`);
+            const txtArea = document.getElementById(targetTextAreaId);
+
+            for (let file of fileCtrl.files) {
+                const p = new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = async function(e) {
+                        const b64 = e.target.result.split(',')[1];
+                        const cleanName = `gal_${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
+                        const pathTarget = `img/${cleanName}`;
+                        const targetUrl = `https://api.github.com/repos/${conf.user}/${conf.repo}/contents/${pathTarget}`;
+
+                        try {
+                            let res = await fetch(targetUrl, {
+                                method: 'PUT',
+                                headers: { 'Authorization': `token ${conf.token}`, 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ message: `Upload gallery ${cleanName}`, content: b64, branch: conf.branch })
+                            });
+                            if(res.ok) {
+                                const cdnUrl = `https://cdn.jsdelivr.net/gh/${conf.user}/${conf.repo}@${conf.branch}/${pathTarget}`;
+                                txtArea.value += (txtArea.value ? "\n" : "") + cdnUrl;
+                            }
+                        } catch (e) {}
+                        resolve();
+                    };
+                    reader.readAsDataURL(file);
+                });
+                await p;
+            }
+            toggleLoading(false);
+            showToast("Seluruh file gambar massal selesai diproses!", "success");
+            fileCtrl.value = "";
+        }
+
+        // Fungsi Otomatis untuk Mengapus Gambar Fisik dari Repo saat Data Dihapus
+        async function attemptDeleteImageFromRepo(imgUrl) {
+            const conf = getRepoConfig();
+            // Validasi apakah URL gambar ini mengarah ke repo pengguna ini sendiri
+            if (!conf.token || !imgUrl.includes(`cdn.jsdelivr.net/gh/${conf.user}/${conf.repo}`)) return;
+
+            try {
+                // Ekstrak path asli file dari URL CDN
+                const parts = imgUrl.split(`/img/`);
+                if (parts.length < 2) return;
+                const pathFile = `img/${parts[1]}`;
+
+                const targetUrl = `https://api.github.com/repos/${conf.user}/${conf.repo}/contents/${pathFile}`;
+
+                // Cari SHA file gambar tersebut terlebih dahulu sebelum bisa melakukan perintah DELETE
+                let resGet = await fetch(`${targetUrl}?ref=${conf.branch}`, {
+                    headers: { 'Authorization': `token ${conf.token}` }
+                });
+
+                if (resGet.ok) {
+                    let fileMeta = await resGet.json();
+                    await fetch(targetUrl, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `token ${conf.token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            message: `Hapus aset gambar tidak terpakai: ${pathFile}`,
+                            sha: fileMeta.sha,
+                            branch: conf.branch
+                        })
+                    });
+                    console.log(`Fisik gambar ${pathFile} sukses dibersihkan dari repositori.`);
+                }
+            } catch (e) {
+                console.warn("Pembersihan gambar di repo dilewati:", e);
+            }
+        }
+
+
+        // ==========================================
+        // APPLICATION RENDERING & UI FUNCTIONS
+        // ==========================================
+
+        function sanitizeDataStructure() {
+            if(!data.categories) data.categories = [];
+            if(!data.packagingTypes) data.packagingTypes = [];
+            if(!data.packagingVariants) data.packagingVariants = [];
+            if(!data.products) data.products = [];
+            if(!data.profile) data.profile = {};
+        }
+
+        function renderAllData() {
+            updateDashboardStats();
+            renderProductsTable();
+            renderVariantsTable();
+            renderCategoriesAndTypes();
+            loadProfileFields();
+            populateSelectOptions();
+        }
+
+        function updateDashboardStats() {
+            document.getElementById('stat-products').innerText = data.products.length;
+            document.getElementById('stat-variants').innerText = data.packagingVariants.length;
+            document.getElementById('stat-categories').innerText = data.categories.length;
+        }
+
+        function switchTab(tabName) {
+            currentTab = tabName;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50";
+            });
+            document.querySelectorAll('.tab-content').forEach(content => content.className = "tab-content hidden");
+
+            let activeBtn = document.getElementById(`tab-${tabName}`);
+            let activeContent = document.getElementById(`content-${tabName}`);
+            
+            if(tabName === 'products' || tabName === 'variants') {
+                activeBtn.className = "tab-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-indigo-50 text-indigo-600";
+            } else if(tabName === 'variants') {
+                activeBtn.className = "tab-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-pink-50 text-pink-600";
+            } else {
+                activeBtn.className = "tab-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-indigo-50 text-indigo-600";
+            }
+
+            if(activeContent) {
+                if(tabName === 'categories') {
+                    activeContent.className = "tab-content block grid grid-cols-1 md:grid-cols-2 gap-6";
+                } else {
+                    activeContent.className = "tab-content block space-y-6";
+                }
+            }
+        }
+
+        function populateSelectOptions() {
+            let catSelect = document.getElementById('prodCatInput');
+            catSelect.innerHTML = "";
+            data.categories.forEach(c => {
+                catSelect.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+            });
+
+            let typeSelect = document.getElementById('varTypeInput');
+            typeSelect.innerHTML = "";
+            data.packagingTypes.forEach(t => {
+                typeSelect.innerHTML += `<option value="${t.id_tipe}">${t.id_tipe}</option>`;
+            });
+        }
+
+
+        // ==========================================
+        // LOGIC CRUD: SECTION PRODUK
+        // ==========================================
+
+        function renderProductsTable() {
+            const tbody = document.getElementById('productTableBody');
+            tbody.innerHTML = "";
+            if(!data.products.length) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Belum ada data produk. Klik Tambah Produk.</td></tr>`;
+                return;
+            }
+
+            data.products.forEach(p => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 transition border-b border-gray-100">
+                        <td class="p-4"><img src="${p.img}" class="w-12 h-12 rounded-lg object-cover shadow-xs border border-gray-200" onerror="this.src='https://placehold.co/100'"></td>
+                        <td class="p-4 font-semibold text-gray-700">${p.name} ${p.bestseller ? '<span class="bg-amber-100 text-amber-700 text-[10px] px-1.5 py-0.5 rounded font-bold ml-1">BEST</span>':''}</td>
+                        <td class="p-4"><span class="bg-gray-100 text-gray-600 px-2 py-0.5 text-xs rounded-full font-medium">${p.cat}</span></td>
+                        <td class="p-4 font-mono text-indigo-600 font-bold">Rp ${p.price.toLocaleString('id-ID')}</td>
+                        <td class="p-4 text-center space-x-2">
+                            <button onclick="openProductModal(${p.id})" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 p-1.5 rounded"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button onclick="deleteProduct(${p.id})" class="text-rose-600 hover:text-rose-900 bg-rose-50 p-1.5 rounded"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function openProductModal(id = null) {
+            populateSelectOptions();
+            const modal = document.getElementById('productModal');
+            document.getElementById('productForm').reset();
+            document.getElementById('prodId').value = "";
+            document.getElementById('prodModalTitle').innerText = "Tambah Produk Baru";
+
+            if(id) {
+                document.getElementById('prodModalTitle').innerText = "Edit Detail Produk";
+                let p = data.products.find(x => x.id == id);
+                if(p) {
+                    document.getElementById('prodId').value = p.id;
+                    document.getElementById('prodNameInput').value = p.name;
+                    document.getElementById('prodCatInput').value = p.cat;
+                    document.getElementById('prodPriceInput').value = p.price;
+                    document.getElementById('prodDescInput').value = p.desc || '';
+                    document.getElementById('prodImgInput').value = p.img;
+                    document.getElementById('prodBest').checked = !!p.bestseller;
+                    document.getElementById('prodNew').checked = !!p.isNew;
+                    document.getElementById('prodPromo').checked = !!p.isPromo;
+                    document.getElementById('prodImagesInput').value = p.images ? p.images.join('\n') : p.img;
+                }
+            }
+            modal.showModal();
+        }
+
+        function saveProductForm(e) {
+            e.preventDefault();
+            const id = document.getElementById('prodId').value;
+            const imagesText = document.getElementById('prodImagesInput').value;
+            let imagesArray = imagesText.split('\n').map(x => x.trim()).filter(x => x.length > 0);
+
+            let productObj = {
+                id: id ? parseInt(id) : Date.now(),
+                name: document.getElementById('prodNameInput').value.trim(),
+                price: parseInt(document.getElementById('prodPriceInput').value),
+                cat: document.getElementById('prodCatInput').value,
+                img: document.getElementById('prodImgInput').value.trim(),
+                images: imagesArray.length ? imagesArray : [document.getElementById('prodImgInput').value.trim()],
+                desc: document.getElementById('prodDescInput').value.trim(),
+                bestseller: document.getElementById('prodBest').checked,
+                isNew: document.getElementById('prodNew').checked,
+                isPromo: document.getElementById('prodPromo').checked
+            };
+
+            if(id) {
+                let idx = data.products.findIndex(x => x.id == id);
+                if(idx !== -1) data.products[idx] = productObj;
+            } else {
+                data.products.push(productObj);
+            }
+
+            document.getElementById('productModal').close();
+            renderProductsTable();
+            showToast("Perubahan data produk disimpan lokal. Jangan lupa klik 'Simpan ke GitHub' untuk publikasi!", "success");
+        }
+
+        async function deleteProduct(id) {
+            if(confirm("Apakah Anda yakin ingin menghapus produk ini?")) {
+                let p = data.products.find(x => x.id == id);
+                if(p) {
+                    // Coba bersihkan file fisik gambar dari repo GitHub jika ada
+                    await attemptDeleteImageFromRepo(p.img);
+                    if(p.images) {
+                        for(let img of p.images) { await attemptDeleteImageFromRepo(img); }
+                    }
+                    data.products = data.products.filter(x => x.id != id);
+                    renderProductsTable();
+                    showToast("Produk berhasil dihapus.", "success");
+                }
+            }
+        }
+
+
+        // ==========================================
+        // LOGIC CRUD: SECTION VARIAN KEMASAN
+        // ==========================================
+
+        function renderVariantsTable() {
+            const tbody = document.getElementById('variantTableBody');
+            tbody.innerHTML = "";
+            if(!data.packagingVariants.length) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Belum ada data varian kemasan.</td></tr>`;
+                return;
+            }
+
+            data.packagingVariants.forEach(v => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 transition border-b border-gray-100">
+                        <td class="p-4"><img src="${v.img}" class="w-12 h-12 rounded-lg object-cover shadow-xs border border-gray-200" onerror="this.src='https://placehold.co/100'"></td>
+                        <td class="p-4 font-semibold text-gray-700">${v.name}</td>
+                        <td class="p-4"><span class="bg-pink-100 text-pink-700 px-2 py-0.5 text-xs rounded font-medium">${v.id_tipe}</span></td>
+                        <td class="p-4 text-xs text-gray-500 max-w-xs truncate">${v.desc || '-'}</td>
+                        <td class="p-4 text-center space-x-2">
+                            <button onclick="openVariantModal('${v.id_varian}')" class="text-pink-600 hover:text-pink-900 bg-pink-50 p-1.5 rounded"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button onclick="deleteVariant('${v.id_varian}')" class="text-rose-600 hover:text-rose-900 bg-rose-50 p-1.5 rounded"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function openVariantModal(id_varian = null) {
+            populateSelectOptions();
+            const modal = document.getElementById('variantModal');
+            document.getElementById('variantForm').reset();
+            document.getElementById('varId').value = "";
+            document.getElementById('varModalTitle').innerText = "Tambah Varian Kemasan Baru";
+
+            if(id_varian) {
+                document.getElementById('varModalTitle').innerText = "Edit Varian Kemasan";
+                let v = data.packagingVariants.find(x => x.id_varian === id_varian);
+                if(v) {
+                    document.getElementById('varId').value = v.id_varian;
+                    document.getElementById('varNameInput').value = v.name;
+                    document.getElementById('varTypeInput').value = v.id_tipe;
+                    document.getElementById('varImgInput').value = v.img;
+                    document.getElementById('varDescInput').value = v.desc || '';
+                    document.getElementById('varFeaturesInput').value = v.features ? v.features.join('\n') : '';
+                }
+            }
+            modal.showModal();
+        }
+
+        function saveVariantForm(e) {
+            e.preventDefault();
+            const id_varian = document.getElementById('varId').value;
+            const featText = document.getElementById('varFeaturesInput').value;
+            let featArray = featText.split('\n').map(x => x.trim()).filter(x => x.length > 0);
+
+            let variantObj = {
+                id_varian: id_varian ? id_varian : 'VAR' + Math.floor(100 + Math.random() * 900),
+                id_tipe: document.getElementById('varTypeInput').value,
+                name: document.getElementById('varNameInput').value.trim(),
+                img: document.getElementById('varImgInput').value.trim(),
+                desc: document.getElementById('varDescInput').value.trim(),
+                features: featArray
+            };
+
+            if(id_varian) {
+                let idx = data.packagingVariants.findIndex(x => x.id_varian === id_varian);
+                if(idx !== -1) data.packagingVariants[idx] = variantObj;
+            } else {
+                data.packagingVariants.push(variantObj);
+            }
+
+            document.getElementById('variantModal').close();
+            renderVariantsTable();
+            showToast("Data varian disimpan lokal.", "success");
+        }
+
+        async function deleteVariant(id_varian) {
+            if(confirm("Hapus varian kemasan ini?")) {
+                let v = data.packagingVariants.find(x => x.id_varian === id_varian);
+                if(v) {
+                    await attemptDeleteImageFromRepo(v.img);
+                    data.packagingVariants = data.packagingVariants.filter(x => x.id_varian !== id_varian);
+                    renderVariantsTable();
+                    showToast("Varian dihapus.", "success");
+                }
+            }
+        }
+
+
+        // ==========================================
+        // LOGIC CRUD: KATEGORI & TIPE KEMASAN
+        // ==========================================
+
+        function renderCategoriesAndTypes() {
+            // Render Kategori Menu[cite: 2]
+            const catUl = document.getElementById('categoryList');
+            catUl.innerHTML = "";
+            data.categories.forEach(c => {
+                catUl.innerHTML += `
+                    <li class="flex justify-between items-center py-2">
+                        <span class="font-medium text-gray-700">${c.name} <span class="text-gray-400 text-xs font-mono">(${c.id})</span></span>
+                        <button onclick="deleteCategory('${c.id}')" class="text-rose-500 hover:text-rose-700 text-xs"><i class="fa-solid fa-trash-can"></i></button>
+                    </li>
+                `;
+            });
+
+            // Render Tipe & Tambahan Harga[cite: 2]
+            const typeUl = document.getElementById('typeList');
+            typeUl.innerHTML = "";
+            data.packagingTypes.forEach(t => {
+                typeUl.innerHTML += `
+                    <li class="flex justify-between items-center py-2">
+                        <div>
+                            <span class="font-medium text-gray-700 block">${t.id_tipe}</span>
+                            <span class="text-xs text-indigo-600 font-bold">+ Rp ${t.harga_tambahan.toLocaleString('id-ID')}</span>
+                        </div>
+                        <button onclick="deleteType('${t.id_tipe}')" class="text-rose-500 hover:text-rose-700 text-xs"><i class="fa-solid fa-trash-can"></i></button>
+                    </li>
+                `;
+            });
+        }
+
+        function addCategoryPrompt() {
+            let name = prompt("Masukkan Nama Kategori Baru:");
+            if(name && name.trim()) {
+                data.categories.push({
+                    id: 'CAT' + Math.floor(100 + Math.random() * 900),
+                    name: name.trim()
+                });
+                renderCategoriesAndTypes();
+            }
+        }
+
+        function deleteCategory(id) {
+            data.categories = data.categories.filter(x => x.id !== id);
+            renderCategoriesAndTypes();
+        }
+
+        function addTypePrompt() {
+            let name = prompt("Masukkan Nama Tipe Kemasan Baru (Misal: Exclusive Acrylic):");
+            if(!name || !name.trim()) return;
+            let harga = prompt("Masukkan Harga Tambahan (Hanya Angka):", "0");
+            
+            data.packagingTypes.push({
+                id_tipe: name.trim(),
+                harga_tambahan: parseInt(harga) || 0
+            });
+            renderCategoriesAndTypes();
+        }
+
+        function deleteType(id_tipe) {
+            data.packagingTypes = data.packagingTypes.filter(x => x.id_tipe !== id_tipe);
+            renderCategoriesAndTypes();
+        }
+
+
+        // ==========================================
+        // LOGIC CRUD: PROFIL CONFIG
+        // ==========================================
+
+        function loadProfileFields() {
+            let p = data.profile || {};
+            document.getElementById('profName').value = p.name || '';
+            document.getElementById('profDesc').value = p.description || '';
+            document.getElementById('profLogo').value = p.logo || '';
+            document.getElementById('profWA').value = p.whatsapp || '';
+            document.getElementById('profIG').value = p.instagram || '';
+            document.getElementById('profTikTok').value = p.tiktok || '';
+            document.getElementById('profAddress').value = p.address || '';
+            document.getElementById('profMaps').value = p.maps_embed || '';
+        }
+
+        function saveProfileData() {
+            data.profile = {
+                name: document.getElementById('profName').value.trim(),
+                description: document.getElementById('profDesc').value.trim(),
+                logo: document.getElementById('profLogo').value.trim(),
+                whatsapp: document.getElementById('profWA').value.trim(),
+                instagram: document.getElementById('profIG').value.trim(),
+                tiktok: document.getElementById('profTikTok').value.trim(),
+                facebook: data.profile.facebook || "", // Amankan properti facebook[cite: 2]
+                address: document.getElementById('profAddress').value.trim(),
+                maps_embed: document.getElementById('profMaps').value.trim()
+            };
+            showToast("Perubahan data profil berhasil dikunci lokal!", "success");
+        }
+
+
+        // ==========================================
+        // UTILITY SYSTEM HELPER COMPONENT
+        // ==========================================
+
+        function toggleLoading(show, message = "") {
+            const overlay = document.getElementById('loadingOverlay');
+            document.getElementById('loadingText').innerText = message;
+            if(show) overlay.classList.remove('hidden');
+            else overlay.classList.add('hidden');
+        }
+
+        function showToast(message, type = "success") {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            let bg = "bg-emerald-500 text-white";
+            let icon = '<i class="fa-solid fa-circle-check"></i>';
+            if(type === "error") { bg = "bg-rose-600 text-white"; icon = '<i class="fa-solid fa-circle-exclamation"></i>'; }
+            if(type === "warning") { bg = "bg-amber-500 text-gray-900"; icon = '<i class="fa-solid fa-triangle-exclamation"></i>'; }
+
+            toast.className = `${bg} px-4 py-2.5 rounded-lg shadow-xl text-xs font-bold flex items-center space-x-2 transition duration-300 transform translate-y-2 opacity-0`;
+            toast.innerHTML = `${icon} <span>${message}</span>`;
+            
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.remove('translate-y-2', 'opacity-0'); }, 10);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => { toast.remove(); }, 300);
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
