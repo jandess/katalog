@@ -1147,11 +1147,11 @@ function finalWhatsAppRedirect() {
   const formattedTime = `${timeParts[0]}:${timeParts[1]}`;
 
   // Bangun pesan dengan format baru
-  let message = `Halo, saya ingin memesan kue dari DJANDES:\n\n`;
+  let message = `*Halo, saya ingin memesan kue dari DJANDES*\n\n`;
   message += `*Data Pemesan:*\n`;
-  message += `Nama: ${checkoutData.name}\n`;
-  message += `Tanggal Pengambilan: ${formattedDate}\n`;
-  message += `Jam Pengambilan: ${formattedTime}\n\n`;
+  message += `*Nama:* ${checkoutData.name}\n`;
+  message += `*Tanggal Pengambilan:* ${formattedDate}\n`;
+  message += `*Jam Pengambilan:* ${formattedTime}\n\n`;
   message += `*Detail Pesanan:*\n`;
 
   cart.forEach(item => {
@@ -1169,7 +1169,7 @@ function finalWhatsAppRedirect() {
   }
 
   message += `\n\n*Total: Rp ${checkoutData.total.toLocaleString('id-ID')}*\n\n`;
-  message += `Silakan konfirmasi ketersediaan dan total pembayaran. Terima kasih!`;
+  message += `*Silakan konfirmasi ketersediaan dan total pembayaran. Terima kasih!*`;
 
   // Kirim ke WhatsApp
   window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, '_blank');
