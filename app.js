@@ -239,15 +239,15 @@ function renderProfile() {
   // Instagram
   const ig = document.getElementById('profile-instagram');
   if (ig) {
-    const igUsername = p.instagram || 'djandes15';
-    ig.textContent = igUsername.startsWith('@') ? igUsername : `@${igUsername}`;
+    const igUsername = p.instagram || '';
+    ig.textContent = igUsername;
     ig.href = `https://instagram.com/${igUsername.replace('@', '')}`;
   }
 
   // TikTok
   const tt = document.getElementById('profile-tiktok');
   if (tt) {
-    const ttUsername = p.tiktok || 'djandes15';
+    const ttUsername = p.tiktok || '';
     tt.textContent = ttUsername.startsWith('@') ? ttUsername : `@${ttUsername}`;
     tt.href = `https://tiktok.com/@${ttUsername.replace('@', '')}`;
   }
@@ -255,7 +255,7 @@ function renderProfile() {
   // Facebook
   const fb = document.getElementById('profile-facebook');
   if (fb) {
-    const fbUsername = p.facebook || 'djandes15';
+    const fbUsername = p.facebook || '';
     fb.textContent = fbUsername;
     fb.href = `https://facebook.com/${fbUsername}`;
   }
