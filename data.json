@@ -3,12 +3,28 @@
     {
       "id": "CAT001",
       "name": "Hantaran"
+    },
+    {
+      "id": "CAT002",
+      "name": "Parcel"
+    },
+    {
+      "id": "CAT003",
+      "name": "Nampan"
+    },
+    {
+      "id": "CAT004",
+      "name": "Snack"
     }
   ],
   "packagingTypes": [
     {
       "id_tipe": "Standard",
       "harga_tambahan": 0
+    },
+    {
+      "id_tipe": "Premium",
+      "harga_tambahan": 30000
     },
     {
       "id_tipe": "Artificial bunga",
@@ -215,10 +231,9 @@
       "name": "Lemper Kipas",
       "price": 155000,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658293416-2azzk4ys2kv.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783422423589_26j9ok_Lemper.jpg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658293416-2azzk4ys2kv.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658293416-2azzk4ys2kv.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783422423589_26j9ok_Lemper.jpg"
       ],
       "desc": "terbuat dari ketan pulen berisi abon atau ayam suwir berbumbu gurih, kemudian dibungkus dengan daun pisang dan dikukus.",
       "bestseller": false,
@@ -230,10 +245,10 @@
       "name": "Bolen pisang",
       "price": 160000,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658308103-4ptv6m7kx6.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426821909_de48kr_bolen.jpg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658308103-4ptv6m7kx6.jpg",
-        "https://djandes.turuxballo.workers.dev/products/1780658312552-bg2fdp1nw25.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426821909_de48kr_bolen.jpg",
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426824212_t8eqlm_bolen2.jpg"
       ],
       "desc": "kue pastry berlapis renyah yang berisi irisan pisang dan cokelat atau keju di dalamnya.",
       "bestseller": false,
@@ -245,10 +260,10 @@
       "name": "Bolu gulung Toping",
       "price": 250000,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658335943-n1n9lo2bxze.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426774265_w3ylu_bolugulung2.jpg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658335943-n1n9lo2bxze.jpg",
-        "https://djandes.turuxballo.workers.dev/products/1780658340640-y38lbbjwrip.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426774265_w3ylu_bolugulung2.jpg",
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426771557_1a3s9_bolugulung.jpg"
       ],
       "desc": "kue lembut berbentuk gulungan yang diisi selai manis atau krim lembut, kemudian diberi topping menarik seperti keju, cokelat, atau meses di atasnya.",
       "bestseller": false,
@@ -260,11 +275,9 @@
       "name": "Wingko babat",
       "price": 175000,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658375391-ox8fn0cqg6j.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426716685_2k8nk_wingko.jpg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658375391-ox8fn0cqg6j.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658375391-ox8fn0cqg6j.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658375391-ox8fn0cqg6j.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426716685_2k8nk_wingko.jpg"
       ],
       "desc": "terbuat dari kelapa parut, tepung ketan, gula, dan santan, kemudian dipanggang hingga beraroma harum dan bertekstur kenyal legit.",
       "bestseller": false,
@@ -292,11 +305,9 @@
       "name": "Telur asin",
       "price": 215000,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658436672-tkmzvmqrx7.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426674337_wmrwbl_telurasin.jpg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658436672-tkmzvmqrx7.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658436672-tkmzvmqrx7.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658436672-tkmzvmqrx7.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426674337_wmrwbl_telurasin.jpg"
       ],
       "desc": "olahan telur bebek yang diawetkan dengan cara direndam dalam larutan garam atau dibalut adonan garam dan abu, menghasilkan rasa gurih dan asin khas.",
       "bestseller": false,
@@ -308,11 +319,9 @@
       "name": "Lumpia Tower",
       "price": 160000,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658457776-siefcpiudhl.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426053285_1acwgh_soslo.jpg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658457776-siefcpiudhl.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658457776-siefcpiudhl.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658457776-siefcpiudhl.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426053285_1acwgh_soslo.jpg"
       ],
       "desc": "sajian lumpia yang disusun tinggi menyerupai tower, berisi sayuran segar, ayam, atau daging cincang dengan kulit lumpia renyah.",
       "bestseller": false,
@@ -324,11 +333,9 @@
       "name": "Kue thok",
       "price": 160000,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658479568-jpim3s5b0g.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426621990_wk3z0h_kuethok.jpg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658479568-jpim3s5b0g.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658479568-jpim3s5b0g.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658479568-jpim3s5b0g.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426621990_wk3z0h_kuethok.jpg"
       ],
       "desc": "berbahan dasar tepung ketan dan isian kacang hijau kupas, dibentuk tebal dan padat dengan tekstur kenyal dan lembut.",
       "bestseller": false,
@@ -340,11 +347,9 @@
       "name": "Putu ayu - Saus gula merah",
       "price": 137500,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658532065-y8s1mzje3ap.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426604773_r1ygr_PutuayuSausgulamerah.jpg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658532065-y8s1mzje3ap.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658532065-y8s1mzje3ap.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658532065-y8s1mzje3ap.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426604773_r1ygr_PutuayuSausgulamerah.jpg"
       ],
       "desc": "kue tradisional lembut berbahan dasar tepung terigu, kelapa parut, dan santan, dengan bentuk cantik berlapis kelapa di atasnya. Disajikan bersama saus gula merah kental dan manis.",
       "bestseller": false,
@@ -356,11 +361,9 @@
       "name": "Jadah Ketan",
       "price": 180000,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658273433-mmfvocbcim.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426499371_tmmzzv_jadah.jpg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658273433-mmfvocbcim.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658273433-mmfvocbcim.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658273433-mmfvocbcim.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426499371_tmmzzv_jadah.jpg"
       ],
       "desc": "Makanan ini terbuat dari ketan (beras ketan) yang dimasak dengan kelapa parut, memberikan rasa gurih yang lezat dan dipadatkan, lalu dibentuk menjadi bentuk hati .",
       "bestseller": false,
@@ -372,11 +375,9 @@
       "name": "Putu Ayu clasic",
       "price": 125000,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658249767-nadc65puqs.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426480491_4l2egg_PutuAyuclasic.jpg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658249767-nadc65puqs.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658249767-nadc65puqs.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658249767-nadc65puqs.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426480491_4l2egg_PutuAyuclasic.jpg"
       ],
       "desc": "kue tradisional lembut berbahan dasar tepung terigu, kelapa parut, dan santan, dengan bentuk cantik berlapis kelapa di atasnya.",
       "bestseller": false,
@@ -388,11 +389,9 @@
       "name": "Wajik ketan - gula merah",
       "price": 200000,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658224624-nuc4tyar0m.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426428495_roaeiz_wajik.jpg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658224624-nuc4tyar0m.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658224624-nuc4tyar0m.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658224624-nuc4tyar0m.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426428495_roaeiz_wajik.jpg"
       ],
       "desc": "Terbuat dari beras ketan dan gula merah, menghasilkan rasa manis legit dengan aroma khas kelapa dan karamel dari gula merah. Teksturnya lengket dan kenyal, mirip dengan jadah, tetapi wajik biasanya lebih manis dan padat.",
       "bestseller": false,
@@ -404,10 +403,9 @@
       "name": "Puding susu clasic + Vla",
       "price": 146000,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658179431-ycy5a9peqck.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426389742_myd62h_pudingsusu.jpg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658179431-ycy5a9peqck.jpg",
-        "https://djandes.turuxballo.workers.dev/products/1780658184071-ud9vvvh626r.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426389742_myd62h_pudingsusu.jpg"
       ],
       "desc": "terbuat dari susu murni, agar-agar, dan sedikit gula, menghasilkan rasa manis ringan dan creamy. Disajikan dengan vla vanila lembut di atasnya.",
       "bestseller": false,
@@ -419,11 +417,9 @@
       "name": "Caramel",
       "price": 120000,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658145367-6ygl53rr00b.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426374775_0zuipb_caramel.jpg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658145367-6ygl53rr00b.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658145367-6ygl53rr00b.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658145367-6ygl53rr00b.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426374775_0zuipb_caramel.jpg"
       ],
       "desc": "Terbuat dari gula yang dimasak hingga menjadi karamel, kemudian dicampur dengan adonan tepung dan telur.",
       "bestseller": false,
@@ -435,11 +431,9 @@
       "name": "Pie buah",
       "price": 162000,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658124000-9brm8qweyge.webp",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426115622_bqk1oy_bikang.jpeg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658124000-9brm8qweyge.webp",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658124000-9brm8qweyge.webp",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658124000-9brm8qweyge.webp"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426115622_bqk1oy_bikang.jpeg"
       ],
       "desc": "kue tart mini dengan kulit pastry renyah yang diisi vla lembut dan dihias dengan aneka potongan buah segar di atasnya.",
       "bestseller": false,
@@ -451,11 +445,9 @@
       "name": "Pie brownies",
       "price": 148000,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658105559-ddysyopo0ug.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426329673_0aj599_piebrownies.jpg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658105559-ddysyopo0ug.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658105559-ddysyopo0ug.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658105559-ddysyopo0ug.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426329673_0aj599_piebrownies.jpg"
       ],
       "desc": "Perpaduan lezat antara kulit pie renyah dan isian brownies cokelat lembut di dalamnya.",
       "bestseller": false,
@@ -467,11 +459,9 @@
       "name": "Onde - onde",
       "price": 137500,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658082359-du66b3ckqhd.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426263535_ajasrp_onde.jpg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658082359-du66b3ckqhd.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658082359-du66b3ckqhd.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658082359-du66b3ckqhd.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426263535_ajasrp_onde.jpg"
       ],
       "desc": "Jajanan tradisional berbentuk bulat yang terbuat dari tepung ketan, berisi kacang hijau manis, dan dilapisi taburan wijen di bagian luar.",
       "bestseller": false,
@@ -483,10 +473,10 @@
       "name": "Puff Pastry",
       "price": 137500,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658009975-ci4t0fptqdn.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426217406_mev0a_pastry2.jpg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658009975-ci4t0fptqdn.jpg",
-        "https://djandes.turuxballo.workers.dev/products/1780658015583-6pdeegdvyqk.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426217406_mev0a_pastry2.jpg",
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426214009_1c5vbno_pastry.jpg"
       ],
       "desc": "pastry berlapis yang dibuat dari adonan tepung dan menteba sehingga menghasilkan tekstur ringan, renyah, dan berlapis-lapis saat dipanggang.",
       "bestseller": false,
@@ -498,11 +488,9 @@
       "name": "Dadar gulung mawar",
       "price": 137500,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780657988352-kgtspjc9dcg.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426155189_bnsov8_dadargulungmawar.jpg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780657988352-kgtspjc9dcg.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780657988352-kgtspjc9dcg.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780657988352-kgtspjc9dcg.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426155189_bnsov8_dadargulungmawar.jpg"
       ],
       "desc": "dadar gulung pandan yang diisi kelapa parut manis dan dibentuk menyerupai bunga mawar cantik.",
       "bestseller": false,
@@ -514,11 +502,9 @@
       "name": "Bikang",
       "price": 125000,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1782304480317-nnpjeuod8bd.jpeg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426115622_bqk1oy_bikang.jpeg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1782304480317-nnpjeuod8bd.jpeg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1782304480317-nnpjeuod8bd.jpeg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1782304480317-nnpjeuod8bd.jpeg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426115622_bqk1oy_bikang.jpeg"
       ],
       "desc": "kue tradisional berbentuk bunga besar atau motif unik, terbuat dari tepung beras, santan, dan gula.",
       "bestseller": false,
@@ -530,11 +516,9 @@
       "name": "Risol Tower",
       "price": 160000,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780657913432-uh8xsct1jpd.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426053285_1acwgh_soslo.jpg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780657913432-uh8xsct1jpd.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780657913432-uh8xsct1jpd.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780657913432-uh8xsct1jpd.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426053285_1acwgh_soslo.jpg"
       ],
       "desc": "Sajian Risol yang disusun tinggi menyerupai tower, berisi sayuran segar, ayam, atau daging cincang dengan kulit lumpia renyah.",
       "bestseller": false,
@@ -546,11 +530,9 @@
       "name": "Sosis solo Tower",
       "price": 170000,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780657913432-uh8xsct1jpd.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426053285_1acwgh_soslo.jpg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780657913432-uh8xsct1jpd.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780657913432-uh8xsct1jpd.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780657913432-uh8xsct1jpd.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426053285_1acwgh_soslo.jpg"
       ],
       "desc": "sajian soslo yang disusun tinggi menyerupai tower, ayam cincang dengan kulit lumpia renyah.",
       "bestseller": false,
@@ -562,11 +544,9 @@
       "name": "Pastel",
       "price": 125000,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780657855775-jvqhfzoh6id.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426016732_nnk3pa6_pastel.jpg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780657855775-jvqhfzoh6id.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780657855775-jvqhfzoh6id.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780657855775-jvqhfzoh6id.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426016732_nnk3pa6_pastel.jpg"
       ],
       "desc": "kue goreng berbentuk setengah lingkaran dengan kulit tipis renyah dan isi sayuran, telur, ayam berbumbu gurih.",
       "bestseller": false,
@@ -578,11 +558,9 @@
       "name": "Wajik + Jadah",
       "price": 380000,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780657809359-awpsejyfs2.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783425958007_20f8i_wajik_jadah.jpg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780657809359-awpsejyfs2.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780657809359-awpsejyfs2.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780657809359-awpsejyfs2.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783425958007_20f8i_wajik_jadah.jpg"
       ],
       "desc": "kue tradisional wajik manis legit dan jadah gurih lembut, terbuat dari beras ketan, gula merah, parutan kelapa dan santan.",
       "bestseller": false,
@@ -594,11 +572,9 @@
       "name": "Lumpur Kentang",
       "price": 145000,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1782303835234-uw57r0vljxk.jpeg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783425890396_6nsbe_lumpurkentang.jpeg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1782303835234-uw57r0vljxk.jpeg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1782303835234-uw57r0vljxk.jpeg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1782303835234-uw57r0vljxk.jpeg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783425890396_6nsbe_lumpurkentang.jpeg"
       ],
       "desc": "kue tradisional lembut yang terbuat dari kentang, tepung, telur, dan gula, menghasilkan tekstur kenyal dan lembut.",
       "bestseller": false,
@@ -610,11 +586,9 @@
       "name": "Parcell Buah Polynett",
       "price": 300000,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780657712999-bqumou1jylj.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783425799545_1z0bt8_Parcell_Buah_Polynett.jpg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780657712999-bqumou1jylj.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780657712999-bqumou1jylj.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780657712999-bqumou1jylj.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783425799545_1z0bt8_Parcell_Buah_Polynett.jpg"
       ],
       "desc": "Rangkaian buah segar pilihan yang disusun cantik dalam keranjang atau kemasan elegan, cocok untuk hadiah, ucapan selamat, atau hampers acara spesial.",
       "bestseller": false,
@@ -626,10 +600,9 @@
       "name": "Parcell Buah Tyle",
       "price": 250000,
       "cat": "Hantaran",
-      "img": "https://djandes.turuxballo.workers.dev/products/1782210245624-0s276djsx4qn.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783425715756_eq8z6n_Parcell_Buah_Tyle.jpg",
       "images": [
-        "https://djandes.turuxballo.workers.dev/products/1782210245624-0s276djsx4qn.jpg",
-        "https://djandes.turuxballo.workers.dev/products/1782210244499-jnj7dxvg0wn.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783425715756_eq8z6n_Parcell_Buah_Tyle.jpg"
       ],
       "desc": "Rangkaian buah segar pilihan yang disusun cantik dalam keranjang atau kemasan elegan, cocok untuk hadiah, ucapan selamat, atau hampers acara spesial.",
       "bestseller": false,
@@ -651,28 +624,12 @@
       "bestseller": false,
       "isNew": false,
       "isPromo": false
-    },
-    {
-      "id": 1782634811433,
-      "name": "Nampan",
-      "price": 40000,
-      "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1782635033027-c8grah3561o.jpg",
-      "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1782635033027-c8grah3561o.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1782635033027-c8grah3561o.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1782635033027-c8grah3561o.jpg"
-      ],
-      "desc": "Berbagai macam kue dalam nampan plastik",
-      "bestseller": false,
-      "isNew": false,
-      "isPromo": false
     }
   ],
   "profile": {
     "name": "Djandes",
     "description": "DJANDES adalah home made kue basah lokal yang menyajikan berbagai macam kue tradisional dan modern dengan cita rasa autentik dan kualitas terbaik.",
-    "logo": "https://djandes.vercel.app/img/favicon.ico",
+    "logo": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/logo.png",
     "whatsapp": "6285812006225",
     "instagram": "djandes15",
     "tiktok": "djandes15",
