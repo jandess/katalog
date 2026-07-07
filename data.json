@@ -3,6 +3,18 @@
     {
       "id": "CAT001",
       "name": "Hantaran"
+    },
+    {
+      "id": "CAT002",
+      "name": "Parcel"
+    },
+    {
+      "id": "CAT003",
+      "name": "Nampan"
+    },
+    {
+      "id": "CAT004",
+      "name": "Snack"
     }
   ],
   "packagingTypes": [
@@ -219,10 +231,9 @@
       "name": "Lemper Kipas",
       "price": 155000,
       "cat": "Hantaran",
-      "img": "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658293416-2azzk4ys2kv.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783422423589_26j9ok_Lemper.jpg",
       "images": [
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658293416-2azzk4ys2kv.jpg",
-        "https://rboiicqwzcdjxhnhkzkl.supabase.co/storage/v1/object/public/product-images/products/1780658293416-2azzk4ys2kv.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783422423589_26j9ok_Lemper.jpg"
       ],
       "desc": "terbuat dari ketan pulen berisi abon atau ayam suwir berbumbu gurih, kemudian dibungkus dengan daun pisang dan dikukus.",
       "bestseller": false,
