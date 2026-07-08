@@ -67,7 +67,7 @@
       .main-content.desktop { display: block; }
       .header-actions-mobile { display: none !important; }
       .header-actions-desktop { display: flex !important; }
-      .header-title { block !important; }
+      .header-title { display: block !important; }
     }
     
     .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
@@ -169,7 +169,6 @@
     <div class="nav-item" data-tab="profile"><span class="material-symbols-outlined">person</span><span>Profil</span></div>
   </nav>
 
-  <!-- MODAL UTAMA -->
   <div id="modal" class="fixed inset-0 z-[60] flex items-center justify-center hidden modal-overlay">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col p-4 relative mx-2 overflow-hidden">
       <button onclick="closeModal()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700 z-10">
@@ -180,7 +179,6 @@
     </div>
   </div>
 
-  <!-- MODAL MULTI-LEVEL UNTUK MEDIA GALLERY CLOUD -->
   <div id="galleryModal" class="fixed inset-0 z-[70] flex items-center justify-center hidden modal-overlay">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col p-5 relative mx-2 overflow-hidden">
       <button onclick="closeGalleryModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 z-10">
@@ -191,12 +189,9 @@
       </h2>
       <p class="text-xs text-gray-500 mb-4">Pilih satu atau beberapa gambar dari repository GitHub Anda secara real-time.</p>
       
-      <!-- Area Grid Foto -->
       <div id="galleryModalBody" class="overflow-y-auto flex-1 p-1 bg-gray-50 rounded-lg border min-h-[300px]">
-         <!-- Konten Gambar di-render lewat JS -->
-      </div>
+         </div>
 
-      <!-- Footer Modal Galeri -->
       <div class="flex items-center justify-between mt-4 pt-3 border-t shrink-0">
          <div class="text-sm font-medium text-gray-700" id="gallerySelectedCount">Terpilih: 0 Gambar</div>
          <div class="flex gap-2">
@@ -248,14 +243,16 @@
     currentTab = tab;
     if (platform === 'desktop' || platform === 'both') {
       document.querySelectorAll('#mainDesktop .tab-panel').forEach(p => p.classList.add('hidden'));
-      document.getElementById(`tab-${tab}`).classList.remove('hidden');
+      const el = document.getElementById(`tab-${tab}`);
+      if (el) el.classList.remove('hidden');
       document.querySelectorAll('.sidebar .nav-item').forEach(b => {
         b.classList.toggle('active', b.dataset.tab === tab);
       });
     }
     if (platform === 'mobile' || platform === 'both') {
       document.querySelectorAll('#mainMobile .tab-panel').forEach(p => p.classList.add('hidden'));
-      document.getElementById(`tab-${tab}-mobile`).classList.remove('hidden');
+      const elMobile = document.getElementById(`tab-${tab}-mobile`);
+      if (elMobile) elMobile.classList.remove('hidden');
       document.querySelectorAll('.bottom-nav .nav-item').forEach(b => {
         b.classList.toggle('active', b.dataset.tab === tab);
       });
@@ -284,7 +281,7 @@
       data = JSON.parse(JSON.stringify(defaultData));
       ensureArrays();
       switchTab(currentTab, 'both');
-    } fillly {
+    } finally {
       toggleSpinner(false);
     }
   }
@@ -319,7 +316,6 @@
             data = await response.json();
         } else {
             const urlAPI = `https://api.github.com/repos/${conf.user}/${conf.repo}/contents/${FILENAME_JSON}?ref=${conf.branch}`;
-            // FIX: Diubah menggunakan Bearer untuk Fine-grained PAT
             const headers = conf.token ? { 'Authorization': `Bearer ${conf.token}` } : {};
             let resAPI = await fetch(urlAPI, { headers });
             if(resAPI.ok) {
@@ -338,7 +334,7 @@
     } catch (error) {
         showToast(error.message, "error");
         loadDataFromFile();
-    } fillly {
+    } finally {
         toggleSpinner(false);
     }
   }
@@ -355,7 +351,6 @@
         const url = `https://api.github.com/repos/${conf.user}/${conf.repo}/contents/${FILENAME_JSON}`;
         let sha = "";
         let resGet = await fetch(`${url}?ref=${conf.branch}`, {
-            // FIX: Diubah menggunakan Bearer untuk Fine-grained PAT
             headers: { 'Authorization': `Bearer ${conf.token}` }
         });
         if(resGet.ok) {
@@ -369,7 +364,6 @@
         let resPut = await fetch(url, {
             method: 'PUT',
             headers: {
-                // FIX: Diubah menggunakan Bearer untuk Fine-grained PAT
                 'Authorization': `Bearer ${conf.token}`,
                 'Content-Type': 'application/json'
             },
@@ -389,16 +383,15 @@
         }
     } catch (error) {
         showToast(error.message, "error");
-    } fillly {
+    } finally {
         toggleSpinner(false);
     }
   }
 
-  // SINGLE DIRECT UPLOAD DENGAN ANTRIAN SINKRONISASI AMAN
   async function handleDirectUpload(fileElementId, targetInputId) {
     const conf = getRepoConfig();
     const fileCtrl = document.getElementById(fileElementId);
-    if (!fileCtrl.files.length) return;
+    if (!fileCtrl || !fileCtrl.files.length) return;
     if(!conf.token) { return showToast("Isi GitHub Token di Menu Profil dahulu!", "error"); }
 
     const file = fileCtrl.files[0];
@@ -414,20 +407,19 @@
         try {
             let res = await fetch(targetUrl, {
                 method: 'PUT',
-                // FIX: Diubah menggunakan Bearer untuk Fine-grained PAT
                 headers: { 'Authorization': `Bearer ${conf.token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: `Upload ${cleanName}`, content: b64, branch: conf.branch })
             });
 
             if(res.ok) {
                 const cdnUrl = `https://cdn.jsdelivr.net/gh/${conf.user}/${conf.repo}@${conf.branch}/${pathTarget}`;
-                
-                // Masukkan url ke input target
                 const el = document.getElementById(targetInputId);
-                if(el.tagName === 'TEXTAREA') {
-                   el.value += (el.value ? "\n" : "") + cdnUrl;
-                } else {
-                   el.value = cdnUrl;
+                if(el) {
+                    if(el.tagName === 'TEXTAREA') {
+                       el.value += (el.value ? "\n" : "") + cdnUrl;
+                    } else {
+                       el.value = cdnUrl;
+                    }
                 }
                 showToast("Gambar Berhasil Terunggah ke Repo!");
             } else {
@@ -435,7 +427,7 @@
             }
         } catch (err) {
             showToast(err.message, "error");
-        } fillly {
+        } finally {
             toggleSpinner(false);
             fileCtrl.value = "";
         }
@@ -456,8 +448,8 @@
     activeTargetInputId = targetInputId;
     selectedCloudImages = [];
     
-    // Ambil nilai yang sudah ada di input/textarea saat ini untuk pra-seleksi otomatis
-    const currentVal = document.getElementById(targetInputId).value;
+    const targetInput = document.getElementById(targetInputId);
+    const currentVal = targetInput ? targetInput.value : '';
     if(currentVal) {
        selectedCloudImages = currentVal.split('\n').map(x => x.trim()).filter(s => s !== '');
     }
@@ -473,7 +465,6 @@
 
     try {
        const url = `https://api.github.com/repos/${conf.user}/${conf.repo}/contents/img?ref=${conf.branch}`;
-       // FIX: Diubah menggunakan Bearer untuk Fine-grained PAT
        let res = await fetch(url, { headers: { 'Authorization': `Bearer ${conf.token}` } });
        
        if(!res.ok) {
@@ -485,7 +476,6 @@
        }
 
        let files = await res.json();
-       // Filter file bertipe gambar saja
        let allowedExt = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
        let imageFiles = files.filter(f => f.type === 'file' && allowedExt.some(ext => f.name.toLowerCase().endsWith(ext)));
 
@@ -517,25 +507,23 @@
      files.forEach(file => {
         const cdnUrl = `https://cdn.jsdelivr.net/gh/${conf.user}/${conf.repo}@${conf.branch}/${file.path}`;
         const isSelected = selectedCloudImages.includes(cdnUrl);
+        const secId = btoa(file.name).replace(/=/g, '');
         
         html += `
           <div class="gallery-item bg-white rounded-lg border p-2 flex flex-col relative justify-between transition cursor-pointer select-none group ${isSelected ? 'selected':''}" 
-               id="gal-item-${btoa(file.name).replace(/=/g, '')}" onclick="toggleSelectImage('${cdnUrl}', '${btoa(file.name).replace(/=/g, '')}')">
+               id="gal-item-${secId}" onclick="toggleSelectImage('${cdnUrl}', '${secId}')">
              
-             <!-- Checkbox Status -->
              <div class="absolute top-1.5 left-1.5 z-10 bg-white/90 rounded-md border p-0.5 flex items-center justify-center shadow-xs">
-                <input type="checkbox" class="w-3.5 h-3.5 accent-[#735c00] pointer-events-none" id="chk-${btoa(file.name).replace(/=/g, '')}" ${isSelected ? 'checked':''} />
+                <input type="checkbox" class="w-3.5 h-3.5 accent-[#735c00] pointer-events-none" id="chk-${secId}" ${isSelected ? 'checked':''} />
              </div>
 
-             <!-- Preview Foto -->
              <div class="w-full aspect-square rounded-md overflow-hidden bg-gray-100 flex items-center justify-center border border-gray-100">
                 <img src="${cdnUrl}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/100?text=Error'" loading="lazy" />
              </div>
 
-             <!-- Judul & Tombol Action Hapus Fisik -->
              <div class="mt-2 flex items-center justify-between gap-1">
                 <span class="text-[10px] text-gray-500 truncate flex-1 block font-mono pr-1" title="${file.name}">${file.name}</span>
-                <button onclick="deleteImageFromRepo(event, '${file.path}', '${file.sha}', '${btoa(file.name).replace(/=/g, '')}')" 
+                <button onclick="deleteImageFromRepo(event, '${file.path}', '${file.sha}', '${secId}')" 
                         class="text-red-500 hover:bg-red-50 p-1 rounded-md shrink-0 md:opacity-0 group-hover:opacity-100 transition" title="Hapus Permanen dari Repo">
                    <span class="material-symbols-outlined text-sm">delete</span>
                 </button>
@@ -553,12 +541,10 @@
      const card = document.getElementById(`gal-item-${secureId}`);
      
      if (selectedCloudImages.includes(url)) {
-        // Jika sudah dipilih, batalkan / hapus dari daftar seleksi
         selectedCloudImages = selectedCloudImages.filter(x => x !== url);
         if(chk) chk.checked = false;
         if(card) card.classList.remove('selected');
      } else {
-        // Masukkan ke array seleksi
         selectedCloudImages.push(url);
         if(chk) chk.checked = true;
         if(card) card.classList.add('selected');
@@ -567,13 +553,13 @@
   }
 
   function updateGallerySelectedCounter() {
-     document.getElementById('gallerySelectedCount').innerText = `Terpilih: ${selectedCloudImages.length} Gambar`;
+     const el = document.getElementById('gallerySelectedCount');
+     if (el) el.innerText = `Terpilih: ${selectedCloudImages.length} Gambar`;
   }
 
   function applyGallerySelection() {
      const targetEl = document.getElementById(activeTargetInputId);
      if(targetEl) {
-        // Gabungkan seluruh array terpilih dipisahkan line break baru (enter)
         targetEl.value = selectedCloudImages.join('\n');
         showToast("Seleksi media library diterapkan!");
      }
@@ -581,7 +567,7 @@
   }
 
   async function deleteImageFromRepo(event, path, sha, secureId) {
-     event.stopPropagation(); // Stop trigger klik select gambar
+     event.stopPropagation();
      if(!confirm(`PERINGATAN: Hapus permanen file '${path}' dari repositori GitHub Cloud Anda? Tindakan ini tidak bisa dibatalkan.`)) return;
 
      const conf = getRepoConfig();
@@ -591,7 +577,6 @@
         const url = `https://api.github.com/repos/${conf.user}/${conf.repo}/contents/${path}`;
         let res = await fetch(url, {
            method: 'DELETE',
-           // FIX: Diubah menggunakan Bearer untuk Fine-grained PAT
            headers: { 'Authorization': `Bearer ${conf.token}`, 'Content-Type': 'application/json' },
            body: JSON.stringify({
               message: `Hapus media: ${path} via Admin Panel`,
@@ -602,11 +587,9 @@
 
         if(res.ok) {
            showToast("File sukses didelete dari cloud!");
-           // Singkirkan dari list seleksi lokal jika kebetulan sedang diseleksi
            const cdnUrlUrl = `https://cdn.jsdelivr.net/gh/${conf.user}/${conf.repo}@${conf.branch}/${path}`;
            selectedCloudImages = selectedCloudImages.filter(x => x !== cdnUrlUrl);
            
-           // Hapus element card dari layar
            const card = document.getElementById(`gal-item-${secureId}`);
            if(card) card.remove();
            updateGallerySelectedCounter();
@@ -615,7 +598,7 @@
         }
      } catch (e) {
         showToast(e.message, "error");
-     } fillly {
+     } finally {
         toggleSpinner(false);
      }
   }
@@ -634,15 +617,16 @@
     if(tM) tM.innerText = text;
     
     if(show) {
-        ld.classList.remove('hidden');
-        lm.classList.remove('hidden');
+        if(ld) ld.classList.remove('hidden');
+        if(lm) lm.classList.remove('hidden');
     } else {
-        ld.classList.add('hidden');
-        lm.classList.add('hidden');
+        if(ld) ld.classList.add('hidden');
+        if(lm) lm.classList.add('hidden');
     }
   }
 
   function fixProductImages() {
+    if (!data.products) return;
     data.products.forEach(p => {
       if ((!p.img || p.img === '') && p.images && p.images.length > 0) p.img = p.images[0];
       if ((!p.images || p.images.length === 0) && p.img && p.img !== '') p.images = [p.img];
@@ -728,8 +712,8 @@
     const containerMobile = document.getElementById('tab-categories-mobile');
     const filtered = data.categories.filter(c => c.name.toLowerCase().includes(searchQuery) || c.id.toLowerCase().includes(searchQuery));
     const html = buildCategoriesHtml(filtered);
-    containerDesktop.innerHTML = html;
-    containerMobile.innerHTML = html;
+    if(containerDesktop) containerDesktop.innerHTML = html;
+    if(containerMobile) containerMobile.innerHTML = html;
   }
   function buildCategoriesHtml(filtered) {
     let html = `
@@ -788,8 +772,8 @@
     const containerMobile = document.getElementById('tab-packagingTypes-mobile');
     const filtered = data.packagingTypes.filter(pt => pt.id_tipe.toLowerCase().includes(searchQuery));
     const html = buildPackagingTypesHtml(filtered);
-    containerDesktop.innerHTML = html;
-    containerMobile.innerHTML = html;
+    if(containerDesktop) containerDesktop.innerHTML = html;
+    if(containerMobile) containerMobile.innerHTML = html;
   }
   function buildPackagingTypesHtml(filtered) {
     let html = `
@@ -853,8 +837,8 @@
     const containerMobile = document.getElementById('tab-packagingVariants-mobile');
     const filtered = data.packagingVariants.filter(pv => pv.name.toLowerCase().includes(searchQuery) || pv.id_varian.toLowerCase().includes(searchQuery) || pv.id_tipe.toLowerCase().includes(searchQuery));
     const html = buildPackagingVariantsHtml(filtered);
-    containerDesktop.innerHTML = html;
-    containerMobile.innerHTML = html;
+    if(containerDesktop) containerDesktop.innerHTML = html;
+    if(containerMobile) containerMobile.innerHTML = html;
   }
   function buildPackagingVariantsHtml(filtered) {
     let html = `
@@ -954,8 +938,8 @@
     const containerMobile = document.getElementById('tab-products-mobile');
     const filtered = data.products.filter(p => p.name.toLowerCase().includes(searchQuery) || p.cat.toLowerCase().includes(searchQuery) || p.id.toString().includes(searchQuery));
     const html = buildProductsHtml(filtered);
-    containerDesktop.innerHTML = html;
-    containerMobile.innerHTML = html;
+    if(containerDesktop) containerDesktop.innerHTML = html;
+    if(containerMobile) containerMobile.innerHTML = html;
   }
   function buildProductsHtml(filtered) {
     let html = `
@@ -1012,13 +996,11 @@
             <textarea id="pImages" class="flex-1 box-border border rounded px-3 py-2 text-sm font-mono text-xs" rows="4" placeholder="Baris pertama otomatis jadi foto utama...">${product && product.images ? product.images.join('\n') : ''}</textarea>
             
             <div class="flex flex-col gap-1.5 shrink-0">
-               <!-- Tombol Buka Media Library Cloud -->
                <button onclick="openCloudGallery('pImages')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 p-2 rounded flex flex-col items-center justify-center border border-amber-300 text-xs font-semibold w-20">
                  <span class="material-symbols-outlined text-xl">imagesmode</span>
                  <span class="mt-0.5 text-[9px]">Gallery Cloud</span>
                </button>
                
-               <!-- Tombol Upload File Baru dari Lokal -->
                <label class="cursor-pointer bg-gray-100 hover:bg-gray-200 p-2 rounded flex flex-col items-center justify-center border border-gray-300 text-xs font-medium w-20">
                  <span class="material-symbols-outlined text-xl">cloud_upload</span>
                  <span class="mt-0.5 text-[9px]">+ Upload Baru</span>
@@ -1053,7 +1035,6 @@
     if (images.length === 0) { showToast('Minimal isi 1 gambar pada galeri!', 'error'); return; }
     
     const mainImg = images[0]; 
-    
     const obj = { id: idx !== undefined ? data.products[idx].id : generateId(), name, price, cat, img: mainImg, images, desc, bestseller, isNew, isPromo };
     if (idx !== undefined) data.products[idx] = obj;
     else data.products.push(obj);
@@ -1151,7 +1132,7 @@
           </div>
         </div>
         <div><label class="block text-sm font-medium mb-1">WhatsApp</label><input id="editProfileWa" class="w-full box-border border rounded px-3 py-2 text-sm" value="${p.whatsapp || ''}" /></div>
-        <div><label class="block text-sm font-medium mb-1">Instagram</label><input id="editProfileIg" class="w-full box-border border rounded px-3 py-2 text-sm" value="${p.instagram || ''}" /></div>
+        <div><label class="block text-sm font-medium mb-1">Instagram</label><input id="editProfileWi" class="w-full box-border border rounded px-3 py-2 text-sm" value="${p.instagram || ''}" id="editProfileIg" /></div>
         <div><label class="block text-sm font-medium mb-1">TikTok</label><input id="editProfileTt" class="w-full box-border border rounded px-3 py-2 text-sm" value="${p.tiktok || ''}" /></div>
         <div><label class="block text-sm font-medium mb-1">Facebook</label><input id="editProfileFb" class="w-full box-border border rounded px-3 py-2 text-sm" value="${p.facebook || ''}" /></div>
         <div><label class="block text-sm font-medium mb-1">Alamat</label><input id="editProfileAddress" class="w-full box-border border rounded px-3 py-2 text-sm" value="${p.address || ''}" /></div>
@@ -1167,7 +1148,7 @@
       description: document.getElementById('editProfileDesc').value.trim() || '',
       logo: document.getElementById('editProfileLogo').value.trim() || '',
       whatsapp: document.getElementById('editProfileWa').value.trim() || '',
-      instagram: document.getElementById('editProfileIg').value.trim() || '',
+      instagram: document.getElementById('editProfileIg') ? document.getElementById('editProfileIg').value.trim() : '',
       tiktok: document.getElementById('editProfileTt').value.trim() || '',
       facebook: document.getElementById('editProfileFb').value.trim() || '',
       address: document.getElementById('editProfileAddress').value.trim() || '',
@@ -1204,7 +1185,6 @@
     loadDataFromGithub();
   }
 
-  // Tutup Modal lewat background overlay klik
   document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
   document.getElementById('galleryModal').addEventListener('click', function(e) { if (e.target === this) closeGalleryModal(); });
   document.addEventListener('keydown', (e) => { 
