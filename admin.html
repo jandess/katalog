@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Djandes Admin Panel - Cloud Sync Edition</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght=400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
   <style>
     body { font-family: 'Inter', sans-serif; background: #f5f5f5; }
@@ -67,7 +67,7 @@
       .main-content.desktop { display: block; }
       .header-actions-mobile { display: none !important; }
       .header-actions-desktop { display: flex !important; }
-      .header-title { display: block; }
+      .header-title { block !important; }
     }
     
     .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
@@ -75,6 +75,9 @@
     .filter-badge.bestseller { background: #fef3c7; color: #92400e; }
     .filter-badge.new { background: #dbeafe; color: #1e40af; }
     .filter-badge.promo { background: #fce4ec; color: #b71c1c; }
+
+    /* Custom Style untuk Gambar yang Terpilih di Gallery Cloud */
+    .gallery-item.selected { border-color: #735c00; background-color: #fef3e7; box-shadow: 0 0 0 2px #735c00; }
   </style>
 </head>
 <body>
@@ -166,6 +169,7 @@
     <div class="nav-item" data-tab="profile"><span class="material-symbols-outlined">person</span><span>Profil</span></div>
   </nav>
 
+  <!-- MODAL UTAMA -->
   <div id="modal" class="fixed inset-0 z-[60] flex items-center justify-center hidden modal-overlay">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col p-4 relative mx-2 overflow-hidden">
       <button onclick="closeModal()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700 z-10">
@@ -175,6 +179,34 @@
       <div id="modalBody" class="overflow-y-auto flex-1 pr-1 pb-2"></div>
     </div>
   </div>
+
+  <!-- MODAL MULTI-LEVEL UNTUK MEDIA GALLERY CLOUD -->
+  <div id="galleryModal" class="fixed inset-0 z-[70] flex items-center justify-center hidden modal-overlay">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col p-5 relative mx-2 overflow-hidden">
+      <button onclick="closeGalleryModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 z-10">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+      <h2 class="text-xl font-bold mb-1 flex items-center gap-2 text-gray-800">
+        <span class="material-symbols-outlined text-[#735c00]">imagesmode</span> Media Library Cloud (img/)
+      </h2>
+      <p class="text-xs text-gray-500 mb-4">Pilih satu atau beberapa gambar dari repository GitHub Anda secara real-time.</p>
+      
+      <!-- Area Grid Foto -->
+      <div id="galleryModalBody" class="overflow-y-auto flex-1 p-1 bg-gray-50 rounded-lg border min-h-[300px]">
+         <!-- Konten Gambar di-render lewat JS -->
+      </div>
+
+      <!-- Footer Modal Galeri -->
+      <div class="flex items-center justify-between mt-4 pt-3 border-t shrink-0">
+         <div class="text-sm font-medium text-gray-700" id="gallerySelectedCount">Terpilih: 0 Gambar</div>
+         <div class="flex gap-2">
+            <button onclick="closeGalleryModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg">Batal</button>
+            <button onclick="applyGallerySelection()" class="px-5 py-2 bg-[#735c00] hover:bg-[#5a4a00] text-white text-sm font-medium rounded-lg">Gunakan Terpilih</button>
+         </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -184,6 +216,10 @@
   let currentTab = 'products';
   let searchQuery = '';
   const FILENAME_JSON = 'data.json';
+
+  // State Sementara untuk Media Library Selection
+  let activeTargetInputId = ''; 
+  let selectedCloudImages = []; 
 
   // -------------------- INIT --------------------
   document.addEventListener('DOMContentLoaded', () => {
@@ -195,7 +231,6 @@
     });
     document.getElementById('importFile').addEventListener('change', (e) => { handleImport(e.target.files[0]); e.target.value = ''; });
     
-    // Otomatis tarik dari cloud jika konfigurasi sudah lengkap
     if(localStorage.getItem('gh_token') && localStorage.getItem('gh_repo')) {
         loadDataFromGithub();
     } else {
@@ -249,7 +284,7 @@
       data = JSON.parse(JSON.stringify(defaultData));
       ensureArrays();
       switchTab(currentTab, 'both');
-    } finally {
+    } fillly {
       toggleSpinner(false);
     }
   }
@@ -284,7 +319,8 @@
             data = await response.json();
         } else {
             const urlAPI = `https://api.github.com/repos/${conf.user}/${conf.repo}/contents/${FILENAME_JSON}?ref=${conf.branch}`;
-            const headers = conf.token ? { 'Authorization': `token ${conf.token}` } : {};
+            // FIX: Diubah menggunakan Bearer untuk Fine-grained PAT
+            const headers = conf.token ? { 'Authorization': `Bearer ${conf.token}` } : {};
             let resAPI = await fetch(urlAPI, { headers });
             if(resAPI.ok) {
                 let resJSON = await resAPI.json();
@@ -302,7 +338,7 @@
     } catch (error) {
         showToast(error.message, "error");
         loadDataFromFile();
-    } finally {
+    } fillly {
         toggleSpinner(false);
     }
   }
@@ -319,7 +355,8 @@
         const url = `https://api.github.com/repos/${conf.user}/${conf.repo}/contents/${FILENAME_JSON}`;
         let sha = "";
         let resGet = await fetch(`${url}?ref=${conf.branch}`, {
-            headers: { 'Authorization': `token ${conf.token}` }
+            // FIX: Diubah menggunakan Bearer untuk Fine-grained PAT
+            headers: { 'Authorization': `Bearer ${conf.token}` }
         });
         if(resGet.ok) {
             let fileData = await resGet.json();
@@ -332,7 +369,8 @@
         let resPut = await fetch(url, {
             method: 'PUT',
             headers: {
-                'Authorization': `token ${conf.token}`,
+                // FIX: Diubah menggunakan Bearer untuk Fine-grained PAT
+                'Authorization': `Bearer ${conf.token}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -351,12 +389,12 @@
         }
     } catch (error) {
         showToast(error.message, "error");
-    } finally {
+    } fillly {
         toggleSpinner(false);
     }
   }
 
-  // ENGINE DIRECT MULTI-UPLOAD IMAGES
+  // SINGLE DIRECT UPLOAD DENGAN ANTRIAN SINKRONISASI AMAN
   async function handleDirectUpload(fileElementId, targetInputId) {
     const conf = getRepoConfig();
     const fileCtrl = document.getElementById(fileElementId);
@@ -376,20 +414,28 @@
         try {
             let res = await fetch(targetUrl, {
                 method: 'PUT',
-                headers: { 'Authorization': `token ${conf.token}`, 'Content-Type': 'application/json' },
+                // FIX: Diubah menggunakan Bearer untuk Fine-grained PAT
+                headers: { 'Authorization': `Bearer ${conf.token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: `Upload ${cleanName}`, content: b64, branch: conf.branch })
             });
 
             if(res.ok) {
                 const cdnUrl = `https://cdn.jsdelivr.net/gh/${conf.user}/${conf.repo}@${conf.branch}/${pathTarget}`;
-                document.getElementById(targetInputId).value = cdnUrl;
-                showToast("Gambar Berhasil Terunggah!");
+                
+                // Masukkan url ke input target
+                const el = document.getElementById(targetInputId);
+                if(el.tagName === 'TEXTAREA') {
+                   el.value += (el.value ? "\n" : "") + cdnUrl;
+                } else {
+                   el.value = cdnUrl;
+                }
+                showToast("Gambar Berhasil Terunggah ke Repo!");
             } else {
                 showToast("Upload gagal di sistem GitHub.", "error");
             }
         } catch (err) {
             showToast(err.message, "error");
-        } finally {
+        } fillly {
             toggleSpinner(false);
             fileCtrl.value = "";
         }
@@ -397,43 +443,185 @@
     reader.readAsDataURL(file);
   }
 
-  async function handleMultipleUpload(fileElementId, targetTextAreaId) {
+  // ========================================================
+  // ENGINE UTAMA: MEDIA LIBRARY GALLERY CLOUD (REAL-TIME)
+  // ========================================================
+  
+  async function openCloudGallery(targetInputId) {
     const conf = getRepoConfig();
-    const fileCtrl = document.getElementById(fileElementId);
-    if (!fileCtrl.files.length) return;
-    if(!conf.token) { return showToast("Isi GitHub Token di Menu Profil dahulu!", "error"); }
-
-    toggleSpinner(true, `Mengunggah ${fileCtrl.files.length} gambar ke Cloud...`);
-    const txtArea = document.getElementById(targetTextAreaId);
-
-    for (let file of fileCtrl.files) {
-        await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                const b64 = e.target.result.split(',')[1];
-                const cleanName = `gal_${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
-                const pathTarget = `img/${cleanName}`;
-                const targetUrl = `https://api.github.com/repos/${conf.user}/${conf.repo}/contents/${pathTarget}`;
-
-                try {
-                    let res = await fetch(targetUrl, {
-                        method: 'PUT',
-                        headers: { 'Authorization': `token ${conf.token}`, 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ message: `Upload ${cleanName}`, content: b64, branch: conf.branch })
-                    });
-                    if(res.ok) {
-                        const cdnUrl = `https://cdn.jsdelivr.net/gh/${conf.user}/${conf.repo}@${conf.branch}/${pathTarget}`;
-                        txtArea.value += (txtArea.value ? "\n" : "") + cdnUrl;
-                    }
-                } catch (e) {}
-                resolve();
-            };
-            reader.readAsDataURL(file);
-        });
+    if(!conf.user || !conf.repo || !conf.token) {
+       return showToast("Konfigurasi Cloud GitHub belum lengkap di menu Profil!", "error");
     }
-    toggleSpinner(false);
-    showToast("Seluruh file sukses disisipkan ke daftar!");
-    fileCtrl.value = "";
+
+    activeTargetInputId = targetInputId;
+    selectedCloudImages = [];
+    
+    // Ambil nilai yang sudah ada di input/textarea saat ini untuk pra-seleksi otomatis
+    const currentVal = document.getElementById(targetInputId).value;
+    if(currentVal) {
+       selectedCloudImages = currentVal.split('\n').map(x => x.trim()).filter(s => s !== '');
+    }
+
+    document.getElementById('galleryModal').classList.remove('hidden');
+    document.getElementById('galleryModalBody').innerHTML = `
+       <div class="loading">
+          <span class="material-symbols-outlined spinner text-3xl text-[#735c00]">sync</span>
+          <span class="ml-2 text-gray-600 text-sm">Menghubungkan repositori & memuat file...</span>
+       </div>
+    `;
+    updateGallerySelectedCounter();
+
+    try {
+       const url = `https://api.github.com/repos/${conf.user}/${conf.repo}/contents/img?ref=${conf.branch}`;
+       // FIX: Diubah menggunakan Bearer untuk Fine-grained PAT
+       let res = await fetch(url, { headers: { 'Authorization': `Bearer ${conf.token}` } });
+       
+       if(!res.ok) {
+          if(res.status === 404) {
+             throw new Error("Folder 'img' belum ada di repo. Silakan upload minimal 1 gambar terlebih dahulu agar folder terbentuk.");
+          } else {
+             throw new Error("Gagal mengambil aset media dari GitHub.");
+          }
+       }
+
+       let files = await res.json();
+       // Filter file bertipe gambar saja
+       let allowedExt = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+       let imageFiles = files.filter(f => f.type === 'file' && allowedExt.some(ext => f.name.toLowerCase().endsWith(ext)));
+
+       if(imageFiles.length === 0) {
+          document.getElementById('galleryModalBody').innerHTML = `
+             <div class="text-center py-12 text-gray-400 text-sm">
+                <span class="material-symbols-outlined text-4xl block mb-2">image_not_supported</span>
+                Tidak ada file gambar ditemukan di folder <b>img/</b> repositori Anda.
+             </div>
+          `;
+          return;
+       }
+
+       renderGalleryGrid(imageFiles, conf);
+
+    } catch (err) {
+       document.getElementById('galleryModalBody').innerHTML = `
+          <div class="text-center py-8 text-red-600 text-sm">
+             <span class="material-symbols-outlined text-3xl block mb-1">warning</span>
+             ${err.message}
+          </div>
+       `;
+    }
+  }
+
+  function renderGalleryGrid(files, conf) {
+     let html = `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-3">`;
+     
+     files.forEach(file => {
+        const cdnUrl = `https://cdn.jsdelivr.net/gh/${conf.user}/${conf.repo}@${conf.branch}/${file.path}`;
+        const isSelected = selectedCloudImages.includes(cdnUrl);
+        
+        html += `
+          <div class="gallery-item bg-white rounded-lg border p-2 flex flex-col relative justify-between transition cursor-pointer select-none group ${isSelected ? 'selected':''}" 
+               id="gal-item-${btoa(file.name).replace(/=/g, '')}" onclick="toggleSelectImage('${cdnUrl}', '${btoa(file.name).replace(/=/g, '')}')">
+             
+             <!-- Checkbox Status -->
+             <div class="absolute top-1.5 left-1.5 z-10 bg-white/90 rounded-md border p-0.5 flex items-center justify-center shadow-xs">
+                <input type="checkbox" class="w-3.5 h-3.5 accent-[#735c00] pointer-events-none" id="chk-${btoa(file.name).replace(/=/g, '')}" ${isSelected ? 'checked':''} />
+             </div>
+
+             <!-- Preview Foto -->
+             <div class="w-full aspect-square rounded-md overflow-hidden bg-gray-100 flex items-center justify-center border border-gray-100">
+                <img src="${cdnUrl}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/100?text=Error'" loading="lazy" />
+             </div>
+
+             <!-- Judul & Tombol Action Hapus Fisik -->
+             <div class="mt-2 flex items-center justify-between gap-1">
+                <span class="text-[10px] text-gray-500 truncate flex-1 block font-mono pr-1" title="${file.name}">${file.name}</span>
+                <button onclick="deleteImageFromRepo(event, '${file.path}', '${file.sha}', '${btoa(file.name).replace(/=/g, '')}')" 
+                        class="text-red-500 hover:bg-red-50 p-1 rounded-md shrink-0 md:opacity-0 group-hover:opacity-100 transition" title="Hapus Permanen dari Repo">
+                   <span class="material-symbols-outlined text-sm">delete</span>
+                </button>
+             </div>
+          </div>
+        `;
+     });
+
+     html += `</div>`;
+     document.getElementById('galleryModalBody').innerHTML = html;
+  }
+
+  function toggleSelectImage(url, secureId) {
+     const chk = document.getElementById(`chk-${secureId}`);
+     const card = document.getElementById(`gal-item-${secureId}`);
+     
+     if (selectedCloudImages.includes(url)) {
+        // Jika sudah dipilih, batalkan / hapus dari daftar seleksi
+        selectedCloudImages = selectedCloudImages.filter(x => x !== url);
+        if(chk) chk.checked = false;
+        if(card) card.classList.remove('selected');
+     } else {
+        // Masukkan ke array seleksi
+        selectedCloudImages.push(url);
+        if(chk) chk.checked = true;
+        if(card) card.classList.add('selected');
+     }
+     updateGallerySelectedCounter();
+  }
+
+  function updateGallerySelectedCounter() {
+     document.getElementById('gallerySelectedCount').innerText = `Terpilih: ${selectedCloudImages.length} Gambar`;
+  }
+
+  function applyGallerySelection() {
+     const targetEl = document.getElementById(activeTargetInputId);
+     if(targetEl) {
+        // Gabungkan seluruh array terpilih dipisahkan line break baru (enter)
+        targetEl.value = selectedCloudImages.join('\n');
+        showToast("Seleksi media library diterapkan!");
+     }
+     closeGalleryModal();
+  }
+
+  async function deleteImageFromRepo(event, path, sha, secureId) {
+     event.stopPropagation(); // Stop trigger klik select gambar
+     if(!confirm(`PERINGATAN: Hapus permanen file '${path}' dari repositori GitHub Cloud Anda? Tindakan ini tidak bisa dibatalkan.`)) return;
+
+     const conf = getRepoConfig();
+     toggleSpinner(true, "Menghapus file gambar dari GitHub...");
+
+     try {
+        const url = `https://api.github.com/repos/${conf.user}/${conf.repo}/contents/${path}`;
+        let res = await fetch(url, {
+           method: 'DELETE',
+           // FIX: Diubah menggunakan Bearer untuk Fine-grained PAT
+           headers: { 'Authorization': `Bearer ${conf.token}`, 'Content-Type': 'application/json' },
+           body: JSON.stringify({
+              message: `Hapus media: ${path} via Admin Panel`,
+              sha: sha,
+              branch: conf.branch
+           })
+        });
+
+        if(res.ok) {
+           showToast("File sukses didelete dari cloud!");
+           // Singkirkan dari list seleksi lokal jika kebetulan sedang diseleksi
+           const cdnUrlUrl = `https://cdn.jsdelivr.net/gh/${conf.user}/${conf.repo}@${conf.branch}/${path}`;
+           selectedCloudImages = selectedCloudImages.filter(x => x !== cdnUrlUrl);
+           
+           // Hapus element card dari layar
+           const card = document.getElementById(`gal-item-${secureId}`);
+           if(card) card.remove();
+           updateGallerySelectedCounter();
+        } else {
+           throw new Error("Gagal menghapus file dari sistem API GitHub.");
+        }
+     } catch (e) {
+        showToast(e.message, "error");
+     } fillly {
+        toggleSpinner(false);
+     }
+  }
+
+  function closeGalleryModal() {
+     document.getElementById('galleryModal').classList.add('hidden');
   }
 
   // -------------------- HELPERS --------------------
@@ -471,6 +659,7 @@
     if (!data.profile) data.profile = {};
   }
   function generateId() { return Date.now() + Math.floor(Math.random() * 1000); }
+  
   function showToast(msg, type = 'success') {
     const toast = document.createElement('div');
     toast.className = `fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg shadow-lg text-white font-medium transition-all duration-300 z-[70] text-sm ${type === 'error' ? 'bg-red-600' : 'bg-green-600'}`;
@@ -481,6 +670,7 @@
       setTimeout(() => toast.remove(), 300);
     }, 2500);
   }
+
   function handleImport(file) {
     if (!file) return;
     const reader = new FileReader();
@@ -497,6 +687,7 @@
     };
     reader.readAsText(file);
   }
+  
   function exportData() {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -697,10 +888,13 @@
         <div><label class="block text-sm font-medium mb-1">Nama Varian</label><input id="pvName" class="w-full box-border border rounded px-3 py-2 text-sm" /></div>
         <div>
           <label class="block text-sm font-medium mb-1">Gambar Varian</label>
-          <div class="flex gap-2">
-            <input id="pvImg" class="flex-1 box-border border rounded px-3 py-2 text-sm" placeholder="URL Gambar" />
+          <div class="flex gap-1">
+            <input id="pvImg" class="flex-1 box-border border rounded-l px-3 py-2 text-sm" placeholder="URL Gambar" />
+            <button onclick="openCloudGallery('pvImg')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 px-2.5 rounded border border-amber-300 text-xs font-semibold flex items-center gap-0.5">
+               <span class="material-symbols-outlined text-sm">imagesmode</span> Galeri Cloud
+            </button>
             <label class="cursor-pointer bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded border border-gray-300 text-xs font-medium flex items-center gap-1">
-              <span class="material-symbols-outlined text-sm">upload</span> Upload
+              <span class="material-symbols-outlined text-sm">upload</span> Upload Local
               <input type="file" id="uploadVarImg" onchange="handleDirectUpload('uploadVarImg', 'pvImg')" class="hidden" />
             </label>
           </div>
@@ -720,10 +914,13 @@
         <div><label class="block text-sm font-medium mb-1">Nama Varian</label><input id="pvName" class="w-full box-border border rounded px-3 py-2 text-sm" value="${pv.name}" /></div>
         <div>
           <label class="block text-sm font-medium mb-1">Gambar Varian</label>
-          <div class="flex gap-2">
-            <input id="pvImg" class="flex-1 box-border border rounded px-3 py-2 text-sm" value="${pv.img || ''}" placeholder="URL Gambar" />
+          <div class="flex gap-1">
+            <input id="pvImg" class="flex-1 box-border border rounded-l px-3 py-2 text-sm" value="${pv.img || ''}" placeholder="URL Gambar" />
+            <button onclick="openCloudGallery('pvImg')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 px-2.5 rounded border border-amber-300 text-xs font-semibold flex items-center gap-0.5">
+               <span class="material-symbols-outlined text-sm">imagesmode</span> Galeri Cloud
+            </button>
             <label class="cursor-pointer bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded border border-gray-300 text-xs font-medium flex items-center gap-1">
-              <span class="material-symbols-outlined text-sm">upload</span> Upload
+              <span class="material-symbols-outlined text-sm">upload</span> Upload Local
               <input type="file" id="uploadVarImg" onchange="handleDirectUpload('uploadVarImg', 'pvImg')" class="hidden" />
             </label>
           </div>
@@ -812,12 +1009,22 @@
         <div>
           <label class="block text-sm font-medium mb-1">Foto Galeri & Utama (Satu URL per baris)</label>
           <div class="flex gap-2 items-start">
-            <textarea id="pImages" class="flex-1 box-border border rounded px-3 py-2 text-sm font-mono text-xs" rows="3" placeholder="Baris pertama otomatis jadi foto utama...">${product && product.images ? product.images.join('\n') : ''}</textarea>
-            <label class="cursor-pointer bg-gray-100 hover:bg-gray-200 p-2 rounded flex flex-col items-center justify-center shrink-0 border border-gray-300 text-xs font-medium w-16">
-              <span class="material-symbols-outlined text-lg">imagesmode</span>
-              <span class="mt-0.5 text-[9px]">+ Multi</span>
-              <input type="file" id="uploadProdGallery" multiple onchange="handleMultipleUpload('uploadProdGallery', 'pImages')" class="hidden" />
-            </label>
+            <textarea id="pImages" class="flex-1 box-border border rounded px-3 py-2 text-sm font-mono text-xs" rows="4" placeholder="Baris pertama otomatis jadi foto utama...">${product && product.images ? product.images.join('\n') : ''}</textarea>
+            
+            <div class="flex flex-col gap-1.5 shrink-0">
+               <!-- Tombol Buka Media Library Cloud -->
+               <button onclick="openCloudGallery('pImages')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 p-2 rounded flex flex-col items-center justify-center border border-amber-300 text-xs font-semibold w-20">
+                 <span class="material-symbols-outlined text-xl">imagesmode</span>
+                 <span class="mt-0.5 text-[9px]">Gallery Cloud</span>
+               </button>
+               
+               <!-- Tombol Upload File Baru dari Lokal -->
+               <label class="cursor-pointer bg-gray-100 hover:bg-gray-200 p-2 rounded flex flex-col items-center justify-center border border-gray-300 text-xs font-medium w-20">
+                 <span class="material-symbols-outlined text-xl">cloud_upload</span>
+                 <span class="mt-0.5 text-[9px]">+ Upload Baru</span>
+                 <input type="file" id="uploadProdGallery" onchange="handleDirectUpload('uploadProdGallery', 'pImages')" class="hidden" />
+               </label>
+            </div>
           </div>
         </div>
 
@@ -845,7 +1052,6 @@
     if (!name) { showToast('Nama produk wajib diisi', 'error'); return; }
     if (images.length === 0) { showToast('Minimal isi 1 gambar pada galeri!', 'error'); return; }
     
-    // Otomatis menetapkan gambar utama dari baris pertama array galeri gambar
     const mainImg = images[0]; 
     
     const obj = { id: idx !== undefined ? data.products[idx].id : generateId(), name, price, cat, img: mainImg, images, desc, bestseller, isNew, isPromo };
@@ -981,7 +1187,7 @@
         <div><label class="block font-medium mb-1">Branch Utama</label><input id="setGhBranch" class="w-full box-border border rounded px-3 py-2 text-sm" value="${localStorage.getItem('gh_branch') || 'main'}" /></div>
         <div><label class="block font-medium mb-1">Personal Access Token (PAT)</label><input id="setGhToken" type="password" class="w-full box-border border rounded px-3 py-2 text-sm" value="${localStorage.getItem('gh_token') || ''}" placeholder="ghp_xxxxxxxxxxxx" /></div>
         <div class="pt-2">
-            <button onclick="saveCloudSettings()" class="bg-[#735c00] text-white px-4 py-2 rounded text-sm font-medium w-full md:w-auto">Hubungkan & Hubungkan Cloud</button>
+            <button onclick="saveCloudSettings()" class="bg-[#735c00] text-white px-4 py-2 rounded text-sm font-medium w-full md:w-auto">Hubungkan & Sinkron Cloud</button>
         </div>
       </div>
     `);
@@ -998,9 +1204,12 @@
     loadDataFromGithub();
   }
 
-  // Close modals
+  // Tutup Modal lewat background overlay klik
   document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+  document.getElementById('galleryModal').addEventListener('click', function(e) { if (e.target === this) closeGalleryModal(); });
+  document.addEventListener('keydown', (e) => { 
+     if (e.key === 'Escape') { closeModal(); closeGalleryModal(); } 
+  });
 </script>
 </body>
 </html>
