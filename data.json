@@ -17,18 +17,6 @@
   ],
   "packagingVariants": [
     {
-      "id_varian": "VAR001",
-      "id_tipe": "Artificial bunga",
-      "name": "Putih",
-      "img": "https://djandes.turuxballo.workers.dev/products/1780657809359-awpsejyfs2.jpg",
-      "desc": "kue tradisional wajik manis legit dan jadah gurih lembut, terbuat dari beras ketan, gula merah, parutan kelapa dan santan.",
-      "features": [
-        "Material kualitas ekspor, kokoh dan tahan lama.",
-        "Ramah lingkungan dan dapat digunakan kembali.",
-        "Desain elegan dan premium."
-      ]
-    },
-    {
       "id_varian": "VAR002",
       "id_tipe": "Artificial bunga",
       "name": "Biru",
