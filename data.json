@@ -53,66 +53,6 @@
       ]
     },
     {
-      "id_varian": "VAR005",
-      "id_tipe": "Artificial bunga",
-      "name": "Hijau",
-      "img": "https://djandes.turuxballo.workers.dev/products/1780657809359-awpsejyfs2.jpg",
-      "desc": "kue tradisional wajik manis legit dan jadah gurih lembut, terbuat dari beras ketan, gula merah, parutan kelapa dan santan.",
-      "features": [
-        "Material kualitas ekspor, kokoh dan tahan lama.",
-        "Ramah lingkungan dan dapat digunakan kembali.",
-        "Desain elegan dan premium."
-      ]
-    },
-    {
-      "id_varian": "VAR006",
-      "id_tipe": "Artificial bunga",
-      "name": "Coklat",
-      "img": "https://djandes.turuxballo.workers.dev/products/1780657809359-awpsejyfs2.jpg",
-      "desc": "kue tradisional wajik manis legit dan jadah gurih lembut, terbuat dari beras ketan, gula merah, parutan kelapa dan santan.",
-      "features": [
-        "Material kualitas ekspor, kokoh dan tahan lama.",
-        "Ramah lingkungan dan dapat digunakan kembali.",
-        "Desain elegan dan premium."
-      ]
-    },
-    {
-      "id_varian": "VAR007",
-      "id_tipe": "Artificial bunga",
-      "name": "Emas",
-      "img": "https://djandes.turuxballo.workers.dev/products/1780657809359-awpsejyfs2.jpg",
-      "desc": "kue tradisional wajik manis legit dan jadah gurih lembut, terbuat dari beras ketan, gula merah, parutan kelapa dan santan.",
-      "features": [
-        "Material kualitas ekspor, kokoh dan tahan lama.",
-        "Ramah lingkungan dan dapat digunakan kembali.",
-        "Desain elegan dan premium."
-      ]
-    },
-    {
-      "id_varian": "VAR008",
-      "id_tipe": "Artificial bunga",
-      "name": "Tosca",
-      "img": "https://djandes.turuxballo.workers.dev/products/1780657809359-awpsejyfs2.jpg",
-      "desc": "kue tradisional wajik manis legit dan jadah gurih lembut, terbuat dari beras ketan, gula merah, parutan kelapa dan santan.",
-      "features": [
-        "Material kualitas ekspor, kokoh dan tahan lama.",
-        "Ramah lingkungan dan dapat digunakan kembali.",
-        "Desain elegan dan premium."
-      ]
-    },
-    {
-      "id_varian": "VAR009",
-      "id_tipe": "Standard",
-      "name": "Putih",
-      "img": "https://djandes.turuxballo.workers.dev/products/1780657809359-awpsejyfs2.jpg",
-      "desc": "kue tradisional wajik manis legit dan jadah gurih lembut, terbuat dari beras ketan, gula merah, parutan kelapa dan santan.",
-      "features": [
-        "Material kualitas ekspor, kokoh dan tahan lama.",
-        "Ramah lingkungan dan dapat digunakan kembali.",
-        "Desain elegan dan premium."
-      ]
-    },
-    {
       "id_varian": "VAR010",
       "id_tipe": "Standard",
       "name": "Biru",
@@ -128,66 +68,6 @@
       "id_varian": "VAR011",
       "id_tipe": "Standard",
       "name": "Pink",
-      "img": "https://djandes.turuxballo.workers.dev/products/1780657809359-awpsejyfs2.jpg",
-      "desc": "kue tradisional wajik manis legit dan jadah gurih lembut, terbuat dari beras ketan, gula merah, parutan kelapa dan santan.",
-      "features": [
-        "Material kualitas ekspor, kokoh dan tahan lama.",
-        "Ramah lingkungan dan dapat digunakan kembali.",
-        "Desain elegan dan premium."
-      ]
-    },
-    {
-      "id_varian": "VAR012",
-      "id_tipe": "Standard",
-      "name": "Marun",
-      "img": "https://djandes.turuxballo.workers.dev/products/1780657809359-awpsejyfs2.jpg",
-      "desc": "kue tradisional wajik manis legit dan jadah gurih lembut, terbuat dari beras ketan, gula merah, parutan kelapa dan santan.",
-      "features": [
-        "Material kualitas ekspor, kokoh dan tahan lama.",
-        "Ramah lingkungan dan dapat digunakan kembali.",
-        "Desain elegan dan premium."
-      ]
-    },
-    {
-      "id_varian": "VAR013",
-      "id_tipe": "Standard",
-      "name": "Hijau",
-      "img": "https://djandes.turuxballo.workers.dev/products/1780657809359-awpsejyfs2.jpg",
-      "desc": "kue tradisional wajik manis legit dan jadah gurih lembut, terbuat dari beras ketan, gula merah, parutan kelapa dan santan.",
-      "features": [
-        "Material kualitas ekspor, kokoh dan tahan lama.",
-        "Ramah lingkungan dan dapat digunakan kembali.",
-        "Desain elegan dan premium."
-      ]
-    },
-    {
-      "id_varian": "VAR014",
-      "id_tipe": "Standard",
-      "name": "Coklat",
-      "img": "https://djandes.turuxballo.workers.dev/products/1780657809359-awpsejyfs2.jpg",
-      "desc": "kue tradisional wajik manis legit dan jadah gurih lembut, terbuat dari beras ketan, gula merah, parutan kelapa dan santan.",
-      "features": [
-        "Material kualitas ekspor, kokoh dan tahan lama.",
-        "Ramah lingkungan dan dapat digunakan kembali.",
-        "Desain elegan dan premium."
-      ]
-    },
-    {
-      "id_varian": "VAR015",
-      "id_tipe": "Standard",
-      "name": "Emas",
-      "img": "https://djandes.turuxballo.workers.dev/products/1780657809359-awpsejyfs2.jpg",
-      "desc": "kue tradisional wajik manis legit dan jadah gurih lembut, terbuat dari beras ketan, gula merah, parutan kelapa dan santan.",
-      "features": [
-        "Material kualitas ekspor, kokoh dan tahan lama.",
-        "Ramah lingkungan dan dapat digunakan kembali.",
-        "Desain elegan dan premium."
-      ]
-    },
-    {
-      "id_varian": "VAR016",
-      "id_tipe": "Premium",
-      "name": "blue",
       "img": "https://djandes.turuxballo.workers.dev/products/1780657809359-awpsejyfs2.jpg",
       "desc": "kue tradisional wajik manis legit dan jadah gurih lembut, terbuat dari beras ketan, gula merah, parutan kelapa dan santan.",
       "features": [
