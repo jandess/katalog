@@ -6,8 +6,32 @@
   <title>Djandes Admin Panel - Cloud Sync Edition</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght=400;500;600;700&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+  <!-- PRELOAD font untuk mencegah flash of text -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
   <style>
+    /* FIX: Sembunyikan icon sampai font termuat */
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      line-height: 1;
+      text-transform: none;
+      letter-spacing: normal;
+      word-wrap: normal;
+      white-space: nowrap;
+      direction: ltr;
+      /* Hindari tampilan teks fallback */
+      font-family: 'Material Symbols Outlined', sans-serif;
+    }
+    /* Loading font fallback */
+    .fonts-loading .material-symbols-outlined {
+      visibility: hidden;
+    }
+    .fonts-loaded .material-symbols-outlined {
+      visibility: visible;
+    }
+    
     body { font-family: 'Inter', sans-serif; background: #f5f5f5; }
     .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #e5e7eb; z-index: 50; padding-bottom: env(safe-area-inset-bottom); }
     .bottom-nav .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px 10px; font-size: 10px; color: #6b7280; transition: all 0.2s; cursor: pointer; }
@@ -79,6 +103,25 @@
     /* Custom Style untuk Gambar yang Terpilih di Gallery Cloud */
     .gallery-item.selected { border-color: #735c00; background-color: #fef3e7; box-shadow: 0 0 0 2px #735c00; }
   </style>
+  <!-- Script untuk mendeteksi font loading -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      document.documentElement.classList.add('fonts-loading');
+      // Cek apakah font sudah termuat
+      if (document.fonts) {
+        document.fonts.ready.then(function() {
+          document.documentElement.classList.remove('fonts-loading');
+          document.documentElement.classList.add('fonts-loaded');
+        });
+      } else {
+        // Fallback: tunggu 2 detik
+        setTimeout(function() {
+          document.documentElement.classList.remove('fonts-loading');
+          document.documentElement.classList.add('fonts-loaded');
+        }, 2000);
+      }
+    });
+  </script>
 </head>
 <body>
 
@@ -169,6 +212,7 @@
     <div class="nav-item" data-tab="profile"><span class="material-symbols-outlined">person</span><span>Profil</span></div>
   </nav>
 
+  <!-- MODAL UTAMA -->
   <div id="modal" class="fixed inset-0 z-[60] flex items-center justify-center hidden modal-overlay">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col p-4 relative mx-2 overflow-hidden">
       <button onclick="closeModal()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700 z-10">
@@ -179,6 +223,7 @@
     </div>
   </div>
 
+  <!-- MODAL MULTI-LEVEL UNTUK MEDIA GALLERY CLOUD -->
   <div id="galleryModal" class="fixed inset-0 z-[70] flex items-center justify-center hidden modal-overlay">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col p-5 relative mx-2 overflow-hidden">
       <button onclick="closeGalleryModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 z-10">
@@ -189,9 +234,12 @@
       </h2>
       <p class="text-xs text-gray-500 mb-4">Pilih satu atau beberapa gambar dari repository GitHub Anda secara real-time.</p>
       
+      <!-- Area Grid Foto -->
       <div id="galleryModalBody" class="overflow-y-auto flex-1 p-1 bg-gray-50 rounded-lg border min-h-[300px]">
-         </div>
+         <!-- Konten Gambar di-render lewat JS -->
+      </div>
 
+      <!-- Footer Modal Galeri -->
       <div class="flex items-center justify-between mt-4 pt-3 border-t shrink-0">
          <div class="text-sm font-medium text-gray-700" id="gallerySelectedCount">Terpilih: 0 Gambar</div>
          <div class="flex gap-2">
@@ -243,16 +291,14 @@
     currentTab = tab;
     if (platform === 'desktop' || platform === 'both') {
       document.querySelectorAll('#mainDesktop .tab-panel').forEach(p => p.classList.add('hidden'));
-      const el = document.getElementById(`tab-${tab}`);
-      if (el) el.classList.remove('hidden');
+      document.getElementById(`tab-${tab}`).classList.remove('hidden');
       document.querySelectorAll('.sidebar .nav-item').forEach(b => {
         b.classList.toggle('active', b.dataset.tab === tab);
       });
     }
     if (platform === 'mobile' || platform === 'both') {
       document.querySelectorAll('#mainMobile .tab-panel').forEach(p => p.classList.add('hidden'));
-      const elMobile = document.getElementById(`tab-${tab}-mobile`);
-      if (elMobile) elMobile.classList.remove('hidden');
+      document.getElementById(`tab-${tab}-mobile`).classList.remove('hidden');
       document.querySelectorAll('.bottom-nav .nav-item').forEach(b => {
         b.classList.toggle('active', b.dataset.tab === tab);
       });
@@ -271,6 +317,12 @@
         data = jsonData;
         ensureArrays();
         fixProductImages();
+        // Fix variant images - ensure each variant has images array
+        data.packagingVariants.forEach(v => {
+          if (!v.images || v.images.length === 0) {
+            v.images = v.img ? [v.img] : [];
+          }
+        });
         switchTab(currentTab, 'both');
         showToast('Data lokal berhasil dimuat');
       } else {
@@ -316,7 +368,7 @@
             data = await response.json();
         } else {
             const urlAPI = `https://api.github.com/repos/${conf.user}/${conf.repo}/contents/${FILENAME_JSON}?ref=${conf.branch}`;
-            const headers = conf.token ? { 'Authorization': `Bearer ${conf.token}` } : {};
+            const headers = conf.token ? { 'Authorization': `token ${conf.token}` } : {};
             let resAPI = await fetch(urlAPI, { headers });
             if(resAPI.ok) {
                 let resJSON = await resAPI.json();
@@ -329,6 +381,12 @@
         
         ensureArrays();
         fixProductImages();
+        // Fix variant images
+        data.packagingVariants.forEach(v => {
+          if (!v.images || v.images.length === 0) {
+            v.images = v.img ? [v.img] : [];
+          }
+        });
         switchTab(currentTab, 'both');
         showToast("Sinkronisasi Cloud Berhasil!");
     } catch (error) {
@@ -351,7 +409,7 @@
         const url = `https://api.github.com/repos/${conf.user}/${conf.repo}/contents/${FILENAME_JSON}`;
         let sha = "";
         let resGet = await fetch(`${url}?ref=${conf.branch}`, {
-            headers: { 'Authorization': `Bearer ${conf.token}` }
+            headers: { 'Authorization': `token ${conf.token}` }
         });
         if(resGet.ok) {
             let fileData = await resGet.json();
@@ -364,7 +422,7 @@
         let resPut = await fetch(url, {
             method: 'PUT',
             headers: {
-                'Authorization': `Bearer ${conf.token}`,
+                'Authorization': `token ${conf.token}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -388,10 +446,11 @@
     }
   }
 
+  // SINGLE DIRECT UPLOAD DENGAN ANTRIAN SINKRONISASI AMAN
   async function handleDirectUpload(fileElementId, targetInputId) {
     const conf = getRepoConfig();
     const fileCtrl = document.getElementById(fileElementId);
-    if (!fileCtrl || !fileCtrl.files.length) return;
+    if (!fileCtrl.files.length) return;
     if(!conf.token) { return showToast("Isi GitHub Token di Menu Profil dahulu!", "error"); }
 
     const file = fileCtrl.files[0];
@@ -407,19 +466,19 @@
         try {
             let res = await fetch(targetUrl, {
                 method: 'PUT',
-                headers: { 'Authorization': `Bearer ${conf.token}`, 'Content-Type': 'application/json' },
+                headers: { 'Authorization': `token ${conf.token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: `Upload ${cleanName}`, content: b64, branch: conf.branch })
             });
 
             if(res.ok) {
                 const cdnUrl = `https://cdn.jsdelivr.net/gh/${conf.user}/${conf.repo}@${conf.branch}/${pathTarget}`;
+                
+                // Masukkan url ke input target
                 const el = document.getElementById(targetInputId);
-                if(el) {
-                    if(el.tagName === 'TEXTAREA') {
-                       el.value += (el.value ? "\n" : "") + cdnUrl;
-                    } else {
-                       el.value = cdnUrl;
-                    }
+                if(el.tagName === 'TEXTAREA') {
+                   el.value += (el.value ? "\n" : "") + cdnUrl;
+                } else {
+                   el.value = cdnUrl;
                 }
                 showToast("Gambar Berhasil Terunggah ke Repo!");
             } else {
@@ -448,8 +507,8 @@
     activeTargetInputId = targetInputId;
     selectedCloudImages = [];
     
-    const targetInput = document.getElementById(targetInputId);
-    const currentVal = targetInput ? targetInput.value : '';
+    // Ambil nilai yang sudah ada di input/textarea saat ini untuk pra-seleksi otomatis
+    const currentVal = document.getElementById(targetInputId).value;
     if(currentVal) {
        selectedCloudImages = currentVal.split('\n').map(x => x.trim()).filter(s => s !== '');
     }
@@ -465,7 +524,7 @@
 
     try {
        const url = `https://api.github.com/repos/${conf.user}/${conf.repo}/contents/img?ref=${conf.branch}`;
-       let res = await fetch(url, { headers: { 'Authorization': `Bearer ${conf.token}` } });
+       let res = await fetch(url, { headers: { 'Authorization': `token ${conf.token}` } });
        
        if(!res.ok) {
           if(res.status === 404) {
@@ -476,6 +535,7 @@
        }
 
        let files = await res.json();
+       // Filter file bertipe gambar saja
        let allowedExt = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
        let imageFiles = files.filter(f => f.type === 'file' && allowedExt.some(ext => f.name.toLowerCase().endsWith(ext)));
 
@@ -507,23 +567,25 @@
      files.forEach(file => {
         const cdnUrl = `https://cdn.jsdelivr.net/gh/${conf.user}/${conf.repo}@${conf.branch}/${file.path}`;
         const isSelected = selectedCloudImages.includes(cdnUrl);
-        const secId = btoa(file.name).replace(/=/g, '');
         
         html += `
           <div class="gallery-item bg-white rounded-lg border p-2 flex flex-col relative justify-between transition cursor-pointer select-none group ${isSelected ? 'selected':''}" 
-               id="gal-item-${secId}" onclick="toggleSelectImage('${cdnUrl}', '${secId}')">
+               id="gal-item-${btoa(file.name).replace(/=/g, '')}" onclick="toggleSelectImage('${cdnUrl}', '${btoa(file.name).replace(/=/g, '')}')">
              
+             <!-- Checkbox Status -->
              <div class="absolute top-1.5 left-1.5 z-10 bg-white/90 rounded-md border p-0.5 flex items-center justify-center shadow-xs">
-                <input type="checkbox" class="w-3.5 h-3.5 accent-[#735c00] pointer-events-none" id="chk-${secId}" ${isSelected ? 'checked':''} />
+                <input type="checkbox" class="w-3.5 h-3.5 accent-[#735c00] pointer-events-none" id="chk-${btoa(file.name).replace(/=/g, '')}" ${isSelected ? 'checked':''} />
              </div>
 
+             <!-- Preview Foto -->
              <div class="w-full aspect-square rounded-md overflow-hidden bg-gray-100 flex items-center justify-center border border-gray-100">
                 <img src="${cdnUrl}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/100?text=Error'" loading="lazy" />
              </div>
 
+             <!-- Judul & Tombol Action Hapus Fisik -->
              <div class="mt-2 flex items-center justify-between gap-1">
                 <span class="text-[10px] text-gray-500 truncate flex-1 block font-mono pr-1" title="${file.name}">${file.name}</span>
-                <button onclick="deleteImageFromRepo(event, '${file.path}', '${file.sha}', '${secId}')" 
+                <button onclick="deleteImageFromRepo(event, '${file.path}', '${file.sha}', '${btoa(file.name).replace(/=/g, '')}')" 
                         class="text-red-500 hover:bg-red-50 p-1 rounded-md shrink-0 md:opacity-0 group-hover:opacity-100 transition" title="Hapus Permanen dari Repo">
                    <span class="material-symbols-outlined text-sm">delete</span>
                 </button>
@@ -541,10 +603,12 @@
      const card = document.getElementById(`gal-item-${secureId}`);
      
      if (selectedCloudImages.includes(url)) {
+        // Jika sudah dipilih, batalkan / hapus dari daftar seleksi
         selectedCloudImages = selectedCloudImages.filter(x => x !== url);
         if(chk) chk.checked = false;
         if(card) card.classList.remove('selected');
      } else {
+        // Masukkan ke array seleksi
         selectedCloudImages.push(url);
         if(chk) chk.checked = true;
         if(card) card.classList.add('selected');
@@ -553,13 +617,13 @@
   }
 
   function updateGallerySelectedCounter() {
-     const el = document.getElementById('gallerySelectedCount');
-     if (el) el.innerText = `Terpilih: ${selectedCloudImages.length} Gambar`;
+     document.getElementById('gallerySelectedCount').innerText = `Terpilih: ${selectedCloudImages.length} Gambar`;
   }
 
   function applyGallerySelection() {
      const targetEl = document.getElementById(activeTargetInputId);
      if(targetEl) {
+        // Gabungkan seluruh array terpilih dipisahkan line break baru (enter)
         targetEl.value = selectedCloudImages.join('\n');
         showToast("Seleksi media library diterapkan!");
      }
@@ -567,7 +631,7 @@
   }
 
   async function deleteImageFromRepo(event, path, sha, secureId) {
-     event.stopPropagation();
+     event.stopPropagation(); // Stop trigger klik select gambar
      if(!confirm(`PERINGATAN: Hapus permanen file '${path}' dari repositori GitHub Cloud Anda? Tindakan ini tidak bisa dibatalkan.`)) return;
 
      const conf = getRepoConfig();
@@ -577,7 +641,7 @@
         const url = `https://api.github.com/repos/${conf.user}/${conf.repo}/contents/${path}`;
         let res = await fetch(url, {
            method: 'DELETE',
-           headers: { 'Authorization': `Bearer ${conf.token}`, 'Content-Type': 'application/json' },
+           headers: { 'Authorization': `token ${conf.token}`, 'Content-Type': 'application/json' },
            body: JSON.stringify({
               message: `Hapus media: ${path} via Admin Panel`,
               sha: sha,
@@ -587,9 +651,11 @@
 
         if(res.ok) {
            showToast("File sukses didelete dari cloud!");
+           // Singkirkan dari list seleksi lokal jika kebetulan sedang diseleksi
            const cdnUrlUrl = `https://cdn.jsdelivr.net/gh/${conf.user}/${conf.repo}@${conf.branch}/${path}`;
            selectedCloudImages = selectedCloudImages.filter(x => x !== cdnUrlUrl);
            
+           // Hapus element card dari layar
            const card = document.getElementById(`gal-item-${secureId}`);
            if(card) card.remove();
            updateGallerySelectedCounter();
@@ -617,16 +683,15 @@
     if(tM) tM.innerText = text;
     
     if(show) {
-        if(ld) ld.classList.remove('hidden');
-        if(lm) lm.classList.remove('hidden');
+        ld.classList.remove('hidden');
+        lm.classList.remove('hidden');
     } else {
-        if(ld) ld.classList.add('hidden');
-        if(lm) lm.classList.add('hidden');
+        ld.classList.add('hidden');
+        lm.classList.add('hidden');
     }
   }
 
   function fixProductImages() {
-    if (!data.products) return;
     data.products.forEach(p => {
       if ((!p.img || p.img === '') && p.images && p.images.length > 0) p.img = p.images[0];
       if ((!p.images || p.images.length === 0) && p.img && p.img !== '') p.images = [p.img];
@@ -664,6 +729,12 @@
         if (validateData(imported)) {
           data = imported;
           ensureArrays(); fixProductImages();
+          // Fix variant images
+          data.packagingVariants.forEach(v => {
+            if (!v.images || v.images.length === 0) {
+              v.images = v.img ? [v.img] : [];
+            }
+          });
           renderTab(currentTab);
           showToast('Data berhasil diimpor!');
         } else { showToast('Format JSON salah!', 'error'); }
@@ -712,8 +783,8 @@
     const containerMobile = document.getElementById('tab-categories-mobile');
     const filtered = data.categories.filter(c => c.name.toLowerCase().includes(searchQuery) || c.id.toLowerCase().includes(searchQuery));
     const html = buildCategoriesHtml(filtered);
-    if(containerDesktop) containerDesktop.innerHTML = html;
-    if(containerMobile) containerMobile.innerHTML = html;
+    containerDesktop.innerHTML = html;
+    containerMobile.innerHTML = html;
   }
   function buildCategoriesHtml(filtered) {
     let html = `
@@ -772,8 +843,8 @@
     const containerMobile = document.getElementById('tab-packagingTypes-mobile');
     const filtered = data.packagingTypes.filter(pt => pt.id_tipe.toLowerCase().includes(searchQuery));
     const html = buildPackagingTypesHtml(filtered);
-    if(containerDesktop) containerDesktop.innerHTML = html;
-    if(containerMobile) containerMobile.innerHTML = html;
+    containerDesktop.innerHTML = html;
+    containerMobile.innerHTML = html;
   }
   function buildPackagingTypesHtml(filtered) {
     let html = `
@@ -831,14 +902,14 @@
     if (confirm('Hapus tipe kemasan ini?')) { data.packagingTypes.splice(idx, 1); renderPackagingTypes(); showToast('Tipe kemasan dihapus'); }
   }
 
-  // -------------------- PACKAGING VARIANTS --------------------
+  // -------------------- PACKAGING VARIANTS (DENGAN MULTI IMAGES) --------------------
   function renderPackagingVariants() {
     const containerDesktop = document.getElementById('tab-packagingVariants');
     const containerMobile = document.getElementById('tab-packagingVariants-mobile');
     const filtered = data.packagingVariants.filter(pv => pv.name.toLowerCase().includes(searchQuery) || pv.id_varian.toLowerCase().includes(searchQuery) || pv.id_tipe.toLowerCase().includes(searchQuery));
     const html = buildPackagingVariantsHtml(filtered);
-    if(containerDesktop) containerDesktop.innerHTML = html;
-    if(containerMobile) containerMobile.innerHTML = html;
+    containerDesktop.innerHTML = html;
+    containerMobile.innerHTML = html;
   }
   function buildPackagingVariantsHtml(filtered) {
     let html = `
@@ -871,16 +942,12 @@
         <div><label class="block text-sm font-medium mb-1">ID Tipe</label><select id="pvType" class="w-full box-border border rounded px-3 py-2 text-sm">${data.packagingTypes.map(pt => `<option value="${pt.id_tipe}">${pt.id_tipe}</option>`).join('')}</select></div>
         <div><label class="block text-sm font-medium mb-1">Nama Varian</label><input id="pvName" class="w-full box-border border rounded px-3 py-2 text-sm" /></div>
         <div>
-          <label class="block text-sm font-medium mb-1">Gambar Varian</label>
-          <div class="flex gap-1">
-            <input id="pvImg" class="flex-1 box-border border rounded-l px-3 py-2 text-sm" placeholder="URL Gambar" />
-            <button onclick="openCloudGallery('pvImg')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 px-2.5 rounded border border-amber-300 text-xs font-semibold flex items-center gap-0.5">
+          <label class="block text-sm font-medium mb-1">Gambar Varian (Multi, satu URL per baris)</label>
+          <div class="flex gap-2 items-start">
+            <textarea id="pvImages" class="flex-1 box-border border rounded px-3 py-2 text-sm font-mono text-xs" rows="3" placeholder="Baris pertama jadi gambar utama..."></textarea>
+            <button onclick="openCloudGallery('pvImages')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 px-2.5 rounded border border-amber-300 text-xs font-semibold flex items-center gap-0.5">
                <span class="material-symbols-outlined text-sm">imagesmode</span> Galeri Cloud
             </button>
-            <label class="cursor-pointer bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded border border-gray-300 text-xs font-medium flex items-center gap-1">
-              <span class="material-symbols-outlined text-sm">upload</span> Upload Local
-              <input type="file" id="uploadVarImg" onchange="handleDirectUpload('uploadVarImg', 'pvImg')" class="hidden" />
-            </label>
           </div>
         </div>
         <div><label class="block text-sm font-medium mb-1">Deskripsi</label><textarea id="pvDesc" class="w-full box-border border rounded px-3 py-2 text-sm" rows="2"></textarea></div>
@@ -897,16 +964,12 @@
         <div><label class="block text-sm font-medium mb-1">ID Tipe</label><select id="pvType" class="w-full box-border border rounded px-3 py-2 text-sm">${data.packagingTypes.map(pt => `<option value="${pt.id_tipe}" ${pt.id_tipe === pv.id_tipe ? 'selected' : ''}>${pt.id_tipe}</option>`).join('')}</select></div>
         <div><label class="block text-sm font-medium mb-1">Nama Varian</label><input id="pvName" class="w-full box-border border rounded px-3 py-2 text-sm" value="${pv.name}" /></div>
         <div>
-          <label class="block text-sm font-medium mb-1">Gambar Varian</label>
-          <div class="flex gap-1">
-            <input id="pvImg" class="flex-1 box-border border rounded-l px-3 py-2 text-sm" value="${pv.img || ''}" placeholder="URL Gambar" />
-            <button onclick="openCloudGallery('pvImg')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 px-2.5 rounded border border-amber-300 text-xs font-semibold flex items-center gap-0.5">
+          <label class="block text-sm font-medium mb-1">Gambar Varian (Multi, satu URL per baris)</label>
+          <div class="flex gap-2 items-start">
+            <textarea id="pvImages" class="flex-1 box-border border rounded px-3 py-2 text-sm font-mono text-xs" rows="3" placeholder="Baris pertama jadi gambar utama...">${(pv.images || [pv.img]).join('\n')}</textarea>
+            <button onclick="openCloudGallery('pvImages')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 px-2.5 rounded border border-amber-300 text-xs font-semibold flex items-center gap-0.5">
                <span class="material-symbols-outlined text-sm">imagesmode</span> Galeri Cloud
             </button>
-            <label class="cursor-pointer bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded border border-gray-300 text-xs font-medium flex items-center gap-1">
-              <span class="material-symbols-outlined text-sm">upload</span> Upload Local
-              <input type="file" id="uploadVarImg" onchange="handleDirectUpload('uploadVarImg', 'pvImg')" class="hidden" />
-            </label>
           </div>
         </div>
         <div><label class="block text-sm font-medium mb-1">Deskripsi</label><textarea id="pvDesc" class="w-full box-border border rounded px-3 py-2 text-sm" rows="2">${pv.desc || ''}</textarea></div>
@@ -922,8 +985,10 @@
     const img = document.getElementById('pvImg').value.trim();
     const desc = document.getElementById('pvDesc').value.trim();
     const features = document.getElementById('pvFeatures').value.split('\n').filter(f => f.trim() !== '');
+    const images = document.getElementById('pvImages').value.split('\n').filter(f => f.trim() !== '');
+    
     if (!id_varian || !name) { showToast('ID dan Nama wajib diisi', 'error'); return; }
-    const obj = { id_varian, id_tipe, name, img, desc, features };
+    const obj = { id_varian, id_tipe, name, img, desc, features, images };
     if (idx !== undefined) data.packagingVariants[idx] = obj;
     else data.packagingVariants.push(obj);
     closeModal(); renderPackagingVariants(); showToast('Varian tersimpan');
@@ -938,8 +1003,8 @@
     const containerMobile = document.getElementById('tab-products-mobile');
     const filtered = data.products.filter(p => p.name.toLowerCase().includes(searchQuery) || p.cat.toLowerCase().includes(searchQuery) || p.id.toString().includes(searchQuery));
     const html = buildProductsHtml(filtered);
-    if(containerDesktop) containerDesktop.innerHTML = html;
-    if(containerMobile) containerMobile.innerHTML = html;
+    containerDesktop.innerHTML = html;
+    containerMobile.innerHTML = html;
   }
   function buildProductsHtml(filtered) {
     let html = `
@@ -996,11 +1061,13 @@
             <textarea id="pImages" class="flex-1 box-border border rounded px-3 py-2 text-sm font-mono text-xs" rows="4" placeholder="Baris pertama otomatis jadi foto utama...">${product && product.images ? product.images.join('\n') : ''}</textarea>
             
             <div class="flex flex-col gap-1.5 shrink-0">
+               <!-- Tombol Buka Media Library Cloud -->
                <button onclick="openCloudGallery('pImages')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 p-2 rounded flex flex-col items-center justify-center border border-amber-300 text-xs font-semibold w-20">
                  <span class="material-symbols-outlined text-xl">imagesmode</span>
                  <span class="mt-0.5 text-[9px]">Gallery Cloud</span>
                </button>
                
+               <!-- Tombol Upload File Baru dari Lokal -->
                <label class="cursor-pointer bg-gray-100 hover:bg-gray-200 p-2 rounded flex flex-col items-center justify-center border border-gray-300 text-xs font-medium w-20">
                  <span class="material-symbols-outlined text-xl">cloud_upload</span>
                  <span class="mt-0.5 text-[9px]">+ Upload Baru</span>
@@ -1035,6 +1102,7 @@
     if (images.length === 0) { showToast('Minimal isi 1 gambar pada galeri!', 'error'); return; }
     
     const mainImg = images[0]; 
+    
     const obj = { id: idx !== undefined ? data.products[idx].id : generateId(), name, price, cat, img: mainImg, images, desc, bestseller, isNew, isPromo };
     if (idx !== undefined) data.products[idx] = obj;
     else data.products.push(obj);
@@ -1132,7 +1200,7 @@
           </div>
         </div>
         <div><label class="block text-sm font-medium mb-1">WhatsApp</label><input id="editProfileWa" class="w-full box-border border rounded px-3 py-2 text-sm" value="${p.whatsapp || ''}" /></div>
-        <div><label class="block text-sm font-medium mb-1">Instagram</label><input id="editProfileWi" class="w-full box-border border rounded px-3 py-2 text-sm" value="${p.instagram || ''}" id="editProfileIg" /></div>
+        <div><label class="block text-sm font-medium mb-1">Instagram</label><input id="editProfileIg" class="w-full box-border border rounded px-3 py-2 text-sm" value="${p.instagram || ''}" /></div>
         <div><label class="block text-sm font-medium mb-1">TikTok</label><input id="editProfileTt" class="w-full box-border border rounded px-3 py-2 text-sm" value="${p.tiktok || ''}" /></div>
         <div><label class="block text-sm font-medium mb-1">Facebook</label><input id="editProfileFb" class="w-full box-border border rounded px-3 py-2 text-sm" value="${p.facebook || ''}" /></div>
         <div><label class="block text-sm font-medium mb-1">Alamat</label><input id="editProfileAddress" class="w-full box-border border rounded px-3 py-2 text-sm" value="${p.address || ''}" /></div>
@@ -1148,7 +1216,7 @@
       description: document.getElementById('editProfileDesc').value.trim() || '',
       logo: document.getElementById('editProfileLogo').value.trim() || '',
       whatsapp: document.getElementById('editProfileWa').value.trim() || '',
-      instagram: document.getElementById('editProfileIg') ? document.getElementById('editProfileIg').value.trim() : '',
+      instagram: document.getElementById('editProfileIg').value.trim() || '',
       tiktok: document.getElementById('editProfileTt').value.trim() || '',
       facebook: document.getElementById('editProfileFb').value.trim() || '',
       address: document.getElementById('editProfileAddress').value.trim() || '',
@@ -1185,6 +1253,7 @@
     loadDataFromGithub();
   }
 
+  // Tutup Modal lewat background overlay klik
   document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
   document.getElementById('galleryModal').addEventListener('click', function(e) { if (e.target === this) closeGalleryModal(); });
   document.addEventListener('keydown', (e) => { 
