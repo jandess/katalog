@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/product/:slug",
-      "destination": "/index.html"
+      "destination": "/api/product/:slug"
     },
     {
       "source": "/cart",
@@ -27,6 +27,10 @@
     },
     {
       "source": "/box-detail",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/",
       "destination": "/index.html"
     }
   ]
