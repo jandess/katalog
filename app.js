@@ -23,6 +23,9 @@ let imageViewerImages = [];
 let touchStartX = 0;
 let touchEndX = 0;
 let isZoomed = false;
+let pinchStartDist = 0;
+let currentZoom = 1;
+let isViewerFromBox = false;
 
 // Load data from JSON
 async function loadData() {
@@ -52,7 +55,8 @@ function buildBoxVariants() {
         img: v.img,
         desc: v.desc,
         features: v.features || [],
-        id_varian: v.id_varian
+        id_varian: v.id_varian,
+        images: v.images || [v.img]
       }));
     boxVariants[type.id_tipe] = variants;
   });
@@ -441,15 +445,9 @@ function renderDetailByProduct(p, initialQty = 1) {
                ontouchmove="handleTouchMove(event)"
                ontouchend="handleTouchEnd(event)">
           ${images.length > 1 ? `
-          <button onclick="changeImage(-1)" class="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-2 shadow-md hover:bg-white transition-colors z-10">
-            <span class="material-symbols-outlined text-sm">chevron_left</span>
-          </button>
-          <button onclick="changeImage(1)" class="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-2 shadow-md hover:bg-white transition-colors z-10">
-            <span class="material-symbols-outlined text-sm">chevron_right</span>
-          </button>
           <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full">
             ${images.map((_, i) => 
-              `<button class="w-2.5 h-2.5 rounded-full ${i === 0 ? 'bg-secondary' : 'bg-white/50'} transition-colors" onclick="changeImage(${i})"></button>`
+              `<button class="w-2.5 h-2.5 rounded-full ${i === 0 ? 'bg-[#eab308]' : 'bg-white/60'} transition-colors hover:bg-white/90" onclick="changeImage(${i})"></button>`
             ).join('')}
           </div>
           ` : ''}
@@ -506,6 +504,42 @@ function renderDetailByProduct(p, initialQty = 1) {
       </button>
     </div>
   `;
+  
+  // Set meta tags for social sharing
+  updateMetaTags(p);
+}
+
+// --- SOCIAL SHARING META TAGS ---
+function updateMetaTags(product) {
+  const title = `DJANDES - ${product.name}`;
+  const description = product.desc || 'Kudapan premium dari Djandes Sweet & Savoury';
+  const image = product.images && product.images.length > 0 ? product.images[0] : product.img;
+  
+  // Update OG Meta
+  document.querySelector('meta[property="og:title"]').content = title;
+  document.querySelector('meta[property="og:description"]').content = description;
+  document.querySelector('meta[property="og:image"]').content = image;
+  document.querySelector('meta[property="og:url"]').content = window.location.href;
+  
+  // Update Twitter Meta
+  document.querySelector('meta[name="twitter:title"]').content = title;
+  document.querySelector('meta[name="twitter:description"]').content = description;
+  document.querySelector('meta[name="twitter:image"]').content = image;
+  
+  // Update page title
+  document.title = title;
+}
+
+// Reset meta tags when leaving detail
+function resetMetaTags() {
+  document.querySelector('meta[property="og:title"]').content = 'DJANDES - Sweet & Savoury';
+  document.querySelector('meta[property="og:description"]').content = 'Berbagai macam kue tradisional dan modern dengan cita rasa autentik dan kualitas terbaik.';
+  document.querySelector('meta[property="og:image"]').content = 'https://djandes.vercel.app/img/djandes.png';
+  document.querySelector('meta[property="og:url"]').content = 'https://djandes.vercel.app';
+  document.querySelector('meta[name="twitter:title"]').content = 'DJANDES - Sweet & Savoury';
+  document.querySelector('meta[name="twitter:description"]').content = 'Berbagai macam kue tradisional dan modern dengan cita rasa autentik dan kualitas terbaik.';
+  document.querySelector('meta[name="twitter:image"]').content = 'https://djandes.vercel.app/img/djandes.png';
+  document.title = 'DJANDES - Sweet & Savoury - Katalog dan harga';
 }
 
 // --- IMAGE NAVIGATION ---
@@ -551,81 +585,158 @@ function changeImage(direction) {
   }
   const dots = document.querySelectorAll('#image-slider .w-2\\.5.h-2\\.5');
   dots.forEach((dot, i) => {
-    dot.className = `w-2.5 h-2.5 rounded-full ${i === newIndex ? 'bg-secondary' : 'bg-white/50'} transition-colors`;
+    dot.className = `w-2.5 h-2.5 rounded-full ${i === newIndex ? 'bg-[#eab308]' : 'bg-white/60'} transition-colors hover:bg-white/90`;
   });
 }
 
-// --- IMAGE VIEWER ---
+// --- IMAGE VIEWER (UNIFIED) - TANPA BUTTON PREV/NEXT ---
 function openImageViewer(index) {
   const images = window._productImages || [];
   if (!images.length) return;
   imageViewerImages = images;
   currentImageIndex = index;
+  isViewerFromBox = false;
+  openViewer(index);
+}
+
+function openBoxImageViewer(index) {
+  const images = window._boxProductImages || [];
+  if (!images.length) return;
+  imageViewerImages = images;
+  currentImageIndex = index;
+  isViewerFromBox = true;
+  openViewer(index);
+}
+
+function openViewer(index) {
   const viewer = document.getElementById('image-viewer');
   const img = document.getElementById('viewer-image');
-  const counter = document.getElementById('viewer-counter');
-  img.src = images[index];
-  counter.textContent = `${index + 1} / ${images.length}`;
+  img.src = imageViewerImages[index];
   viewer.classList.add('active');
   viewer.style.display = 'flex';
-  document.body.style.overflow = 'auto';
+  document.body.style.overflow = 'hidden';
+  document.body.classList.add('no-scroll');
   img.style.transform = 'scale(1)';
   img.classList.remove('zoomed');
   isZoomed = false;
+  currentZoom = 1;
   touchStartX = 0;
   touchEndX = 0;
+  
+  // Render indicator dots
+  renderViewerDots(index);
 }
+
+function renderViewerDots(activeIndex) {
+  const container = document.getElementById('viewer-indicator');
+  container.innerHTML = '';
+  imageViewerImages.forEach((_, i) => {
+    const dot = document.createElement('button');
+    dot.className = `dot ${i === activeIndex ? 'active' : ''}`;
+    dot.onclick = () => changeViewerImage(i);
+    container.appendChild(dot);
+  });
+}
+
 function closeImageViewer() {
   const viewer = document.getElementById('image-viewer');
   viewer.classList.remove('active');
   viewer.style.display = 'none';
   document.body.style.overflow = 'auto';
   document.body.classList.remove('no-scroll');
-}
-function toggleZoom() {
-  const img = document.getElementById('viewer-image');
-  if (isZoomed) {
-    img.classList.remove('zoomed');
-    img.style.transform = 'scale(1)';
-    isZoomed = false;
-  } else {
-    img.classList.add('zoomed');
-    img.style.transform = 'scale(2)';
-    isZoomed = true;
+  if (!isViewerFromBox) {
+    resetMetaTags();
   }
 }
+
+function handlePinchStart(e) {
+  if (e.touches.length === 2) {
+    const touch1 = e.touches[0];
+    const touch2 = e.touches[1];
+    pinchStartDist = Math.hypot(
+      touch2.clientX - touch1.clientX,
+      touch2.clientY - touch1.clientY
+    );
+  }
+}
+
+function handlePinchMove(e) {
+  if (e.touches.length === 2) {
+    e.preventDefault();
+    const touch1 = e.touches[0];
+    const touch2 = e.touches[1];
+    const currentDist = Math.hypot(
+      touch2.clientX - touch1.clientX,
+      touch2.clientY - touch1.clientY
+    );
+    const scale = currentDist / pinchStartDist;
+    const img = document.getElementById('viewer-image');
+    currentZoom = Math.min(Math.max(currentZoom * scale, 1), 4);
+    img.style.transform = `scale(${currentZoom})`;
+    if (currentZoom > 1) {
+      img.classList.add('zoomed');
+    } else {
+      img.classList.remove('zoomed');
+    }
+    pinchStartDist = currentDist;
+  }
+}
+
 function changeViewerImage(direction) {
   const images = imageViewerImages;
   if (!images.length) return;
-  let newIndex = currentImageIndex + direction;
-  if (newIndex < 0) newIndex = images.length - 1;
-  if (newIndex >= images.length) newIndex = 0;
+  let newIndex;
+  if (typeof direction === 'number') {
+    newIndex = currentImageIndex + direction;
+    if (newIndex < 0) newIndex = images.length - 1;
+    if (newIndex >= images.length) newIndex = 0;
+  } else {
+    newIndex = direction;
+  }
   currentImageIndex = newIndex;
   document.getElementById('viewer-image').src = images[newIndex];
-  document.getElementById('viewer-counter').textContent = `${newIndex + 1} / ${images.length}`;
   const img = document.getElementById('viewer-image');
   img.classList.remove('zoomed');
   img.style.transform = 'scale(1)';
   isZoomed = false;
+  currentZoom = 1;
+  
+  // Update indicator dots
+  renderViewerDots(newIndex);
 }
+
+// Unified touch handlers for viewer
 document.addEventListener('touchstart', (e) => {
   const viewer = document.getElementById('image-viewer');
   if (!viewer.classList.contains('active')) return;
-  touchStartX = e.changedTouches[0].screenX;
+  if (e.touches.length === 2) {
+    handlePinchStart(e);
+  } else {
+    touchStartX = e.changedTouches[0].screenX;
+  }
 });
+
 document.addEventListener('touchmove', (e) => {
   const viewer = document.getElementById('image-viewer');
   if (!viewer.classList.contains('active')) return;
-  if (Math.abs(e.changedTouches[0].screenX - touchStartX) > 10) {
-    e.preventDefault();
+  if (e.touches.length === 2) {
+    handlePinchMove(e);
+  } else {
+    if (Math.abs(e.changedTouches[0].screenX - touchStartX) > 10) {
+      e.preventDefault();
+    }
   }
 });
+
 document.addEventListener('touchend', (e) => {
   const viewer = document.getElementById('image-viewer');
   if (!viewer.classList.contains('active')) return;
-  touchEndX = e.changedTouches[0].screenX;
-  handleSwipe();
+  if (e.changedTouches.length === 1) {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+  }
 });
+
 function handleSwipe() {
   const swipeDistance = touchStartX - touchEndX;
   if (Math.abs(swipeDistance) > 50) {
@@ -636,6 +747,7 @@ function handleSwipe() {
     }
   }
 }
+
 document.addEventListener('keydown', (e) => {
   const viewer = document.getElementById('image-viewer');
   if (!viewer.classList.contains('active')) return;
@@ -643,11 +755,13 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight') changeViewerImage(1);
   if (e.key === 'Escape') closeImageViewer();
 });
+
 document.getElementById('image-viewer').addEventListener('click', function(e) {
   if (e.target === this) {
     closeImageViewer();
   }
 });
+
 function copyProductLink() {
   const url = window.location.href;
   navigator.clipboard.writeText(url).then(() => {
@@ -656,6 +770,7 @@ function copyProductLink() {
     console.error("Gagal menyalin link:", err);
   });
 }
+
 async function shareProduct(productName) {
   if (navigator.share) {
     try {
@@ -733,7 +848,7 @@ function renderCart() {
     const row = document.createElement('div');
     row.className = "flex gap-4 p-4 md:p-6 bg-white rounded-2xl product-card-shadow transition-all border border-transparent hover:border-outline-variant/30";
     row.innerHTML = `
-      <div class="w-20 h-20 md:w-28 md:h-28 rounded-xl overflow-hidden flex-shrink-0">
+      <div class="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden flex-shrink-0">
         <img src="${item.img}" class="w-full h-full object-cover">
       </div>
       <div class="flex flex-col justify-between flex-grow">
@@ -923,10 +1038,32 @@ function showBoxDetail() {
       <span class="text-sm text-on-surface">${f}</span>
     </li>
   `).join('');
+  
+  // Use variant images array or single image
+  const variantImages = variant.images || [variant.img];
+  window._boxProductImages = variantImages;
+  window._boxCurrentSlide = 0;
+  
   container.innerHTML = `
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-start">
-      <div class="relative h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl">
-        <img src="${variant.img}" class="w-full h-full object-cover" alt="${variant.name}">
+      <div class="relative rounded-3xl overflow-hidden shadow-2xl md:sticky md:top-24">
+        <div class="relative aspect-[4/5] md:aspect-square bg-white" id="box-image-slider">
+          <img src="${variantImages[0]}" 
+               class="w-full h-full object-cover cursor-pointer hover:opacity-95 transition-opacity touch-pan-y" 
+               id="box-main-image" 
+               alt="${variant.name}" 
+               onclick="openBoxImageViewer(0)"
+               ontouchstart="handleBoxTouchStart(event)"
+               ontouchmove="handleBoxTouchMove(event)"
+               ontouchend="handleBoxTouchEnd(event)">
+          ${variantImages.length > 1 ? `
+          <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full">
+            ${variantImages.map((_, i) => 
+              `<button class="w-2.5 h-2.5 rounded-full ${i === 0 ? 'bg-[#eab308]' : 'bg-white/60'} transition-colors hover:bg-white/90" onclick="changeBoxImage(${i})"></button>`
+            ).join('')}
+          </div>
+          ` : ''}
+        </div>
         <div class="absolute top-4 left-4 bg-primary/90 backdrop-blur-md text-white px-3 py-1 rounded-full font-label-xs text-label-xs uppercase tracking-widest shadow-sm">
           ${selectedBox} Package
         </div>
@@ -959,6 +1096,54 @@ function showBoxDetail() {
     </div>
   `;
   navigateTo('box-detail', false);
+}
+
+// --- BOX IMAGE NAVIGATION ---
+let boxTouchStartX = 0;
+let boxTouchEndX = 0;
+let boxIsSwiping = false;
+
+function handleBoxTouchStart(e) {
+  const touch = e.touches[0];
+  boxTouchStartX = touch.clientX;
+  boxIsSwiping = true;
+}
+function handleBoxTouchMove(e) {
+  if (!boxIsSwiping) return;
+  boxTouchEndX = e.touches[0].clientX;
+}
+function handleBoxTouchEnd(e) {
+  if (!boxIsSwiping) return;
+  boxIsSwiping = false;
+  const diff = boxTouchStartX - boxTouchEndX;
+  if (Math.abs(diff) > 50) {
+    if (diff > 0) {
+      changeBoxImage(1);
+    } else {
+      changeBoxImage(-1);
+    }
+  }
+}
+function changeBoxImage(direction) {
+  const images = window._boxProductImages || [];
+  if (images.length <= 1) return;
+  let newIndex;
+  if (typeof direction === 'number') {
+    newIndex = window._boxCurrentSlide + direction;
+    if (newIndex < 0) newIndex = images.length - 1;
+    if (newIndex >= images.length) newIndex = 0;
+  } else {
+    newIndex = direction;
+  }
+  window._boxCurrentSlide = newIndex;
+  const img = document.getElementById('box-main-image');
+  if (img) {
+    img.src = images[newIndex];
+  }
+  const dots = document.querySelectorAll('#box-image-slider .w-2\\.5.h-2\\.5');
+  dots.forEach((dot, i) => {
+    dot.className = `w-2.5 h-2.5 rounded-full ${i === newIndex ? 'bg-[#eab308]' : 'bg-white/60'} transition-colors hover:bg-white/90`;
+  });
 }
 
 // --- CHECKOUT & INVOICE (SAVED TO LOCALSTORAGE) ---
