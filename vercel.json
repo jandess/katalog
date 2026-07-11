@@ -2,36 +2,31 @@
   "cleanUrls": true,
   "rewrites": [
     {
+      "source": "/api/product/:slug",
+      "destination": "/api/product/[slug].js"
+    },
+    {
       "source": "/product/:slug",
-      "destination": "/api/product/:slug"
+      "destination": "/api/product/[slug].js"
     },
     {
-      "source": "/cart",
+      "source": "/(cart|favs|profile|checkout|invoice|box-detail)",
       "destination": "/index.html"
     },
     {
-      "source": "/favs",
+      "source": "/(.*)",
       "destination": "/index.html"
-    },
+    }
+  ],
+  "headers": [
     {
-      "source": "/profile",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/checkout",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/invoice",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/box-detail",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/",
-      "destination": "/index.html"
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
     }
   ]
 }
