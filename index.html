@@ -3,13 +3,39 @@
 <head>
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
-  <title>Djandes - Premium Culinary</title>
-  <link href="https://fonts.googleapis.com" rel="preconnect"/>
-  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Playfair+Display:wght@600;700&amp;display=swap" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+  <title>DJANDES - Sweet & Savoury - Katalog dan harga</title>
+  
+  <!-- PRELOAD font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet"/>
+  
+  <!-- Font Awesome untuk icon sosial media -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  
+  <meta name="description" content="home made kue basah lokal yang menyajikan berbagai macam kue tradisional dan modern dengan cita rasa autentik dan kualitas terbaik.">
+  <link rel="icon" type="image/png" href="/img/logo.png">
+  <link rel="shortcut icon" href="/img/logo.png">
+  <link rel="apple-touch-icon" href="/img/logo.png">
+  
+  <!-- Open Graph / Facebook / WhatsApp -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="DJANDES - Sweet & Savoury">
+  <meta property="og:title" content="DJANDES - Sweet & Savoury">
+  <meta property="og:description" content="Berbagai macam kue tradisional dan modern dengan cita rasa autentik dan kualitas terbaik.">
+  <meta property="og:image" content="https://djandes.vercel.app/img/djandes.png" />
+  <meta property="og:url" content="https://djandes.vercel.app">
+
+  <!-- Twitter / X Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="DJANDES - Sweet & Savoury">
+  <meta name="twitter:description" content="home made kue basah lokal yang menyajikan berbagai macam kue tradisional dan modern dengan cita rasa autentik dan kualitas terbaik.">
+  <meta name="twitter:image" content="https://djandes.vercel.app/img/djandes.png">
+  
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  
   <script id="tailwind-config">
     tailwind.config = {
       darkMode: "class",
@@ -106,7 +132,52 @@
       },
     }
   </script>
+  
   <link rel="stylesheet" href="style.css"/>
+  
+  <!-- Script untuk deteksi font loading (mencegah flash of text) -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      document.documentElement.classList.add('fonts-loading');
+      if (document.fonts) {
+        document.fonts.ready.then(function() {
+          document.documentElement.classList.remove('fonts-loading');
+          document.documentElement.classList.add('fonts-loaded');
+        });
+      } else {
+        setTimeout(function() {
+          document.documentElement.classList.remove('fonts-loading');
+          document.documentElement.classList.add('fonts-loaded');
+        }, 2000);
+      }
+    });
+  </script>
+  
+  <style>
+    /* Sembunyikan icon sampai font termuat */
+    .fonts-loading .material-symbols-outlined {
+      visibility: hidden;
+    }
+    .fonts-loaded .material-symbols-outlined {
+      visibility: visible;
+    }
+    
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      line-height: 1;
+      text-transform: none;
+      letter-spacing: normal;
+      word-wrap: normal;
+      white-space: nowrap;
+      direction: ltr;
+      font-family: 'Material Symbols Outlined', sans-serif;
+    }
+    
+    .material-symbols-outlined.fill {
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+  </style>
 </head>
 <body class="font-body-md text-on-surface bg-surface selection:bg-secondary-container selection:text-on-secondary-container">
 <header class="fixed top-0 left-0 w-full px-margin-mobile md:px-margin-desktop py-4 z-[60] bg-surface/80 backdrop-blur-md shadow-sm" id="main-header">
@@ -117,7 +188,7 @@
       <!-- Logo Utama -->
       <img id="header-logo" src="" alt="Djandes" class="h-9 md:h-10 w-auto hidden object-contain">
       
-      <!-- Teks Brand Baru (Fix untuk Mobile & Desktop) -->
+      <!-- Teks Brand -->
       <div id="header-brand-text" class="flex flex-col justify-center min-w-0">
         <span class="font-serif text-base md:text-xl font-bold text-secondary leading-none">Djandes</span>
         <span class="text-on-surface-variant text-[9px] md:text-[11px] italic tracking-wider block truncate">Sweet & Savoury</span>
@@ -145,7 +216,6 @@
 <main class="pt-20 md:pt-24 pb-28 md:pb-20 max-w-container-max mx-auto">
   <!-- Home Section -->
   <section class="page-section px-margin-mobile md:px-margin-desktop" id="page-home">
-    <!-- Teks brand lama di sini sudah dihapus agar langsung fokus ke pencarian -->
     <div class="mb-8 md:mb-12 relative max-w-2xl mx-auto">
       <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
         <span class="material-symbols-outlined text-outline">search</span>
@@ -196,7 +266,7 @@
                 <h4 class="font-label-md text-primary uppercase tracking-wider" id="variant-selection-title">Pilih Varian Kemasan</h4>
                 <p class="text-[11px] text-on-surface-variant">Klik gambar untuk detail kemasan.</p>
               </div>
-              <div class="relative w-full aspect-square rounded-2xl overflow-hidden bg-white shadow-inner border border-outline-variant/20 mb-4 cursor-pointer group active:scale-[0.98] transition-transform" id="variant-preview-container" onclick="showBoxDetail()">
+<div class="relative w-full max-w-[260px] md:max-w-[300px] mx-auto aspect-square rounded-2xl overflow-hidden bg-white shadow-inner border border-outline-variant/20 mb-4 cursor-pointer group active:scale-[0.98] transition-transform" id="variant-preview-container" onclick="showBoxDetail()">
                 <img class="w-full h-full object-cover transition-all duration-200" id="variant-preview-img" src=""/>
                 <div class="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md px-3 py-2.5 rounded-xl border border-outline-variant/30 flex justify-between items-center shadow-lg">
                   <div class="flex flex-col">
@@ -299,8 +369,8 @@
         <div class="text-center py-8"><p class="text-on-surface-variant">Memuat Invoice...</p></div>
       </div>
       <div class="mt-8 space-y-4 pb-12" id="invoice-actions">
-        <button class="w-full bg-secondary text-white flex items-center justify-center gap-3 py-4 rounded-full shadow-xl font-title-md active:scale-95 transition-transform" id="main-print-btn" onclick="handleUnifiedPrint()">
-          <span class="material-symbols-outlined">print</span> Cetak Invoice (BT)
+        <button class="w-full bg-whatsapp-green text-white flex items-center justify-center gap-3 py-4 rounded-full shadow-xl font-title-md active:scale-95 transition-transform hidden" id="wa-confirm-btn" onclick="finalWhatsAppRedirect()">
+          <span class="material-symbols-outlined">send</span> Konfirmasi via WhatsApp
         </button>
         <div class="grid grid-cols-2 gap-3 mb-4">
           <button class="flex items-center justify-center gap-2 py-3 px-4 bg-surface-container-high text-primary rounded-xl font-label-md border border-outline-variant/30 active:scale-95 transition-transform" onclick="saveAsImage()">
@@ -310,8 +380,8 @@
             <span class="material-symbols-outlined text-xl">share</span> Share
           </button>
         </div>
-        <button class="w-full bg-whatsapp-green text-white flex items-center justify-center gap-3 py-4 rounded-full shadow-xl font-title-md active:scale-95 transition-transform hidden" id="wa-confirm-btn" onclick="finalWhatsAppRedirect()">
-          <span class="material-symbols-outlined">send</span> Konfirmasi via WhatsApp
+        <button class="w-full bg-secondary text-white flex items-center justify-center gap-3 py-4 rounded-full shadow-xl font-title-md active:scale-95 transition-transform" id="main-print-btn" onclick="handleUnifiedPrint()">
+          <span class="material-symbols-outlined">print</span> Cetak Invoice (BT)
         </button>
         <button class="w-full text-on-surface-variant font-label-md uppercase tracking-widest py-2" id="edit-data-btn" onclick="navigateTo('checkout')">Edit Data Diri</button>
       </div>
@@ -356,15 +426,15 @@
               <span id="profile-whatsapp" class="break-words flex-1"></span>
             </div>
             <div class="flex items-center gap-3 min-w-0">
-              <span class="text-secondary font-bold text-sm flex-shrink-0 w-6 h-6 flex items-center justify-center border-2 border-secondary rounded-full text-[10px]">IG</span>
+              <i class="fa-brands fa-instagram text-secondary text-lg flex-shrink-0 w-6 h-6 flex items-center justify-center"></i>
               <a href="#" target="_blank" id="profile-instagram" class="break-words flex-1 hover:text-secondary transition-colors"></a>
             </div>
             <div class="flex items-center gap-3 min-w-0">
-              <span class="text-secondary font-bold text-sm flex-shrink-0 w-6 h-6 flex items-center justify-center border-2 border-secondary rounded-full text-[10px]">TT</span>
+              <i class="fa-brands fa-tiktok text-secondary text-lg flex-shrink-0 w-6 h-6 flex items-center justify-center"></i>
               <a href="#" target="_blank" id="profile-tiktok" class="break-words flex-1 hover:text-secondary transition-colors"></a>
             </div>
             <div class="flex items-center gap-3 min-w-0">
-              <span class="text-secondary font-bold text-sm flex-shrink-0 w-6 h-6 flex items-center justify-center border-2 border-secondary rounded-full text-[10px]">FB</span>
+              <i class="fa-brands fa-facebook text-secondary text-lg flex-shrink-0 w-6 h-6 flex items-center justify-center"></i>
               <a href="#" target="_blank" id="profile-facebook" class="break-words flex-1 hover:text-secondary transition-colors"></a>
             </div>
             <a href="#" target="_blank" id="profile-wa-btn" class="mt-4 inline-flex items-center gap-2 bg-whatsapp-green text-white px-6 py-3 rounded-full font-bold shadow-lg hover:scale-105 transition-transform">
@@ -388,7 +458,7 @@
   </section>
 </main>
 
-<!-- IMAGE VIEWER - FULL SCREEN POPUP -->
+<!-- IMAGE VIEWER - FULL SCREEN POPUP (TANPA BUTTON PREV/NEXT) -->
 <div id="image-viewer">
   <button class="viewer-close-btn" onclick="closeImageViewer()">
     <span class="material-symbols-outlined text-3xl">close</span>
@@ -397,14 +467,10 @@
   <div class="viewer-content" onclick="event.stopPropagation()">
     <img id="viewer-image" src="" alt="Product Image" onclick="toggleZoom()">
     
-    <button class="viewer-nav-btn left" onclick="changeViewerImage(-1)">
-      <span class="material-symbols-outlined text-3xl">chevron_left</span>
-    </button>
-    <button class="viewer-nav-btn right" onclick="changeViewerImage(1)">
-      <span class="material-symbols-outlined text-3xl">chevron_right</span>
-    </button>
-    
-    <div class="viewer-counter" id="viewer-counter">1 / 1</div>
+    <!-- INDICATOR DOTS (bukan angka) -->
+    <div id="viewer-indicator" class="viewer-indicator">
+      <!-- Akan diisi oleh JS -->
+    </div>
   </div>
 </div>
 
