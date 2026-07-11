@@ -1,17 +1,3 @@
 {
-  "cleanUrls": true,
-  "rewrites": [
-    {
-      "source": "/product/:slug",
-      "destination": "/api/product/slug.js"
-    },
-    {
-      "source": "/(cart|favs|profile|checkout|invoice|box-detail)",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ]
+  "cleanUrls": true
 }
