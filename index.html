@@ -33,34 +33,6 @@
   <meta name="twitter:description" id="twitter-description" content="Berbagai macam kue tradisional dan modern dengan cita rasa autentik dan kualitas terbaik.">
   <meta name="twitter:image" id="twitter-image" content="https://djandes15.vercel.app/img/djandes.png">
   
-  <!-- Script untuk deteksi crawler social media -->
-  <script>
-    // Deteksi crawler social media (WhatsApp, Telegram, Facebook, dll)
-    const isCrawler = /bot|crawler|facebook|whatsapp|telegram|twitter|slack|discord|linkedin|googlebot|pinterest|tumblr|reddit|viber|line|wechat|skype/i.test(navigator.userAgent);
-    
-    // Jika crawler dan URL menggunakan hash, redirect ke path
-    if (isCrawler && window.location.hash.startsWith('#/product/')) {
-      const slug = window.location.hash.replace('#/product/', '');
-      window.location.replace(`/product/${slug}`);
-    }
-    
-    // Deteksi font loading
-    document.addEventListener('DOMContentLoaded', function() {
-      document.documentElement.classList.add('fonts-loading');
-      if (document.fonts) {
-        document.fonts.ready.then(function() {
-          document.documentElement.classList.remove('fonts-loading');
-          document.documentElement.classList.add('fonts-loaded');
-        });
-      } else {
-        setTimeout(function() {
-          document.documentElement.classList.remove('fonts-loading');
-          document.documentElement.classList.add('fonts-loaded');
-        }, 2000);
-      }
-    });
-  </script>
-  
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   
