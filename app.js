@@ -82,7 +82,7 @@ function initApp() {
   renderFavorites();
   // Restore checkout data if exists
   if (checkoutData && checkoutData.invoiceId) {
-    if (window.location.hash === '#invoice') {
+    if (window.location.pathname === '/invoice') {
       renderInvoice();
     }
   }
@@ -130,20 +130,33 @@ function navigateTo(pageId, pushHistory = true) {
   if (pushHistory && pageId !== 'home') {
     navigationStack.push(pageId);
   }
-  window.location.hash = pageId;
+  // Gunakan path bukan hash
+  if (pageId === 'home') {
+    window.history.pushState({}, '', '/');
+  } else if (pageId.startsWith('product/')) {
+    window.history.pushState({}, '', `/${pageId}`);
+  } else {
+    window.history.pushState({}, '', `/${pageId}`);
+  }
+  handleRouting();
 }
+
 function goBack() {
   if (navigationStack.length > 0) {
     const previous = navigationStack.pop();
-    window.location.hash = previous;
+    window.history.pushState({}, '', `/${previous}`);
+    handleRouting();
   } else {
-    window.location.hash = 'home';
+    window.history.pushState({}, '', '/');
+    handleRouting();
   }
 }
+
 function handleRouting() {
-  const hash = window.location.hash || '#home';
-  if (hash.startsWith('#/product/')) {
-    const slug = hash.replace('#/product/', '');
+  const path = window.location.pathname || '/';
+  
+  if (path.startsWith('/product/')) {
+    const slug = path.replace('/product/', '');
     const product = products.find(p => slugify(p.name) === slug);
     if (product) {
       renderDetailByProduct(product);
@@ -151,15 +164,17 @@ function handleRouting() {
     } else {
       navigateTo('home', false);
     }
-  } else if (hash === '#home' || hash === '#') {
+  } else if (path === '/' || path === '/home') {
     navigationStack = [];
     updateView('home');
   } else {
-    const pageId = hash.replace('#', '');
+    // Handle page lain
+    const pageId = path.replace('/', '');
     updateView(pageId);
   }
 }
-window.addEventListener('hashchange', handleRouting);
+
+window.addEventListener('popstate', handleRouting);
 
 function updateView(pageId) {
   document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
@@ -231,37 +246,64 @@ function renderProfile() {
 
   // Alamat
   const address = document.getElementById('profile-address');
-  if (address) address.textContent = p.address || 'Alamat belum tersedia';
+  if (address) {
+    if (p.address) {
+      address.textContent = p.address;
+      address.parentElement.classList.remove('hidden');
+    } else {
+      address.parentElement.classList.add('hidden');
+    }
+  }
 
   // WhatsApp (teks)
   const wa = document.getElementById('profile-whatsapp');
   if (wa) {
-    const waNum = p.whatsapp || '6281234567890';
-    wa.textContent = waNum.startsWith('62') ? `+${waNum}` : `+62 ${waNum}`;
+    if (p.whatsapp) {
+      const waNum = p.whatsapp;
+      wa.textContent = waNum.startsWith('62') ? `+${waNum}` : `+62 ${waNum}`;
+      wa.parentElement.classList.remove('hidden');
+    } else {
+      wa.parentElement.classList.add('hidden');
+    }
   }
 
   // Instagram
   const ig = document.getElementById('profile-instagram');
   if (ig) {
-    const igUsername = p.instagram || '';
-    ig.textContent = igUsername;
-    ig.href = `https://instagram.com/${igUsername.replace('@', '')}`;
+    if (p.instagram) {
+      const igUsername = p.instagram;
+      ig.textContent = igUsername;
+      ig.href = `https://instagram.com/${igUsername.replace('@', '')}`;
+      ig.parentElement.classList.remove('hidden');
+    } else {
+      ig.parentElement.classList.add('hidden');
+    }
   }
 
   // TikTok
   const tt = document.getElementById('profile-tiktok');
   if (tt) {
-    const ttUsername = p.tiktok || '';
-    tt.textContent = ttUsername.startsWith('@') ? ttUsername : `@${ttUsername}`;
-    tt.href = `https://tiktok.com/@${ttUsername.replace('@', '')}`;
+    if (p.tiktok) {
+      const ttUsername = p.tiktok;
+      tt.textContent = ttUsername.startsWith('@') ? ttUsername : `@${ttUsername}`;
+      tt.href = `https://tiktok.com/@${ttUsername.replace('@', '')}`;
+      tt.parentElement.classList.remove('hidden');
+    } else {
+      tt.parentElement.classList.add('hidden');
+    }
   }
 
   // Facebook
   const fb = document.getElementById('profile-facebook');
   if (fb) {
-    const fbUsername = p.facebook || '';
-    fb.textContent = fbUsername;
-    fb.href = `https://facebook.com/${fbUsername}`;
+    if (p.facebook) {
+      const fbUsername = p.facebook;
+      fb.textContent = fbUsername;
+      fb.href = `https://facebook.com/${fbUsername}`;
+      fb.parentElement.classList.remove('hidden');
+    } else {
+      fb.parentElement.classList.add('hidden');
+    }
   }
 
   // Maps
@@ -271,9 +313,14 @@ function renderProfile() {
   // WhatsApp button (floating dan di profil)
   const waButtons = document.querySelectorAll('#profile-wa-btn, #home-fab');
   waButtons.forEach(btn => {
-    let waNum = p.whatsapp || '6281234567890';
-    if (!waNum.startsWith('62')) waNum = '62' + waNum;
-    btn.href = `https://wa.me/${waNum}`;
+    if (p.whatsapp) {
+      let waNum = p.whatsapp;
+      if (!waNum.startsWith('62')) waNum = '62' + waNum;
+      btn.href = `https://wa.me/${waNum}`;
+      btn.classList.remove('hidden');
+    } else {
+      btn.classList.add('hidden');
+    }
   });
 
   // Logo header
@@ -384,7 +431,7 @@ function toggleFavorite(id, e) {
   }
   saveFavorites();
   filterProducts();
-  if(window.location.hash === '#favs') renderFavorites();
+  if(window.location.pathname === '/favs') renderFavorites();
 }
 function renderFavorites() {
   const grid = document.getElementById('favs-grid');
@@ -421,7 +468,8 @@ function renderFavorites() {
   });
 }
 function showDetail(slug) {
-  window.location.hash = `/product/${slug}`;
+  window.history.pushState({}, '', `/product/${slug}`);
+  handleRouting();
 }
 function renderDetailByProduct(p, initialQty = 1) {
   currentDetailSlug = slugify(p.name);
@@ -514,32 +562,52 @@ function updateMetaTags(product) {
   const title = `DJANDES - ${product.name}`;
   const description = product.desc || 'Kudapan premium dari Djandes Sweet & Savoury';
   const image = product.images && product.images.length > 0 ? product.images[0] : product.img;
+  const url = `https://djandes15.vercel.app/product/${slugify(product.name)}`;
   
-  // Update OG Meta
-  document.querySelector('meta[property="og:title"]').content = title;
-  document.querySelector('meta[property="og:description"]').content = description;
-  document.querySelector('meta[property="og:image"]').content = image;
-  document.querySelector('meta[property="og:url"]').content = window.location.href;
+  // Update OG Meta dengan ID
+  const ogTitle = document.getElementById('og-title');
+  const ogDesc = document.getElementById('og-description');
+  const ogImage = document.getElementById('og-image');
+  const ogUrl = document.getElementById('og-url');
+  const twitterTitle = document.getElementById('twitter-title');
+  const twitterDesc = document.getElementById('twitter-description');
+  const twitterImage = document.getElementById('twitter-image');
   
-  // Update Twitter Meta
-  document.querySelector('meta[name="twitter:title"]').content = title;
-  document.querySelector('meta[name="twitter:description"]').content = description;
-  document.querySelector('meta[name="twitter:image"]').content = image;
+  if (ogTitle) ogTitle.content = title;
+  if (ogDesc) ogDesc.content = description;
+  if (ogImage) ogImage.content = image;
+  if (ogUrl) ogUrl.content = url;
+  if (twitterTitle) twitterTitle.content = title;
+  if (twitterDesc) twitterDesc.content = description;
+  if (twitterImage) twitterImage.content = image;
   
   // Update page title
   document.title = title;
 }
 
-// Reset meta tags when leaving detail
 function resetMetaTags() {
-  document.querySelector('meta[property="og:title"]').content = 'DJANDES - Sweet & Savoury';
-  document.querySelector('meta[property="og:description"]').content = 'Berbagai macam kue tradisional dan modern dengan cita rasa autentik dan kualitas terbaik.';
-  document.querySelector('meta[property="og:image"]').content = 'https://djandes.vercel.app/img/djandes.png';
-  document.querySelector('meta[property="og:url"]').content = 'https://djandes.vercel.app';
-  document.querySelector('meta[name="twitter:title"]').content = 'DJANDES - Sweet & Savoury';
-  document.querySelector('meta[name="twitter:description"]').content = 'Berbagai macam kue tradisional dan modern dengan cita rasa autentik dan kualitas terbaik.';
-  document.querySelector('meta[name="twitter:image"]').content = 'https://djandes.vercel.app/img/djandes.png';
-  document.title = 'DJANDES - Sweet & Savoury - Katalog dan harga';
+  const defaultTitle = 'DJANDES - Sweet & Savoury';
+  const defaultDesc = 'Berbagai macam kue tradisional dan modern dengan cita rasa autentik dan kualitas terbaik.';
+  const defaultImg = 'https://djandes15.vercel.app/img/djandes.png';
+  const defaultUrl = 'https://djandes15.vercel.app';
+  
+  const ogTitle = document.getElementById('og-title');
+  const ogDesc = document.getElementById('og-description');
+  const ogImage = document.getElementById('og-image');
+  const ogUrl = document.getElementById('og-url');
+  const twitterTitle = document.getElementById('twitter-title');
+  const twitterDesc = document.getElementById('twitter-description');
+  const twitterImage = document.getElementById('twitter-image');
+  
+  if (ogTitle) ogTitle.content = defaultTitle;
+  if (ogDesc) ogDesc.content = defaultDesc;
+  if (ogImage) ogImage.content = defaultImg;
+  if (ogUrl) ogUrl.content = defaultUrl;
+  if (twitterTitle) twitterTitle.content = defaultTitle;
+  if (twitterDesc) twitterDesc.content = defaultDesc;
+  if (twitterImage) twitterImage.content = defaultImg;
+  
+  document.title = defaultTitle;
 }
 
 // --- IMAGE NAVIGATION ---
@@ -763,7 +831,9 @@ document.getElementById('image-viewer').addEventListener('click', function(e) {
 });
 
 function copyProductLink() {
-  const url = window.location.href;
+  // Gunakan path tanpa hash
+  const slug = currentDetailSlug;
+  const url = `https://djandes15.vercel.app/product/${slug}`;
   navigator.clipboard.writeText(url).then(() => {
     showToast("Link berhasil disalin!");
   }).catch(err => {
@@ -774,10 +844,12 @@ function copyProductLink() {
 async function shareProduct(productName) {
   if (navigator.share) {
     try {
+      const slug = currentDetailSlug;
+      const url = `https://djandes15.vercel.app/product/${slug}`;
       await navigator.share({
         title: productName,
         text: `Cek kudapan premium Djandes: ${productName}`,
-        url: window.location.href
+        url: url
       });
     } catch (err) {
       console.error("Gagal share:", err);
