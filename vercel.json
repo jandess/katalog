@@ -2,12 +2,8 @@
   "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/api/product/:slug",
-      "destination": "/api/product/[slug].js"
-    },
-    {
       "source": "/product/:slug",
-      "destination": "/api/product/[slug].js"
+      "destination": "/api/product/slug.js"
     },
     {
       "source": "/(cart|favs|profile|checkout|invoice|box-detail)",
@@ -16,17 +12,6 @@
     {
       "source": "/(.*)",
       "destination": "/index.html"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        }
-      ]
     }
   ]
 }
