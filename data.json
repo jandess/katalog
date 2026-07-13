@@ -21,6 +21,10 @@
       "id_tipe": "Artificial bunga",
       "name": "Biru",
       "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783473322555_artifial_Biru.jpg",
+      "images": [
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783473322555_artifial_Biru.jpg",
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783476451170_artifial_marun.jpg"
+      ],
       "desc": "Kotak seserahan mewah berbahan hardbox kokoh berwarna biru muda dengan tutup mika transparan yang elegan. Bagian sudut dipercantik ornamen siku emas, serta dipermanis dengan balutan kain tile dan hiasan bunga artifisial biru di bagian atas. Memberikan kesan rapi, eksklusif, dan siap mempercantik momen spesial Anda.",
       "features": [
         "Material berkualitas, kokoh dan tahan.",
