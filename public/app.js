@@ -26,8 +26,8 @@ let isZoomed = false;
 let pinchStartDist = 0;
 let currentZoom = 1;
 let isViewerFromBox = false;
+let isPinching = false; // 🔥 Tambahan: Flag untuk membedakan pinch vs swipe
 
-// 🔥 KUNCI PERBAIKAN: Flag untuk menunggu data selesai dimuat
 let dataLoaded = false;
 
 // Load data from JSON
@@ -42,7 +42,6 @@ async function loadData() {
     profileData = data.profile || {};
     buildBoxVariants();
     
-    // 🔥 Tandai data sudah dimuat
     dataLoaded = true;
     
     initApp();
@@ -86,11 +85,9 @@ function initApp() {
   renderPackagingTypes();
   renderProfile();
   
-  // 🔥 PENTING: Panggil handleRouting SETELAH data dimuat
   handleRouting();
   
   renderFavorites();
-  // Restore checkout data if exists
   if (checkoutData && checkoutData.invoiceId) {
     if (window.location.hash === '#invoice') {
       renderInvoice();
@@ -151,16 +148,20 @@ function goBack() {
   }
 }
 
-// 🔥 PERBAIKAN: handleRouting hanya berjalan jika data sudah dimuat
 function handleRouting() {
   if (!dataLoaded) {
-    console.log("Data belum dimuat, menunggu...");
-    // Jika data belum dimuat, coba lagi 100ms kemudian
     setTimeout(handleRouting, 100);
     return;
   }
   
   const hash = window.location.hash || '#home';
+  
+  // 🔥 PERBAIKAN: Jika hash adalah #box-detail, muat ulang data kemasan
+  if (hash === '#box-detail') {
+    updateView('box-detail');
+    return;
+  }
+  
   if (hash.startsWith('#/product/')) {
     const slug = hash.replace('#/product/', '');
     const product = products.find(p => slugify(p.name) === slug);
@@ -168,7 +169,6 @@ function handleRouting() {
       renderDetailByProduct(product);
       updateView('detail');
     } else {
-      console.warn(`Produk dengan slug "${slug}" tidak ditemukan`);
       navigateTo('home', false);
     }
   } else {
@@ -229,6 +229,8 @@ function updateView(pageId) {
   } else if (pageId === 'box-detail') {
     headerTitle.innerText = 'Detail Kemasan';
     backBtn.classList.remove('hidden');
+    // 🔥 Muat ulang data kemasan saat refresh
+    showBoxDetail(true);
   } else if (pageId === 'checkout') {
     headerTitle.innerText = 'Checkout Form';
     backBtn.classList.remove('hidden');
@@ -645,6 +647,8 @@ function handleTouchEnd(e) {
     }
   }
 }
+
+// 🔥 PERBAIKAN: Dukung klik langsung pada dot (bukan hanya next/prev)
 function changeImage(direction) {
   const images = window._productImages || [];
   if (images.length <= 1) return;
@@ -654,6 +658,7 @@ function changeImage(direction) {
     if (newIndex < 0) newIndex = images.length - 1;
     if (newIndex >= images.length) newIndex = 0;
   } else {
+    // 🔥 Jika direction adalah angka (indeks), langsung lompat ke indeks tersebut
     newIndex = direction;
   }
   window._currentSlide = newIndex;
@@ -700,6 +705,7 @@ function openViewer(index) {
   currentZoom = 1;
   touchStartX = 0;
   touchEndX = 0;
+  isPinching = false; // 🔥 Reset flag pinch
   
   renderViewerDots(index);
 }
@@ -725,6 +731,7 @@ function closeImageViewer() {
 
 function handlePinchStart(e) {
   if (e.touches.length === 2) {
+    isPinching = true; // 🔥 Tandai sedang melakukan pinch
     const touch1 = e.touches[0];
     const touch2 = e.touches[1];
     pinchStartDist = Math.hypot(
@@ -745,13 +752,20 @@ function handlePinchMove(e) {
     );
     const scale = currentDist / pinchStartDist;
     const img = document.getElementById('viewer-image');
-    currentZoom = Math.min(Math.max(currentZoom * scale, 1), 4);
+    
+    // 🔥 Batasi zoom agar tidak terlalu besar (maks 3x)
+    currentZoom = Math.min(Math.max(currentZoom * scale, 1), 3);
     img.style.transform = `scale(${currentZoom})`;
+    
     if (currentZoom > 1) {
       img.classList.add('zoomed');
+      isZoomed = true;
     } else {
       img.classList.remove('zoomed');
+      isZoomed = false;
     }
+    
+    // 🔥 Reset jarak awal untuk zoom berikutnya
     pinchStartDist = currentDist;
   }
 }
@@ -785,6 +799,7 @@ document.addEventListener('touchstart', (e) => {
     handlePinchStart(e);
   } else {
     touchStartX = e.changedTouches[0].screenX;
+    isPinching = false; // 🔥 Reset flag pinch saat jari lepas
   }
 });
 
@@ -803,10 +818,12 @@ document.addEventListener('touchmove', (e) => {
 document.addEventListener('touchend', (e) => {
   const viewer = document.getElementById('image-viewer');
   if (!viewer.classList.contains('active')) return;
-  if (e.changedTouches.length === 1) {
+  if (e.changedTouches.length === 1 && !isPinching) {
+    // 🔥 Hanya swipe jika bukan pinch
     touchEndX = e.changedTouches[0].screenX;
     handleSwipe();
   }
+  isPinching = false; // 🔥 Reset flag pinch
 });
 
 function handleSwipe() {
@@ -835,10 +852,7 @@ document.getElementById('image-viewer').addEventListener('click', function(e) {
 });
 
 function copyProductLink() {
-  // Ambil URL saat ini
   const url = window.location.href;
-  
-  // Jika URL mengandung hash #/product/, ubah menjadi format /product/ tanpa hash
   if (url.includes('#/product/')) {
     const cleanUrl = url.replace('/#/product/', '/product/');
     navigator.clipboard.writeText(cleanUrl).then(() => {
@@ -847,7 +861,6 @@ function copyProductLink() {
       console.error("Gagal menyalin link:", err);
     });
   } else {
-    // Jika tidak ada hash, copy apa adanya (seperti default)
     navigator.clipboard.writeText(url).then(() => {
       showToast("Link berhasil disalin!");
     }).catch(err => {
@@ -857,31 +870,24 @@ function copyProductLink() {
 }
 
 async function shareProduct(productName) {
-  // 🔥 BERSIHKAN URL DARI HASH (#) SEBELUM DI SHARE
   let currentUrl = window.location.href;
   let cleanUrl = currentUrl;
-
-  // Jika URL mengandung #/product/, ubah menjadi format /product/ tanpa hash
   if (currentUrl.includes('#/product/')) {
     cleanUrl = currentUrl.replace('/#/product/', '/product/');
   }
-
   if (navigator.share) {
     try {
       await navigator.share({
         title: productName,
         text: `Cek kudapan premium Djandes: ${productName}`,
-        url: cleanUrl  // 🔥 Gunakan URL yang sudah dibersihkan!
+        url: cleanUrl
       });
     } catch (err) {
-      // Jika user membatalkan share, jangan tampilkan error (biasanya error 'AbortError')
       if (err.name !== 'AbortError') {
         console.error("Gagal share:", err);
       }
     }
   } else {
-    // Fallback jika browser tidak mendukung Web Share API (misal desktop)
-    // Copy link ke clipboard sebagai alternatif
     try {
       await navigator.clipboard.writeText(cleanUrl);
       showToast("Link produk berhasil disalin ke clipboard!");
@@ -917,16 +923,23 @@ function removeFromCartById(id) {
   renderCart();
   showToast("Produk dihapus dari keranjang");
 }
+
+// 🔥 PERBAIKAN: Font badge keranjang jadi lebih umum dan jelas
 function updateCartUI() {
   const badge = document.getElementById('cart-badge');
   const count = cart.reduce((acc, item) => acc + item.qty, 0);
   if (count > 0) {
     badge.innerText = count;
     badge.classList.remove('hidden');
+    // 🔥 Terapkan font yang lebih umum
+    badge.style.fontFamily = 'Arial, sans-serif';
+    badge.style.fontWeight = 'bold';
+    badge.style.fontSize = '11px';
   } else {
     badge.classList.add('hidden');
   }
 }
+
 function renderCart() {
   const list = document.getElementById('cart-items-list');
   const emptyMsg = document.getElementById('cart-empty-msg');
@@ -1121,7 +1134,9 @@ function updateVariantPreview() {
     previewName.innerText = variantObj.name;
   }
 }
-function showBoxDetail() {
+
+// 🔥 PERBAIKAN: Tambahkan parameter `skipNavigate` agar bisa dipanggil saat refresh
+function showBoxDetail(skipNavigate = false) {
   const currentVariants = boxVariants[selectedBox] || [];
   const variant = currentVariants.find(v => v.name === selectedVariant);
   if (!variant) return;
@@ -1198,7 +1213,11 @@ function showBoxDetail() {
       </div>
     </div>
   `;
-  navigateTo('box-detail', false);
+  
+  // 🔥 Jangan navigate lagi jika dipanggil dari refresh
+  if (!skipNavigate) {
+    navigateTo('box-detail', false);
+  }
 }
 
 // --- BOX IMAGE NAVIGATION ---
@@ -1227,6 +1246,8 @@ function handleBoxTouchEnd(e) {
     }
   }
 }
+
+// 🔥 PERBAIKAN: Dukung klik langsung pada dot untuk box image
 function changeBoxImage(direction) {
   const images = window._boxProductImages || [];
   if (images.length <= 1) return;
@@ -1481,5 +1502,4 @@ function switchCartTab(tab) {
   }
 }
 
-// --- INIT ---
 document.addEventListener('DOMContentLoaded', loadData);
