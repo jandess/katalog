@@ -27,13 +27,13 @@ let pinchStartDist = 0;
 let currentZoom = 1;
 let isViewerFromBox = false;
 
-// Flag untuk memastikan routing hanya terjadi setelah data dimuat
+// 🔥 TAMBAHAN: Flag untuk memastikan routing hanya terjadi setelah data dimuat
 let dataLoaded = false;
 
 // Load data from JSON
 async function loadData() {
   try {
-    const response = await fetch('/data.json');
+    const response = await fetch('data.json');
     const data = await response.json();
     products = data.products || [];
     categories = data.categories || [];
@@ -42,7 +42,7 @@ async function loadData() {
     profileData = data.profile || {};
     buildBoxVariants();
     
-    // Tandai data sudah dimuat
+    // 🔥 Tandai data sudah dimuat
     dataLoaded = true;
     
     initApp();
@@ -86,7 +86,7 @@ function initApp() {
   renderPackagingTypes();
   renderProfile();
   
-  // PENTING: Panggil handleRouting SETELAH data dimuat
+  // 🔥 PENTING: Panggil handleRouting SETELAH data dimuat
   handleRouting();
   
   renderFavorites();
@@ -150,8 +150,9 @@ function goBack() {
     window.location.hash = 'home';
   }
 }
+
+// 🔥 PERBAIKAN: handleRouting hanya berjalan jika data sudah dimuat
 function handleRouting() {
-  // JANGAN jalankan routing jika data belum dimuat
   if (!dataLoaded) {
     console.log("Data belum dimuat, menunggu...");
     return;
@@ -169,7 +170,6 @@ function handleRouting() {
       navigateTo('home', false);
     }
   } else {
-    // Reset meta tags jika bukan di detail
     resetMetaTags();
     if (hash === '#home' || hash === '#') {
       navigationStack = [];
@@ -242,26 +242,22 @@ function updateView(pageId) {
   }
 }
 
-// --- PROFILE (NO HARCODED, ALL FROM data.json) ---
+// --- PROFILE ---
 function renderProfile() {
   const p = profileData || {};
 
-  // Deskripsi
   const desc = document.getElementById('profile-description');
   if (desc) desc.textContent = p.description || 'Tentang Djandes...';
 
-  // Alamat
   const address = document.getElementById('profile-address');
   if (address) address.textContent = p.address || 'Alamat belum tersedia';
 
-  // WhatsApp (teks)
   const wa = document.getElementById('profile-whatsapp');
   if (wa) {
     const waNum = p.whatsapp || '6281234567890';
     wa.textContent = waNum.startsWith('62') ? `+${waNum}` : `+62 ${waNum}`;
   }
 
-  // Instagram
   const ig = document.getElementById('profile-instagram');
   if (ig) {
     const igUsername = p.instagram || '';
@@ -269,7 +265,6 @@ function renderProfile() {
     ig.href = `https://instagram.com/${igUsername.replace('@', '')}`;
   }
 
-  // TikTok
   const tt = document.getElementById('profile-tiktok');
   if (tt) {
     const ttUsername = p.tiktok || '';
@@ -277,7 +272,6 @@ function renderProfile() {
     tt.href = `https://tiktok.com/@${ttUsername.replace('@', '')}`;
   }
 
-  // Facebook
   const fb = document.getElementById('profile-facebook');
   if (fb) {
     const fbUsername = p.facebook || '';
@@ -285,11 +279,9 @@ function renderProfile() {
     fb.href = `https://facebook.com/${fbUsername}`;
   }
 
-  // Maps
   const maps = document.getElementById('profile-maps');
   if (maps && p.maps_embed) maps.src = p.maps_embed;
 
-  // WhatsApp button (floating dan di profil)
   const waButtons = document.querySelectorAll('#profile-wa-btn, #home-fab');
   waButtons.forEach(btn => {
     let waNum = p.whatsapp || '6281234567890';
@@ -297,7 +289,6 @@ function renderProfile() {
     btn.href = `https://wa.me/${waNum}`;
   });
 
-  // Logo header
   const logoImg = document.getElementById('header-logo');
   if (logoImg && p.logo) {
     logoImg.src = p.logo;
@@ -526,7 +517,6 @@ function renderDetailByProduct(p, initialQty = 1) {
     </div>
   `;
   
-  // Set meta tags for social sharing
   updateMetaTags(p);
 }
 
@@ -537,7 +527,6 @@ function updateMetaTags(product) {
   const image = product.images && product.images.length > 0 ? product.images[0] : product.img;
   const url = window.location.href;
   
-  // Update OG Meta
   let ogTitle = document.querySelector('meta[property="og:title"]');
   if (!ogTitle) {
     ogTitle = document.createElement('meta');
@@ -570,7 +559,6 @@ function updateMetaTags(product) {
   }
   ogUrl.content = url;
   
-  // Update Twitter Meta
   let twTitle = document.querySelector('meta[name="twitter:title"]');
   if (!twTitle) {
     twTitle = document.createElement('meta');
@@ -595,13 +583,10 @@ function updateMetaTags(product) {
   }
   twImage.content = image;
   
-  // Update page title
   document.title = title;
 }
 
-// Reset meta tags when leaving detail - JANGAN RESET JIKA MASIH DI DETAIL
 function resetMetaTags() {
-  // Jangan reset jika masih di halaman detail
   if (window.location.hash.startsWith('#/product/')) return;
   
   const defaultTitle = 'DJANDES - Sweet & Savoury';
@@ -680,7 +665,7 @@ function changeImage(direction) {
   });
 }
 
-// --- IMAGE VIEWER (UNIFIED) - TANPA BUTTON PREV/NEXT ---
+// --- IMAGE VIEWER ---
 function openImageViewer(index) {
   const images = window._productImages || [];
   if (!images.length) return;
@@ -714,7 +699,6 @@ function openViewer(index) {
   touchStartX = 0;
   touchEndX = 0;
   
-  // Render indicator dots
   renderViewerDots(index);
 }
 
@@ -735,7 +719,6 @@ function closeImageViewer() {
   viewer.style.display = 'none';
   document.body.style.overflow = 'auto';
   document.body.classList.remove('no-scroll');
-  // Jangan reset meta tags di sini, karena kita sudah handle di routing
 }
 
 function handlePinchStart(e) {
@@ -790,11 +773,9 @@ function changeViewerImage(direction) {
   isZoomed = false;
   currentZoom = 1;
   
-  // Update indicator dots
   renderViewerDots(newIndex);
 }
 
-// Unified touch handlers for viewer
 document.addEventListener('touchstart', (e) => {
   const viewer = document.getElementById('image-viewer');
   if (!viewer.classList.contains('active')) return;
@@ -1128,7 +1109,6 @@ function showBoxDetail() {
     </li>
   `).join('');
   
-  // Use variant images array or single image
   const variantImages = variant.images || [variant.img];
   window._boxProductImages = variantImages;
   window._boxCurrentSlide = 0;
@@ -1235,7 +1215,7 @@ function changeBoxImage(direction) {
   });
 }
 
-// --- CHECKOUT & INVOICE (SAVED TO LOCALSTORAGE) ---
+// --- CHECKOUT & INVOICE ---
 function handleShowInvoice(e) {
   e.preventDefault();
   const subtotal = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
@@ -1400,13 +1380,9 @@ async function shareInvoiceImage() {
   }
 }
 
-// =============================================
-// PERBAIKAN FORMAT WHATSAPP SESUAI PERMINTAAN
-// =============================================
 function finalWhatsAppRedirect() {
   const phoneNumber = profileData.whatsapp || '6281234567890';
 
-  // Format tanggal pengambilan menjadi hari, tanggal bulan tahun
   const dateObj = new Date(checkoutData.date_pickup + 'T00:00:00');
   const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
   const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -1416,11 +1392,9 @@ function finalWhatsAppRedirect() {
   const year = dateObj.getFullYear();
   const formattedDate = `${dayName}, ${day} ${month} ${year}`;
 
-  // Format jam (ambil dari time_pickup)
   const timeParts = checkoutData.time_pickup ? checkoutData.time_pickup.split(':') : ['00', '00'];
   const formattedTime = `${timeParts[0]}:${timeParts[1]}`;
 
-  // Bangun pesan dengan format baru
   let message = `*Halo, saya ingin memesan kue dari DJANDES*\n\n`;
   message += `*Data Pemesan:*\n`;
   message += `*Nama:* ${checkoutData.name}\n`;
@@ -1433,11 +1407,9 @@ function finalWhatsAppRedirect() {
     message += `- ${item.name} (${item.qty}x): Rp ${itemTotal.toLocaleString('id-ID')}\n`;
   });
 
-  // Kemasan
   const boxPrice = checkoutData.boxTotal || 0;
   message += `- Kemasan ${checkoutData.box} (${checkoutData.variant}): Rp ${boxPrice.toLocaleString('id-ID')}\n`;
 
-  // Catatan opsional
   if (checkoutData.notes && checkoutData.notes.trim() !== '') {
     message += `\n*Catatan:* ${checkoutData.notes}`;
   }
@@ -1445,10 +1417,8 @@ function finalWhatsAppRedirect() {
   message += `\n\n*Total: Rp ${checkoutData.total.toLocaleString('id-ID')}*\n\n`;
   message += `*Silakan konfirmasi ketersediaan dan total pembayaran. Terima kasih!*`;
 
-  // Kirim ke WhatsApp
   window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, '_blank');
 
-  // Simpan riwayat
   const historyItem = {
     ...checkoutData,
     items: cart.map(item => ({ name: item.name, qty: item.qty, price: item.price })),
@@ -1459,7 +1429,6 @@ function finalWhatsAppRedirect() {
   history.push(historyItem);
   saveHistory();
 
-  // Kosongkan keranjang
   cart = [];
   saveCart();
   updateCartUI();
@@ -1468,7 +1437,6 @@ function finalWhatsAppRedirect() {
   showToast("Pesanan terkirim! Keranjang dikosongkan.");
 }
 
-// --- CART TABS ---
 function switchCartTab(tab) {
   document.querySelectorAll('.cart-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.cart-panel').forEach(p => p.classList.remove('active'));
