@@ -33,15 +33,24 @@
   <meta name="twitter:description" id="twitter-description" content="Berbagai macam kue tradisional dan modern dengan cita rasa autentik dan kualitas terbaik.">
   <meta name="twitter:image" id="twitter-image" content="https://djandes15.vercel.app/img/djandes.png">
   
-  <!-- Script untuk deteksi crawler social media -->
+  <!-- Script untuk deteksi crawler social media (DIPERBAIKI) -->
   <script>
     // Deteksi crawler social media (WhatsApp, Telegram, Facebook, dll)
-    const isCrawler = /bot|crawler|facebook|whatsapp|telegram|twitter|slack|discord|linkedin|googlebot|pinterest|tumblr|reddit|viber|line|wechat|skype/i.test(navigator.userAgent);
+    const isCrawler = /bot|crawler|facebook|whatsapp|telegram|twitter|slack|discord|linkedin|googlebot|pinterest|tumblr|reddit|viber|line|wechat|skype|curl|wget|python-requests|http\.client|slackbot|discordbot|telegrambot|whatsappbot/i.test(navigator.userAgent);
     
     // Jika crawler dan URL menggunakan hash, redirect ke path
     if (isCrawler && window.location.hash.startsWith('#/product/')) {
       const slug = window.location.hash.replace('#/product/', '');
       window.location.replace(`/product/${slug}`);
+    }
+    
+    // Jika crawler dan URL menggunakan query parameter, deteksi juga
+    if (isCrawler && window.location.search.includes('product=')) {
+      const params = new URLSearchParams(window.location.search);
+      const slug = params.get('product');
+      if (slug) {
+        window.location.replace(`/product/${slug}`);
+      }
     }
     
     // Deteksi font loading
