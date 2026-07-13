@@ -309,12 +309,14 @@
     toggleSpinner(true, "Menarik data terupdate dari Cloud CDN...");
 
     try {
+        // Coba dari CDN (lebih cepat)
         const urlCDN = `https://cdn.jsdelivr.net/gh/${conf.user}/${conf.repo}@${conf.branch}/${FILENAME_JSON}?t=${Date.now()}`;
         let response = await fetch(urlCDN);
         
         if (response.ok) {
             data = await response.json();
         } else {
+            // Fallback ke GitHub API dengan token
             const urlAPI = `https://api.github.com/repos/${conf.user}/${conf.repo}/contents/${FILENAME_JSON}?ref=${conf.branch}`;
             const headers = conf.token ? { 'Authorization': `token ${conf.token}` } : {};
             let resAPI = await fetch(urlAPI, { headers });
@@ -464,19 +466,46 @@
     updateGallerySelectedCounter();
 
     try {
+       // 🔥 PERBAIKAN PENTING: Gunakan token dengan benar di header
        const url = `https://api.github.com/repos/${conf.user}/${conf.repo}/contents/img?ref=${conf.branch}`;
-       let res = await fetch(url, { headers: { 'Authorization': `token ${conf.token}` } });
+       console.log("Mengambil dari URL:", url); // Untuk debugging
        
+       let res = await fetch(url, { 
+           headers: { 
+               'Authorization': `token ${conf.token}`,
+               'Accept': 'application/vnd.github.v3+json'
+           } 
+       });
+       
+       // 🔥 Tangani response dengan lebih detail
        if(!res.ok) {
+          let errorMessage = "";
+          try {
+             const errorData = await res.json();
+             errorMessage = errorData.message || res.statusText;
+             
+             // Tangani rate limit secara spesifik
+             if(res.status === 403 && errorMessage.includes("rate limit")) {
+                throw new Error(`IP Anda terkena batas limit GitHub (Rate Limit). Karena Anda belum mengirim token dengan benar. 
+                \n\nSolusi: Pastikan token Anda benar dan kode sudah mengirim header Authorization.
+                \n\nTunggu 10-15 menit hingga IP Anda dipulihkan, lalu coba lagi setelah mengganti kode di bawah ini.`);
+             }
+          } catch {
+             errorMessage = res.statusText;
+          }
+          
           if(res.status === 404) {
-             throw new Error("Folder 'img' belum ada di repo. Silakan upload minimal 1 gambar terlebih dahulu agar folder terbentuk.");
+             throw new Error(`Folder 'img/' tidak ditemukan di repositori '${conf.user}/${conf.repo}'. Pastikan folder 'img/' ada di root repository GitHub Anda.`);
+          } else if(res.status === 401 || res.status === 403) {
+             throw new Error(`Token GitHub tidak valid atau tidak memiliki izin 'repo'. Periksa kembali token Anda. (Error: ${errorMessage})`);
           } else {
-             throw new Error("Gagal mengambil aset media dari GitHub.");
+             throw new Error(`GitHub API error: ${res.status} - ${errorMessage}`);
           }
        }
 
        let files = await res.json();
-       // Filter file bertipe gambar saja
+       
+       // Filter hanya file gambar
        let allowedExt = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
        let imageFiles = files.filter(f => f.type === 'file' && allowedExt.some(ext => f.name.toLowerCase().endsWith(ext)));
 
@@ -493,10 +522,16 @@
        renderGalleryGrid(imageFiles, conf);
 
     } catch (err) {
+       console.error("Error detail:", err);
+       
        document.getElementById('galleryModalBody').innerHTML = `
           <div class="text-center py-8 text-red-600 text-sm">
              <span class="material-symbols-outlined text-3xl block mb-1">warning</span>
-             ${err.message}
+             <b>Error:</b> ${err.message}
+             <br><br>
+             <button onclick="openCloudGallery('${activeTargetInputId}')" class="bg-[#735c00] text-white px-4 py-2 rounded text-sm font-medium mt-2">
+                Coba Lagi
+             </button>
           </div>
        `;
     }
