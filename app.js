@@ -151,12 +151,16 @@ function handleRouting() {
     } else {
       navigateTo('home', false);
     }
-  } else if (hash === '#home' || hash === '#') {
-    navigationStack = [];
-    updateView('home');
   } else {
-    const pageId = hash.replace('#', '');
-    updateView(pageId);
+    // Reset meta tags jika bukan di detail
+    resetMetaTags();
+    if (hash === '#home' || hash === '#') {
+      navigationStack = [];
+      updateView('home');
+    } else {
+      const pageId = hash.replace('#', '');
+      updateView(pageId);
+    }
   }
 }
 window.addEventListener('hashchange', handleRouting);
@@ -509,37 +513,107 @@ function renderDetailByProduct(p, initialQty = 1) {
   updateMetaTags(p);
 }
 
-// --- SOCIAL SHARING META TAGS ---
+// --- SOCIAL SHARING META TAGS (DIPERBAIKI) ---
 function updateMetaTags(product) {
   const title = `DJANDES - ${product.name}`;
   const description = product.desc || 'Kudapan premium dari Djandes Sweet & Savoury';
   const image = product.images && product.images.length > 0 ? product.images[0] : product.img;
+  const url = window.location.href;
   
-  // Update OG Meta
-  document.querySelector('meta[property="og:title"]').content = title;
-  document.querySelector('meta[property="og:description"]').content = description;
-  document.querySelector('meta[property="og:image"]').content = image;
-  document.querySelector('meta[property="og:url"]').content = window.location.href;
+  // Update OG Meta - Pastikan elemen ada
+  let ogTitle = document.querySelector('meta[property="og:title"]');
+  if (!ogTitle) {
+    ogTitle = document.createElement('meta');
+    ogTitle.setAttribute('property', 'og:title');
+    document.head.appendChild(ogTitle);
+  }
+  ogTitle.content = title;
+
+  let ogDesc = document.querySelector('meta[property="og:description"]');
+  if (!ogDesc) {
+    ogDesc = document.createElement('meta');
+    ogDesc.setAttribute('property', 'og:description');
+    document.head.appendChild(ogDesc);
+  }
+  ogDesc.content = description;
+
+  let ogImage = document.querySelector('meta[property="og:image"]');
+  if (!ogImage) {
+    ogImage = document.createElement('meta');
+    ogImage.setAttribute('property', 'og:image');
+    document.head.appendChild(ogImage);
+  }
+  ogImage.content = image;
+
+  let ogUrl = document.querySelector('meta[property="og:url"]');
+  if (!ogUrl) {
+    ogUrl = document.createElement('meta');
+    ogUrl.setAttribute('property', 'og:url');
+    document.head.appendChild(ogUrl);
+  }
+  ogUrl.content = url;
   
   // Update Twitter Meta
-  document.querySelector('meta[name="twitter:title"]').content = title;
-  document.querySelector('meta[name="twitter:description"]').content = description;
-  document.querySelector('meta[name="twitter:image"]').content = image;
+  let twTitle = document.querySelector('meta[name="twitter:title"]');
+  if (!twTitle) {
+    twTitle = document.createElement('meta');
+    twTitle.setAttribute('name', 'twitter:title');
+    document.head.appendChild(twTitle);
+  }
+  twTitle.content = title;
+
+  let twDesc = document.querySelector('meta[name="twitter:description"]');
+  if (!twDesc) {
+    twDesc = document.createElement('meta');
+    twDesc.setAttribute('name', 'twitter:description');
+    document.head.appendChild(twDesc);
+  }
+  twDesc.content = description;
+
+  let twImage = document.querySelector('meta[name="twitter:image"]');
+  if (!twImage) {
+    twImage = document.createElement('meta');
+    twImage.setAttribute('name', 'twitter:image');
+    document.head.appendChild(twImage);
+  }
+  twImage.content = image;
   
   // Update page title
   document.title = title;
 }
 
-// Reset meta tags when leaving detail
+// Reset meta tags when leaving detail - JANGAN RESET JIKA MASIH DI DETAIL
 function resetMetaTags() {
-  document.querySelector('meta[property="og:title"]').content = 'DJANDES - Sweet & Savoury';
-  document.querySelector('meta[property="og:description"]').content = 'Berbagai macam kue tradisional dan modern dengan cita rasa autentik dan kualitas terbaik.';
-  document.querySelector('meta[property="og:image"]').content = 'https://djandes.vercel.app/img/djandes.png';
-  document.querySelector('meta[property="og:url"]').content = 'https://djandes.vercel.app';
-  document.querySelector('meta[name="twitter:title"]').content = 'DJANDES - Sweet & Savoury';
-  document.querySelector('meta[name="twitter:description"]').content = 'Berbagai macam kue tradisional dan modern dengan cita rasa autentik dan kualitas terbaik.';
-  document.querySelector('meta[name="twitter:image"]').content = 'https://djandes.vercel.app/img/djandes.png';
-  document.title = 'DJANDES - Sweet & Savoury - Katalog dan harga';
+  // Jangan reset jika masih di halaman detail
+  if (window.location.hash.startsWith('#/product/')) return;
+  
+  const defaultTitle = 'DJANDES - Sweet & Savoury';
+  const defaultDesc = 'Berbagai macam kue tradisional dan modern dengan cita rasa autentik dan kualitas terbaik.';
+  const defaultImage = 'https://djandes15.vercel.app/img/djandes.png';
+  const defaultUrl = 'https://djandes15.vercel.app';
+  
+  const ogTitle = document.querySelector('meta[property="og:title"]');
+  if (ogTitle) ogTitle.content = defaultTitle;
+  
+  const ogDesc = document.querySelector('meta[property="og:description"]');
+  if (ogDesc) ogDesc.content = defaultDesc;
+  
+  const ogImage = document.querySelector('meta[property="og:image"]');
+  if (ogImage) ogImage.content = defaultImage;
+  
+  const ogUrl = document.querySelector('meta[property="og:url"]');
+  if (ogUrl) ogUrl.content = defaultUrl;
+  
+  const twTitle = document.querySelector('meta[name="twitter:title"]');
+  if (twTitle) twTitle.content = defaultTitle;
+  
+  const twDesc = document.querySelector('meta[name="twitter:description"]');
+  if (twDesc) twDesc.content = defaultDesc;
+  
+  const twImage = document.querySelector('meta[name="twitter:image"]');
+  if (twImage) twImage.content = defaultImage;
+  
+  document.title = defaultTitle;
 }
 
 // --- IMAGE NAVIGATION ---
@@ -644,9 +718,7 @@ function closeImageViewer() {
   viewer.style.display = 'none';
   document.body.style.overflow = 'auto';
   document.body.classList.remove('no-scroll');
-  if (!isViewerFromBox) {
-    resetMetaTags();
-  }
+  // Jangan reset meta tags di sini, karena kita sudah handle di routing
 }
 
 function handlePinchStart(e) {
