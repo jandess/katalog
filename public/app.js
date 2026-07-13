@@ -857,18 +857,37 @@ function copyProductLink() {
 }
 
 async function shareProduct(productName) {
+  // 🔥 BERSIHKAN URL DARI HASH (#) SEBELUM DI SHARE
+  let currentUrl = window.location.href;
+  let cleanUrl = currentUrl;
+
+  // Jika URL mengandung #/product/, ubah menjadi format /product/ tanpa hash
+  if (currentUrl.includes('#/product/')) {
+    cleanUrl = currentUrl.replace('/#/product/', '/product/');
+  }
+
   if (navigator.share) {
     try {
       await navigator.share({
         title: productName,
         text: `Cek kudapan premium Djandes: ${productName}`,
-        url: window.location.href
+        url: cleanUrl  // 🔥 Gunakan URL yang sudah dibersihkan!
       });
     } catch (err) {
-      console.error("Gagal share:", err);
+      // Jika user membatalkan share, jangan tampilkan error (biasanya error 'AbortError')
+      if (err.name !== 'AbortError') {
+        console.error("Gagal share:", err);
+      }
     }
   } else {
-    showToast("Fitur Share tidak tersedia di browser Anda");
+    // Fallback jika browser tidak mendukung Web Share API (misal desktop)
+    // Copy link ke clipboard sebagai alternatif
+    try {
+      await navigator.clipboard.writeText(cleanUrl);
+      showToast("Link produk berhasil disalin ke clipboard!");
+    } catch (err) {
+      showToast("Fitur Share tidak tersedia di browser Anda");
+    }
   }
 }
 
