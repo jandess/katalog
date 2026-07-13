@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Djandes Admin Panel - Cloud Sync Edition</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght=400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
   <style>
     body { font-family: 'Inter', sans-serif; background: #f5f5f5; }
@@ -76,7 +76,6 @@
     .filter-badge.new { background: #dbeafe; color: #1e40af; }
     .filter-badge.promo { background: #fce4ec; color: #b71c1c; }
 
-    /* Custom Style untuk Gambar yang Terpilih di Gallery Cloud */
     .gallery-item.selected { border-color: #735c00; background-color: #fef3e7; box-shadow: 0 0 0 2px #735c00; }
   </style>
 </head>
@@ -210,7 +209,7 @@
 </div>
 
 <script>
-  // -------------------- DATA --------------------
+  // ==================== DATA ====================
   let data = { categories: [], packagingTypes: [], packagingVariants: [], products: [], profile: {} };
   let defaultData = JSON.parse(JSON.stringify(data));
   let currentTab = 'products';
@@ -221,7 +220,7 @@
   let activeTargetInputId = ''; 
   let selectedCloudImages = []; 
 
-  // -------------------- INIT --------------------
+  // ==================== INIT ====================
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.sidebar .nav-item').forEach(item => {
       item.addEventListener('click', () => { switchTab(item.dataset.tab, 'desktop'); });
@@ -243,7 +242,7 @@
     renderTab(currentTab);
   }
 
-  // -------------------- SWITCH TAB --------------------
+  // ==================== SWITCH TAB ====================
   function switchTab(tab, platform = 'desktop') {
     currentTab = tab;
     if (platform === 'desktop' || platform === 'both') {
@@ -263,7 +262,7 @@
     renderTab(tab);
   }
 
-  // -------------------- LOAD LOCAL FILE (FALLBACK) --------------------
+  // ==================== LOAD LOCAL FILE (FALLBACK) ====================
   async function loadDataFromFile() {
     toggleSpinner(true, 'Memuat data lokal...');
     try {
@@ -289,9 +288,7 @@
     }
   }
 
-  // ========================================================
-  // CORE SINKRONISASI GITHUB API & JS-DELIVR CDN
-  // ========================================================
+  // ==================== CORE SINKRONISASI GITHUB API & JS-DELIVR CDN ====================
   
   function getRepoConfig() {
     return {
@@ -439,9 +436,7 @@
     reader.readAsDataURL(file);
   }
 
-  // ========================================================
-  // ENGINE UTAMA: MEDIA LIBRARY GALLERY CLOUD (REAL-TIME)
-  // ========================================================
+  // ==================== ENGINE UTAMA: MEDIA LIBRARY GALLERY CLOUD (REAL-TIME) ====================
   
   async function openCloudGallery(targetInputId) {
     const conf = getRepoConfig();
@@ -449,6 +444,7 @@
        return showToast("Konfigurasi Cloud GitHub belum lengkap di menu Profil!", "error");
     }
 
+    // Reset state setiap kali dibuka
     activeTargetInputId = targetInputId;
     selectedCloudImages = [];
     
@@ -618,7 +614,7 @@
      document.getElementById('galleryModal').classList.add('hidden');
   }
 
-  // -------------------- HELPERS --------------------
+  // ==================== HELPERS ====================
   function toggleSpinner(show, text = 'Memuat data...') {
     const ld = document.getElementById('loadingIndicator');
     const lm = document.getElementById('loadingIndicatorMobile');
@@ -699,7 +695,7 @@
   }
   function reloadData() { if (confirm('Reload data dari file data.json?')) loadDataFromFile(); }
 
-  // -------------------- RENDER TAB CONTROLLER --------------------
+  // ==================== RENDER TAB CONTROLLER ====================
   function renderTab(tab) {
     switch (tab) {
       case 'products': renderProducts(); break;
@@ -716,7 +712,7 @@
   }
   function closeModal() { document.getElementById('modal').classList.add('hidden'); }
 
-  // -------------------- CATEGORIES --------------------
+  // ==================== CATEGORIES ====================
   function renderCategories() {
     const containerDesktop = document.getElementById('tab-categories');
     const containerMobile = document.getElementById('tab-categories-mobile');
@@ -776,7 +772,7 @@
     if (confirm('Hapus kategori ini?')) { data.categories.splice(idx, 1); renderCategories(); showToast('Kategori dihapus'); }
   }
 
-  // -------------------- PACKAGING TYPES --------------------
+  // ==================== PACKAGING TYPES ====================
   function renderPackagingTypes() {
     const containerDesktop = document.getElementById('tab-packagingTypes');
     const containerMobile = document.getElementById('tab-packagingTypes-mobile');
@@ -841,7 +837,7 @@
     if (confirm('Hapus tipe kemasan ini?')) { data.packagingTypes.splice(idx, 1); renderPackagingTypes(); showToast('Tipe kemasan dihapus'); }
   }
 
-  // -------------------- PACKAGING VARIANTS --------------------
+  // ==================== PACKAGING VARIANTS (DIPERBAIKI UNTUK MULTI-GAMBAR) ====================
   function renderPackagingVariants() {
     const containerDesktop = document.getElementById('tab-packagingVariants');
     const containerMobile = document.getElementById('tab-packagingVariants-mobile');
@@ -881,16 +877,20 @@
         <div><label class="block text-sm font-medium mb-1">ID Tipe</label><select id="pvType" class="w-full box-border border rounded px-3 py-2 text-sm">${data.packagingTypes.map(pt => `<option value="${pt.id_tipe}">${pt.id_tipe}</option>`).join('')}</select></div>
         <div><label class="block text-sm font-medium mb-1">Nama Varian</label><input id="pvName" class="w-full box-border border rounded px-3 py-2 text-sm" /></div>
         <div>
-          <label class="block text-sm font-medium mb-1">Gambar Varian</label>
-          <div class="flex gap-1">
-            <input id="pvImg" class="flex-1 box-border border rounded-l px-3 py-2 text-sm" placeholder="URL Gambar" />
-            <button onclick="openCloudGallery('pvImg')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 px-2.5 rounded border border-amber-300 text-xs font-semibold flex items-center gap-0.5">
-               <span class="material-symbols-outlined text-sm">imagesmode</span> Galeri Cloud
-            </button>
-            <label class="cursor-pointer bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded border border-gray-300 text-xs font-medium flex items-center gap-1">
-              <span class="material-symbols-outlined text-sm">upload</span> Upload Local
-              <input type="file" id="uploadVarImg" onchange="handleDirectUpload('uploadVarImg', 'pvImg')" class="hidden" />
-            </label>
+          <label class="block text-sm font-medium mb-1">Gambar Varian (satu URL per baris)</label>
+          <div class="flex gap-2 items-start">
+            <textarea id="pvImages" class="flex-1 box-border border rounded px-3 py-2 text-sm font-mono text-xs" rows="3" placeholder="Baris pertama otomatis jadi gambar utama..."></textarea>
+            <div class="flex flex-col gap-1.5 shrink-0">
+               <button onclick="openCloudGallery('pvImages')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 p-2 rounded flex flex-col items-center justify-center border border-amber-300 text-xs font-semibold w-20">
+                 <span class="material-symbols-outlined text-xl">imagesmode</span>
+                 <span class="mt-0.5 text-[9px]">Gallery Cloud</span>
+               </button>
+               <label class="cursor-pointer bg-gray-100 hover:bg-gray-200 p-2 rounded flex flex-col items-center justify-center border border-gray-300 text-xs font-medium w-20">
+                 <span class="material-symbols-outlined text-xl">cloud_upload</span>
+                 <span class="mt-0.5 text-[9px]">+ Upload Baru</span>
+                 <input type="file" id="uploadVarGallery" onchange="handleDirectUpload('uploadVarGallery', 'pvImages')" class="hidden" />
+               </label>
+            </div>
           </div>
         </div>
         <div><label class="block text-sm font-medium mb-1">Deskripsi</label><textarea id="pvDesc" class="w-full box-border border rounded px-3 py-2 text-sm" rows="2"></textarea></div>
@@ -907,16 +907,20 @@
         <div><label class="block text-sm font-medium mb-1">ID Tipe</label><select id="pvType" class="w-full box-border border rounded px-3 py-2 text-sm">${data.packagingTypes.map(pt => `<option value="${pt.id_tipe}" ${pt.id_tipe === pv.id_tipe ? 'selected' : ''}>${pt.id_tipe}</option>`).join('')}</select></div>
         <div><label class="block text-sm font-medium mb-1">Nama Varian</label><input id="pvName" class="w-full box-border border rounded px-3 py-2 text-sm" value="${pv.name}" /></div>
         <div>
-          <label class="block text-sm font-medium mb-1">Gambar Varian</label>
-          <div class="flex gap-1">
-            <input id="pvImg" class="flex-1 box-border border rounded-l px-3 py-2 text-sm" value="${pv.img || ''}" placeholder="URL Gambar" />
-            <button onclick="openCloudGallery('pvImg')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 px-2.5 rounded border border-amber-300 text-xs font-semibold flex items-center gap-0.5">
-               <span class="material-symbols-outlined text-sm">imagesmode</span> Galeri Cloud
-            </button>
-            <label class="cursor-pointer bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded border border-gray-300 text-xs font-medium flex items-center gap-1">
-              <span class="material-symbols-outlined text-sm">upload</span> Upload Local
-              <input type="file" id="uploadVarImg" onchange="handleDirectUpload('uploadVarImg', 'pvImg')" class="hidden" />
-            </label>
+          <label class="block text-sm font-medium mb-1">Gambar Varian (satu URL per baris)</label>
+          <div class="flex gap-2 items-start">
+            <textarea id="pvImages" class="flex-1 box-border border rounded px-3 py-2 text-sm font-mono text-xs" rows="3">${(pv.images || [pv.img]).join('\n')}</textarea>
+            <div class="flex flex-col gap-1.5 shrink-0">
+               <button onclick="openCloudGallery('pvImages')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 p-2 rounded flex flex-col items-center justify-center border border-amber-300 text-xs font-semibold w-20">
+                 <span class="material-symbols-outlined text-xl">imagesmode</span>
+                 <span class="mt-0.5 text-[9px]">Gallery Cloud</span>
+               </button>
+               <label class="cursor-pointer bg-gray-100 hover:bg-gray-200 p-2 rounded flex flex-col items-center justify-center border border-gray-300 text-xs font-medium w-20">
+                 <span class="material-symbols-outlined text-xl">cloud_upload</span>
+                 <span class="mt-0.5 text-[9px]">+ Upload Baru</span>
+                 <input type="file" id="uploadVarGallery" onchange="handleDirectUpload('uploadVarGallery', 'pvImages')" class="hidden" />
+               </label>
+            </div>
           </div>
         </div>
         <div><label class="block text-sm font-medium mb-1">Deskripsi</label><textarea id="pvDesc" class="w-full box-border border rounded px-3 py-2 text-sm" rows="2">${pv.desc || ''}</textarea></div>
@@ -929,11 +933,13 @@
     const id_varian = document.getElementById('pvId').value.trim();
     const id_tipe = document.getElementById('pvType').value;
     const name = document.getElementById('pvName').value.trim();
-    const img = document.getElementById('pvImg').value.trim();
+    const images = document.getElementById('pvImages').value.split('\n').map(x => x.trim()).filter(s => s !== '');
+    const img = images.length > 0 ? images[0] : '';
     const desc = document.getElementById('pvDesc').value.trim();
     const features = document.getElementById('pvFeatures').value.split('\n').filter(f => f.trim() !== '');
     if (!id_varian || !name) { showToast('ID dan Nama wajib diisi', 'error'); return; }
-    const obj = { id_varian, id_tipe, name, img, desc, features };
+    if (images.length === 0) { showToast('Minimal isi 1 gambar pada galeri!', 'error'); return; }
+    const obj = { id_varian, id_tipe, name, img, images, desc, features };
     if (idx !== undefined) data.packagingVariants[idx] = obj;
     else data.packagingVariants.push(obj);
     closeModal(); renderPackagingVariants(); showToast('Varian tersimpan');
@@ -942,7 +948,7 @@
     if (confirm('Hapus varian ini?')) { data.packagingVariants.splice(idx, 1); renderPackagingVariants(); showToast('Varian dihapus'); }
   }
 
-  // -------------------- PRODUCTS --------------------
+  // ==================== PRODUCTS ====================
   function renderProducts() {
     const containerDesktop = document.getElementById('tab-products');
     const containerMobile = document.getElementById('tab-products-mobile');
@@ -1006,13 +1012,10 @@
             <textarea id="pImages" class="flex-1 box-border border rounded px-3 py-2 text-sm font-mono text-xs" rows="4" placeholder="Baris pertama otomatis jadi foto utama...">${product && product.images ? product.images.join('\n') : ''}</textarea>
             
             <div class="flex flex-col gap-1.5 shrink-0">
-               <!-- Tombol Buka Media Library Cloud -->
                <button onclick="openCloudGallery('pImages')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 p-2 rounded flex flex-col items-center justify-center border border-amber-300 text-xs font-semibold w-20">
                  <span class="material-symbols-outlined text-xl">imagesmode</span>
                  <span class="mt-0.5 text-[9px]">Gallery Cloud</span>
                </button>
-               
-               <!-- Tombol Upload File Baru dari Lokal -->
                <label class="cursor-pointer bg-gray-100 hover:bg-gray-200 p-2 rounded flex flex-col items-center justify-center border border-gray-300 text-xs font-medium w-20">
                  <span class="material-symbols-outlined text-xl">cloud_upload</span>
                  <span class="mt-0.5 text-[9px]">+ Upload Baru</span>
@@ -1061,7 +1064,7 @@
     if (confirm('Hapus produk ini?')) { data.products.splice(idx, 1); renderProducts(); showToast('Produk dihapus'); }
   }
 
-  // -------------------- PROFILE & INTEGRASI CLOUD SETTINGS --------------------
+  // ==================== PROFILE & INTEGRASI CLOUD SETTINGS ====================
   function renderProfileDisplay() {
     const p = data.profile || {};
     const containers = ['tab-profile', 'tab-profile-mobile'];
