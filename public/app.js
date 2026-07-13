@@ -835,12 +835,25 @@ document.getElementById('image-viewer').addEventListener('click', function(e) {
 });
 
 function copyProductLink() {
+  // Ambil URL saat ini
   const url = window.location.href;
-  navigator.clipboard.writeText(url).then(() => {
-    showToast("Link berhasil disalin!");
-  }).catch(err => {
-    console.error("Gagal menyalin link:", err);
-  });
+  
+  // Jika URL mengandung hash #/product/, ubah menjadi format /product/ tanpa hash
+  if (url.includes('#/product/')) {
+    const cleanUrl = url.replace('/#/product/', '/product/');
+    navigator.clipboard.writeText(cleanUrl).then(() => {
+      showToast("Link produk berhasil disalin! (Tanpa #)");
+    }).catch(err => {
+      console.error("Gagal menyalin link:", err);
+    });
+  } else {
+    // Jika tidak ada hash, copy apa adanya (seperti default)
+    navigator.clipboard.writeText(url).then(() => {
+      showToast("Link berhasil disalin!");
+    }).catch(err => {
+      console.error("Gagal menyalin link:", err);
+    });
+  }
 }
 
 async function shareProduct(productName) {
