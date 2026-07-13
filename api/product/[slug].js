@@ -1,7 +1,7 @@
 // api/product/[slug].js
-import data from '../../data.json' with { type: 'json' };
+const data = require('../../data.json');
 
-export default function handler(req, res) {
+module.exports = async function handler(req, res) {
   const { slug } = req.query;
   
   // Cari produk berdasarkan slug
@@ -22,7 +22,7 @@ export default function handler(req, res) {
   const url = `https://djandes15.vercel.app/product/${slug}`;
   const image = mainImage.startsWith('http') ? mainImage : `https://djandes15.vercel.app${mainImage}`;
 
-  // Kirim HTML dengan meta tags (tanpa JavaScript)
+  // Kirim HTML dengan meta tags
   res.setHeader('Content-Type', 'text/html');
   res.send(`
     <!DOCTYPE html>
@@ -69,7 +69,7 @@ export default function handler(req, res) {
   `);
 }
 
-// Fungsi slugify (sama seperti di app.js)
+// Fungsi slugify
 function slugify(text) {
   return text.toString().toLowerCase().trim()
     .replace(/\s+/g, '-')
