@@ -27,10 +27,13 @@ let pinchStartDist = 0;
 let currentZoom = 1;
 let isViewerFromBox = false;
 
+// Flag untuk memastikan routing hanya terjadi setelah data dimuat
+let dataLoaded = false;
+
 // Load data from JSON
 async function loadData() {
   try {
-    const response = await fetch('data.json');
+    const response = await fetch('/data.json');
     const data = await response.json();
     products = data.products || [];
     categories = data.categories || [];
@@ -38,6 +41,10 @@ async function loadData() {
     packagingVariants = data.packagingVariants || [];
     profileData = data.profile || {};
     buildBoxVariants();
+    
+    // Tandai data sudah dimuat
+    dataLoaded = true;
+    
     initApp();
   } catch (error) {
     console.error('Error loading data:', error);
@@ -78,7 +85,10 @@ function initApp() {
   filterProducts();
   renderPackagingTypes();
   renderProfile();
+  
+  // PENTING: Panggil handleRouting SETELAH data dimuat
   handleRouting();
+  
   renderFavorites();
   // Restore checkout data if exists
   if (checkoutData && checkoutData.invoiceId) {
@@ -141,6 +151,12 @@ function goBack() {
   }
 }
 function handleRouting() {
+  // JANGAN jalankan routing jika data belum dimuat
+  if (!dataLoaded) {
+    console.log("Data belum dimuat, menunggu...");
+    return;
+  }
+  
   const hash = window.location.hash || '#home';
   if (hash.startsWith('#/product/')) {
     const slug = hash.replace('#/product/', '');
@@ -149,6 +165,7 @@ function handleRouting() {
       renderDetailByProduct(product);
       updateView('detail');
     } else {
+      console.warn(`Produk dengan slug "${slug}" tidak ditemukan`);
       navigateTo('home', false);
     }
   } else {
@@ -513,14 +530,14 @@ function renderDetailByProduct(p, initialQty = 1) {
   updateMetaTags(p);
 }
 
-// --- SOCIAL SHARING META TAGS (DIPERBAIKI) ---
+// --- SOCIAL SHARING META TAGS ---
 function updateMetaTags(product) {
   const title = `DJANDES - ${product.name}`;
   const description = product.desc || 'Kudapan premium dari Djandes Sweet & Savoury';
   const image = product.images && product.images.length > 0 ? product.images[0] : product.img;
   const url = window.location.href;
   
-  // Update OG Meta - Pastikan elemen ada
+  // Update OG Meta
   let ogTitle = document.querySelector('meta[property="og:title"]');
   if (!ogTitle) {
     ogTitle = document.createElement('meta');
