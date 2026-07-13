@@ -1,5 +1,5 @@
 // api/product/[slug].js
-import data from '../../data.json' assert { type: 'json' };
+import data from '../../data.json' with { type: 'json' };
 
 export default function handler(req, res) {
   const { slug } = req.query;
