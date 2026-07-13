@@ -5,13 +5,11 @@
   <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
   <title>DJANDES - Sweet & Savoury - Katalog dan harga</title>
   
-  <!-- PRELOAD font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet"/>
   
-  <!-- Font Awesome untuk icon sosial media -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
   
   <meta name="description" content="home made kue basah lokal yang menyajikan berbagai macam kue tradisional dan modern dengan cita rasa autentik dan kualitas terbaik.">
@@ -19,7 +17,6 @@
   <link rel="shortcut icon" href="/img/logo.png">
   <link rel="apple-touch-icon" href="/img/logo.png">
   
-  <!-- Open Graph / Facebook / WhatsApp -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="DJANDES - Sweet & Savoury">
   <meta property="og:title" id="og-title" content="DJANDES - Sweet & Savoury">
@@ -27,42 +24,10 @@
   <meta property="og:image" id="og-image" content="https://djandes15.vercel.app/img/djandes.png">
   <meta property="og:url" id="og-url" content="https://djandes15.vercel.app">
   
-  <!-- Twitter / X Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" id="twitter-title" content="DJANDES - Sweet & Savoury">
   <meta name="twitter:description" id="twitter-description" content="Berbagai macam kue tradisional dan modern dengan cita rasa autentik dan kualitas terbaik.">
   <meta name="twitter:image" id="twitter-image" content="https://djandes15.vercel.app/img/djandes.png">
-  
-  <!-- Script untuk deteksi crawler social media (DIPERBAIKI) -->
-  <script>
-    // Deteksi crawler social media (WhatsApp, Telegram, Facebook, dll)
-    const isCrawler = /bot|crawler|facebook|whatsapp|telegram|twitter|slack|discord|linkedin|googlebot|pinterest|tumblr|reddit|viber|line|wechat|skype|curl|wget|python-requests|http\.client|slackbot|discordbot|telegrambot|whatsappbot/i.test(navigator.userAgent);
-    
-    // Jika crawler dan URL menggunakan query parameter, deteksi juga
-    if (isCrawler && window.location.search.includes('product=')) {
-      const params = new URLSearchParams(window.location.search);
-      const slug = params.get('product');
-      if (slug) {
-        window.location.replace(`/product/${slug}`);
-      }
-    }
-    
-    // Deteksi font loading
-    document.addEventListener('DOMContentLoaded', function() {
-      document.documentElement.classList.add('fonts-loading');
-      if (document.fonts) {
-        document.fonts.ready.then(function() {
-          document.documentElement.classList.remove('fonts-loading');
-          document.documentElement.classList.add('fonts-loaded');
-        });
-      } else {
-        setTimeout(function() {
-          document.documentElement.classList.remove('fonts-loading');
-          document.documentElement.classList.add('fonts-loaded');
-        }, 2000);
-      }
-    });
-  </script>
   
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -164,16 +129,11 @@
     }
   </script>
   
-  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="/style.css"/>
   
   <style>
-    /* Sembunyikan icon sampai font termuat */
-    .fonts-loading .material-symbols-outlined {
-      visibility: hidden;
-    }
-    .fonts-loaded .material-symbols-outlined {
-      visibility: visible;
-    }
+    .fonts-loading .material-symbols-outlined { visibility: hidden; }
+    .fonts-loaded .material-symbols-outlined { visibility: visible; }
   </style>
 </head>
 <body class="font-body-md text-on-surface bg-surface selection:bg-secondary-container selection:text-on-secondary-container">
@@ -181,19 +141,12 @@
   <div class="max-w-container-max mx-auto flex justify-between items-center">
     <div class="flex items-center gap-3 md:gap-8">
       <button class="material-symbols-outlined text-primary hidden" id="header-back-btn" onclick="goBack()">arrow_back</button>
-      
-      <!-- Logo Utama -->
       <img id="header-logo" src="" alt="Djandes" class="h-9 md:h-10 w-auto hidden object-contain">
-      
-      <!-- Teks Brand -->
       <div id="header-brand-text" class="flex flex-col justify-center min-w-0">
         <span class="font-serif text-base md:text-xl font-bold text-secondary leading-none">Djandes</span>
         <span class="text-on-surface-variant text-[9px] md:text-[11px] italic tracking-wider block truncate">Sweet & Savoury</span>
       </div>
-      
       <h1 class="font-headline-lg-mobile md:text-headline-lg font-semibold text-primary hidden" id="header-title"></h1>
-      
-      <!-- Menu Navigasi Desktop -->
       <nav class="hidden md:flex items-center gap-6 ml-4" id="desktop-nav">
         <button class="nav-link text-label-md font-medium text-primary hover:text-secondary transition-colors" onclick="navigateTo('home')">Beranda</button>
         <button class="nav-link text-label-md font-medium text-on-surface-variant hover:text-secondary transition-colors" onclick="navigateTo('cart')">Pesanan</button>
@@ -211,7 +164,6 @@
 </header>
 
 <main class="pt-20 md:pt-24 pb-28 md:pb-20 max-w-container-max mx-auto">
-  <!-- Home Section -->
   <section class="page-section px-margin-mobile md:px-margin-desktop" id="page-home">
     <div class="mb-8 md:mb-12 relative max-w-2xl mx-auto">
       <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
@@ -228,29 +180,19 @@
     <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6" id="product-grid"></div>
   </section>
 
-  <!-- Product Detail Section -->
   <section class="page-section px-margin-mobile md:px-margin-desktop" id="page-detail">
     <div id="detail-content"></div>
   </section>
 
-  <!-- Cart Section (Keranjang + Riwayat) -->
   <section class="page-section px-margin-mobile md:px-margin-desktop" id="page-cart">
     <div class="mb-6 md:mb-10">
       <h2 class="font-headline-lg text-headline-lg text-primary">Pesanan</h2>
       <p class="text-on-surface-variant font-body-md">Kelola pesanan Anda</p>
     </div>
-    
-    <!-- Tabs -->
     <div class="cart-tabs" id="cart-tabs">
-      <button class="cart-tab active" data-tab="keranjang" onclick="switchCartTab('keranjang')">
-        Keranjang
-      </button>
-      <button class="cart-tab" data-tab="riwayat" onclick="switchCartTab('riwayat')">
-        Riwayat
-      </button>
+      <button class="cart-tab active" data-tab="keranjang" onclick="switchCartTab('keranjang')">Keranjang</button>
+      <button class="cart-tab" data-tab="riwayat" onclick="switchCartTab('riwayat')">Riwayat</button>
     </div>
-    
-    <!-- Panel Keranjang -->
     <div class="cart-panel active" id="panel-keranjang">
       <div class="flex flex-col lg:flex-row gap-8 lg:items-start">
         <div class="flex-grow space-y-4" id="cart-items-list"></div>
@@ -281,9 +223,7 @@
           <div class="p-6 bg-surface-container-high rounded-2xl hidden" id="cart-summary">
             <h3 class="font-title-md text-title-md text-primary mb-4">Ringkasan Pesanan</h3>
             <div class="space-y-3" id="summary-breakdown"></div>
-            <button class="w-full mt-6 bg-secondary text-white flex items-center justify-center gap-3 py-4 rounded-full shadow-xl font-title-md active:scale-95 transition-transform" onclick="navigateTo('checkout')">
-              Lanjut ke Form Checkout
-            </button>
+            <button class="w-full mt-6 bg-secondary text-white flex items-center justify-center gap-3 py-4 rounded-full shadow-xl font-title-md active:scale-95 transition-transform" onclick="navigateTo('checkout')">Lanjut ke Form Checkout</button>
           </div>
         </div>
       </div>
@@ -293,8 +233,6 @@
         <button class="mt-4 text-secondary font-bold" onclick="navigateTo('home')">Mulai Belanja</button>
       </div>
     </div>
-    
-    <!-- Panel Riwayat -->
     <div class="cart-panel" id="panel-riwayat">
       <div id="history-list"></div>
       <div class="text-center py-12 hidden" id="history-empty-msg">
@@ -305,12 +243,10 @@
     </div>
   </section>
 
-  <!-- Box Detail Section -->
   <section class="page-section px-margin-mobile md:px-margin-desktop" id="page-box-detail">
     <div class="max-w-4xl mx-auto" id="box-detail-content"></div>
   </section>
 
-  <!-- Favorites Section -->
   <section class="page-section px-margin-mobile md:px-margin-desktop" id="page-favs">
     <div class="mb-6 md:mb-10">
       <h2 class="font-headline-lg text-headline-lg text-primary">Produk Favorit</h2>
@@ -324,7 +260,6 @@
     </div>
   </section>
 
-  <!-- Checkout Form Section -->
   <section class="page-section px-margin-mobile md:px-margin-desktop" id="page-checkout">
     <div class="max-w-xl mx-auto">
       <div class="mb-6 md:mb-8">
@@ -351,32 +286,24 @@
           <textarea class="w-full px-4 py-3 bg-surface-container-lowest rounded-xl border border-outline-variant/30 text-body-md" id="special-notes" placeholder="Masukan catatan atau instruksi khusus" rows="2"></textarea>
         </div>
         <div class="pt-2 md:pt-4">
-          <button class="w-full bg-secondary text-white flex items-center justify-center gap-3 py-4 rounded-full shadow-xl font-title-md active:scale-95 transition-transform" type="submit">
-            Review Pesanan
-          </button>
+          <button class="w-full bg-secondary text-white flex items-center justify-center gap-3 py-4 rounded-full shadow-xl font-title-md active:scale-95 transition-transform" type="submit">Review Pesanan</button>
         </div>
       </form>
     </div>
   </section>
 
-  <!-- Invoice Screen -->
   <section class="page-section px-margin-mobile md:px-margin-desktop" id="page-invoice">
     <div class="max-w-xl mx-auto">
       <div class="bg-white rounded-3xl p-6 md:p-10 shadow-2xl invoice-paper border border-outline-variant/30 relative overflow-hidden" id="invoice-content">
         <div class="text-center py-8"><p class="text-on-surface-variant">Memuat Invoice...</p></div>
       </div>
       <div class="mt-8 space-y-4 pb-12" id="invoice-actions">
-        <!-- TOMBOL WHATSAPP (Paling Atas) -->
         <button class="w-full bg-whatsapp-green text-white flex items-center justify-center gap-3 py-4 rounded-full shadow-xl font-title-md active:scale-95 transition-transform hidden" id="wa-confirm-btn" onclick="finalWhatsAppRedirect()">
           <span class="material-symbols-outlined">send</span> Konfirmasi via WhatsApp
         </button>
-        
-        <!-- TOMBOL CETAK (Kedua) -->
         <button class="w-full bg-secondary text-white flex items-center justify-center gap-3 py-4 rounded-full shadow-xl font-title-md active:scale-95 transition-transform" id="main-print-btn" onclick="handleUnifiedPrint()">
           <span class="material-symbols-outlined">print</span> Cetak Invoice (BT)
         </button>
-        
-        <!-- TOMBOL SIMPAN & SHARE -->
         <div class="grid grid-cols-2 gap-3 mb-4">
           <button class="flex items-center justify-center gap-2 py-3 px-4 bg-surface-container-high text-primary rounded-xl font-label-md border border-outline-variant/30 active:scale-95 transition-transform" onclick="saveAsImage()">
             <span class="material-symbols-outlined text-xl">image</span> Simpan Image
@@ -385,14 +312,11 @@
             <span class="material-symbols-outlined text-xl">share</span> Share
           </button>
         </div>
-        
-        <!-- TOMBOL EDIT DATA -->
         <button class="w-full text-on-surface-variant font-label-md uppercase tracking-widest py-2" id="edit-data-btn" onclick="navigateTo('checkout')">Edit Data Diri</button>
       </div>
     </div>
   </section>
 
-  <!-- Profile Section -->
   <section class="page-section px-margin-mobile md:px-margin-desktop space-y-8" id="page-profile">
     <div class="max-w-4xl mx-auto space-y-8">
       <div class="relative h-[250px] md:h-[400px] rounded-3xl overflow-hidden shadow-lg mt-4">
@@ -403,17 +327,13 @@
           <p class="font-serif text-xl md:text-2xl text-on-primary-container italic">Sentuhan Modern.</p>
         </div>
       </div>
-      
       <div class="glass-card p-6 md:p-10 rounded-3xl">
         <div class="flex items-center gap-3 mb-4">
           <div class="w-10 h-1 bg-secondary rounded-full"></div>
           <h3 class="font-serif text-2xl md:text-3xl text-primary">Tentang Kami</h3>
         </div>
-        <p class="text-on-surface-variant text-body-md md:text-body-lg leading-relaxed max-w-2xl" id="profile-description">
-          Berawal dari kecintaan akan tradisi kuliner Indonesia...
-        </p>
+        <p class="text-on-surface-variant text-body-md md:text-body-lg leading-relaxed max-w-2xl" id="profile-description">Berawal dari kecintaan akan tradisi kuliner Indonesia...</p>
       </div>
-
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="glass-card p-6 rounded-3xl space-y-4">
           <div class="flex items-center gap-3">
@@ -421,44 +341,31 @@
             <h3 class="font-serif text-xl text-primary">Kontak & Alamat</h3>
           </div>
           <div class="space-y-3 text-on-surface-variant">
-            <!-- Alamat -->
             <div class="flex items-start gap-3 min-w-0">
               <span class="material-symbols-outlined text-secondary text-sm mt-1 flex-shrink-0 w-6 h-6 flex items-center justify-center">location_on</span>
               <span id="profile-address" class="break-words flex-1"></span>
             </div>
-            
-            <!-- WhatsApp -->
             <div class="flex items-center gap-3 min-w-0">
               <span class="material-symbols-outlined text-secondary flex-shrink-0 w-6 h-6 flex items-center justify-center">phone</span>
               <span id="profile-whatsapp" class="break-words flex-1"></span>
             </div>
-            
-            <!-- Instagram -->
             <div class="flex items-center gap-3 min-w-0">
               <i class="fa-brands fa-instagram text-secondary text-lg flex-shrink-0 w-6 h-6 flex items-center justify-center"></i>
               <a href="#" target="_blank" id="profile-instagram" class="break-words flex-1 hover:text-secondary transition-colors"></a>
             </div>
-            
-            <!-- TikTok -->
             <div class="flex items-center gap-3 min-w-0">
               <i class="fa-brands fa-tiktok text-secondary text-lg flex-shrink-0 w-6 h-6 flex items-center justify-center"></i>
               <a href="#" target="_blank" id="profile-tiktok" class="break-words flex-1 hover:text-secondary transition-colors"></a>
             </div>
-            
-            <!-- Facebook -->
             <div class="flex items-center gap-3 min-w-0">
               <i class="fa-brands fa-facebook text-secondary text-lg flex-shrink-0 w-6 h-6 flex items-center justify-center"></i>
               <a href="#" target="_blank" id="profile-facebook" class="break-words flex-1 hover:text-secondary transition-colors"></a>
             </div>
-            
-            <!-- WhatsApp Button -->
             <a href="#" target="_blank" id="profile-wa-btn" class="mt-4 inline-flex items-center gap-2 bg-whatsapp-green text-white px-6 py-3 rounded-full font-bold shadow-lg hover:scale-105 transition-transform hidden">
-              <span class="material-symbols-outlined">chat</span>
-              Hubungi Kami
+              <span class="material-symbols-outlined">chat</span> Hubungi Kami
             </a>
           </div>
         </div>
-        
         <div class="glass-card p-6 rounded-3xl">
           <div class="flex items-center gap-3 mb-4">
             <span class="material-symbols-outlined text-secondary">map</span>
@@ -473,29 +380,21 @@
   </section>
 </main>
 
-<!-- IMAGE VIEWER - FULL SCREEN POPUP (TANPA BUTTON PREV/NEXT) -->
 <div id="image-viewer">
   <button class="viewer-close-btn" onclick="closeImageViewer()">
     <span class="material-symbols-outlined text-3xl">close</span>
   </button>
-  
   <div class="viewer-content" onclick="event.stopPropagation()">
     <img id="viewer-image" src="" alt="Product Image" onclick="toggleZoom()">
-    
-    <!-- INDICATOR DOTS (bukan angka) -->
-    <div id="viewer-indicator" class="viewer-indicator">
-      <!-- Akan diisi oleh JS -->
-    </div>
+    <div id="viewer-indicator" class="viewer-indicator"></div>
   </div>
 </div>
 
-<!-- TOAST NOTIFICATION - FIXED -->
 <div id="toast">
   <span class="material-symbols-outlined toast-icon">check_circle</span>
   <span class="toast-message" id="toast-message">Berhasil ditambahkan</span>
 </div>
 
-<!-- Floating WhatsApp Button -->
 <a href="#" target="_blank" id="home-fab" class="fixed right-6 bottom-24 md:bottom-6 bg-whatsapp-green text-white p-3 rounded-full shadow-lg hover:scale-110 active:scale-90 transition-transform duration-200 z-40 flex items-center justify-center w-14 h-14 hidden">
   <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
