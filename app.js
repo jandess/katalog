@@ -27,13 +27,13 @@ let pinchStartDist = 0;
 let currentZoom = 1;
 let isViewerFromBox = false;
 
-// 🔥 TAMBAHAN: Flag untuk memastikan routing hanya terjadi setelah data dimuat
+// 🔥 KUNCI PERBAIKAN: Flag untuk menunggu data selesai dimuat
 let dataLoaded = false;
 
 // Load data from JSON
 async function loadData() {
   try {
-    const response = await fetch('data.json');
+    const response = await fetch('/data.json');
     const data = await response.json();
     products = data.products || [];
     categories = data.categories || [];
@@ -155,6 +155,8 @@ function goBack() {
 function handleRouting() {
   if (!dataLoaded) {
     console.log("Data belum dimuat, menunggu...");
+    // Jika data belum dimuat, coba lagi 100ms kemudian
+    setTimeout(handleRouting, 100);
     return;
   }
   
