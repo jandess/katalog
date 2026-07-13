@@ -1,0 +1,78 @@
+// api/product/[slug].js
+import data from '../../data.json' assert { type: 'json' };
+
+export default function handler(req, res) {
+  const { slug } = req.query;
+  
+  // Cari produk berdasarkan slug
+  const product = data.products.find(p => slugify(p.name) === slug);
+  
+  if (!product) {
+    return res.status(404).send('Product not found');
+  }
+
+  // Ambil gambar pertama
+  const mainImage = product.images && product.images.length > 0 
+    ? product.images[0] 
+    : (product.img || 'https://djandes15.vercel.app/img/djandes.png');
+
+  // Meta tags lengkap
+  const title = `DJANDES - ${product.name}`;
+  const description = product.desc || 'Kudapan premium dari Djandes Sweet & Savoury';
+  const url = `https://djandes15.vercel.app/product/${slug}`;
+  const image = mainImage.startsWith('http') ? mainImage : `https://djandes15.vercel.app${mainImage}`;
+
+  // Kirim HTML dengan meta tags (tanpa JavaScript)
+  res.setHeader('Content-Type', 'text/html');
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="id">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      
+      <!-- Open Graph / Facebook / WhatsApp -->
+      <meta property="og:type" content="website">
+      <meta property="og:site_name" content="DJANDES - Sweet & Savoury">
+      <meta property="og:title" content="${title}">
+      <meta property="og:description" content="${description}">
+      <meta property="og:image" content="${image}">
+      <meta property="og:url" content="${url}">
+      
+      <!-- Twitter Card -->
+      <meta name="twitter:card" content="summary_large_image">
+      <meta name="twitter:title" content="${title}">
+      <meta name="twitter:description" content="${description}">
+      <meta name="twitter:image" content="${image}">
+      
+      <title>${title}</title>
+      
+      <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        img { max-width: 300px; border-radius: 8px; }
+      </style>
+    </head>
+    <body>
+      <h1>${product.name}</h1>
+      <p>${description}</p>
+      <img src="${image}" alt="${product.name}" width="300" height="300" style="object-fit:cover">
+      <p><a href="/#/product/${slug}">Lihat detail produk →</a></p>
+      
+      <!-- Redirect otomatis ke halaman utama dengan hash -->
+      <script>
+        setTimeout(() => {
+          window.location.href = '/#/product/${slug}';
+        }, 1000);
+      </script>
+    </body>
+    </html>
+  `);
+}
+
+// Fungsi slugify (sama seperti di app.js)
+function slugify(text) {
+  return text.toString().toLowerCase().trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-');
+}
