@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html class="light" lang="id">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+  <title>DJANDES - Sweet & Savoury - Katalog dan harga</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
+  
+  <!-- Font Awesome untuk icon -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  
+  <meta name="description" content="home made kue basah lokal yang menyajikan berbagai macam kue tradisional dan modern dengan cita rasa autentik dan kualitas terbaik.">
+  <link rel="icon" type="image/png" href="/img/logo.png">
+  <link rel="shortcut icon" href="/img/logo.png">
+  <link rel="apple-touch-icon" href="/img/logo.png">
+  
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="DJANDES - Sweet & Savoury">
+  <meta property="og:title" id="og-title" content="DJANDES - Sweet & Savoury">
+  <meta property="og:description" id="og-description" content="Berbagai macam kue tradisional dan modern dengan cita rasa autentik dan kualitas terbaik.">
+  <meta property="og:image" id="og-image" content="https://djandes15.vercel.app/img/djandes.png">
+  <meta property="og:url" id="og-url" content="https://djandes15.vercel.app">
+  
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" id="twitter-title" content="DJANDES - Sweet & Savoury">
+  <meta name="twitter:description" id="twitter-description" content="Berbagai macam kue tradisional dan modern dengan cita rasa autentik dan kualitas terbaik.">
+  <meta name="twitter:image" id="twitter-image" content="https://djandes15.vercel.app/img/djandes.png">
+  
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "error": "#ba1a1a",
+            "outline-variant": "#d2c4b9",
+            "secondary-fixed": "#ffe085",
+            "primary-container": "#33210d",
+            "background": "#fffae5",
+            "surface-bright": "#fffae5",
+            "on-surface-variant": "#4E453D",
+            "surface-tint": "#725a42",
+            "tertiary": "#001118",
+            "surface-container-low": "#f9f4df",
+            "cream-subtle": "#F5EED7",
+            "surface-container": "#f3eed9",
+            "primary-fixed": "#feddbe",
+            "on-secondary": "#ffffff",
+            "inverse-on-surface": "#f6f1dc",
+            "whatsapp-green": "#25D366",
+            "on-secondary-fixed-variant": "#574500",
+            "surface-container-highest": "#e7e3ce",
+            "primary": "#1b0c00",
+            "outline": "#80756c",
+            "secondary": "#735c00",
+            "on-error-container": "#93000a",
+            "tertiary-fixed": "#d0e6f1",
+            "on-tertiary": "#ffffff",
+            "on-tertiary-fixed-variant": "#354a52",
+            "on-secondary-container": "#776005",
+            "on-primary-container": "#a3876c",
+            "surface-container-lowest": "#ffffff",
+            "error-container": "#ffdad6",
+            "on-surface": "#1d1c0f",
+            "on-background": "#1d1c0f",
+            "surface": "#fffae5",
+            "tertiary-container": "#12272f",
+            "on-tertiary-container": "#798f99",
+            "on-tertiary-fixed": "#081e26",
+            "tertiary-fixed-dim": "#b4cad4",
+            "primary-fixed-dim": "#e1c1a3",
+            "surface-container-high": "#ede8d4",
+            "inverse-surface": "#323123",
+            "secondary-fixed-dim": "#e3c466",
+            "on-primary-fixed-variant": "#58432c",
+            "surface-variant": "#e7e3ce",
+            "on-primary-fixed": "#291805",
+            "secondary-container": "#fddd7c",
+            "on-secondary-fixed": "#231b00",
+            "inverse-primary": "#e1c1a3",
+            "surface-dim": "#dfdac6",
+            "on-primary": "#ffffff",
+            "on-error": "#ffffff"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "base": "8px",
+            "margin-mobile": "16px",
+            "gutter": "24px",
+            "container-max": "1200px",
+            "margin-desktop": "40px"
+          },
+          "fontFamily": {
+            "title-md": ["Inter"],
+            "headline-lg": ["Inter"],
+            "label-xs": ["Inter"],
+            "label-md": ["Inter"],
+            "label-sm": ["Inter"],
+            "headline-lg-mobile": ["Inter"],
+            "display-lg": ["Inter"],
+            "body-lg": ["Inter"],
+            "body-md": ["Inter"],
+            "serif": ["Playfair Display", "serif"]
+          },
+          "fontSize": {
+            "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+            "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+            "label-xs": ["10px", {"lineHeight": "12px", "fontWeight": "700"}],
+            "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+            "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+            "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+            "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+            "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+            "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+          }
+        },
+      },
+    }
+  </script>
+  
+  <link rel="stylesheet" href="/style.css"/>
+</head>
+<body class="font-body-md text-on-surface bg-surface selection:bg-secondary-container selection:text-on-secondary-container">
+<header class="fixed top-0 left-0 w-full px-margin-mobile md:px-margin-desktop py-4 z-[60] bg-surface/80 backdrop-blur-md shadow-sm" id="main-header">
+  <div class="max-w-container-max mx-auto flex justify-between items-center">
+    <div class="flex items-center gap-3 md:gap-8">
+      <button class="text-primary hidden" id="header-back-btn" onclick="goBack()">
+        <i class="fa-solid fa-arrow-left text-2xl"></i>
+      </button>
+      <img id="header-logo" src="" alt="Djandes" class="h-9 md:h-10 w-auto hidden object-contain">
+      <div id="header-brand-text" class="flex flex-col justify-center min-w-0">
+        <span class="font-serif text-base md:text-xl font-bold text-secondary leading-none">Djandes</span>
+        <span class="text-on-surface-variant text-[9px] md:text-[11px] italic tracking-wider block truncate">Sweet & Savoury</span>
+      </div>
+      <h1 class="font-headline-lg-mobile md:text-headline-lg font-semibold text-primary hidden" id="header-title"></h1>
+      <nav class="hidden md:flex items-center gap-6 ml-4" id="desktop-nav">
+        <button class="nav-link text-label-md font-medium text-primary hover:text-secondary transition-colors" onclick="navigateTo('home')">Beranda</button>
+        <button class="nav-link text-label-md font-medium text-on-surface-variant hover:text-secondary transition-colors" onclick="navigateTo('cart')">Pesanan</button>
+        <button class="nav-link text-label-md font-medium text-on-surface-variant hover:text-secondary transition-colors" onclick="navigateTo('favs')">Favorit</button>
+        <button class="nav-link text-label-md font-medium text-on-surface-variant hover:text-secondary transition-colors" onclick="navigateTo('profile')">Profile</button>
+      </nav>
+    </div>
+    <div class="flex items-center gap-4">
+      <button class="relative text-primary p-2 hover:bg-secondary-container/20 rounded-full transition-colors" onclick="navigateTo('cart')">
+        <i class="fa-solid fa-cart-shopping text-2xl"></i>
+        <span class="absolute top-1 right-1 bg-error text-on-error text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden" id="cart-badge">0</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="pt-20 md:pt-24 pb-28 md:pb-20 max-w-container-max mx-auto">
+  <section class="page-section px-margin-mobile md:px-margin-desktop" id="page-home">
+    <div class="mb-8 md:mb-12 relative max-w-2xl mx-auto">
+      <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+        <i class="fa-solid fa-magnifying-glass text-outline"></i>
+      </div>
+      <input class="w-full pl-12 pr-12 py-4 bg-surface-container-lowest rounded-xl border-none product-card-shadow focus:ring-2 focus:ring-secondary-container text-body-md placeholder:text-outline transition-all" id="product-search" oninput="filterProducts()" placeholder="Cari kudapan manis..." type="text"/>
+    </div>
+    <div class="mb-8 md:mb-12 -mx-margin-mobile md:mx-0">
+      <div class="flex overflow-x-auto md:flex-wrap md:justify-center no-scrollbar px-margin-mobile md:px-0 space-x-3 md:gap-3 md:space-x-0" id="category-container"></div>
+    </div>
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="font-title-md md:text-headline-lg text-primary">Rekomendasi Spesial</h2>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6" id="product-grid"></div>
+  </section>
+
+  <section class="page-section px-margin-mobile md:px-margin-desktop" id="page-detail">
+    <div id="detail-content"></div>
+  </section>
+
+  <section class="page-section px-margin-mobile md:px-margin-desktop" id="page-cart">
+    <div class="mb-6 md:mb-10">
+      <h2 class="font-headline-lg text-headline-lg text-primary">Pesanan</h2>
+      <p class="text-on-surface-variant font-body-md">Kelola pesanan Anda</p>
+    </div>
+    <div class="cart-tabs" id="cart-tabs">
+      <button class="cart-tab active" data-tab="keranjang" onclick="switchCartTab('keranjang')">Keranjang</button>
+      <button class="cart-tab" data-tab="riwayat" onclick="switchCartTab('riwayat')">Riwayat</button>
+    </div>
+    <div class="cart-panel active" id="panel-keranjang">
+      <div class="flex flex-col lg:flex-row gap-8 lg:items-start">
+        <div class="flex-grow space-y-4" id="cart-items-list"></div>
+        <div class="w-full lg:w-[400px] flex-shrink-0 space-y-6">
+          <div class="p-6 bg-surface-container-high rounded-2xl hidden" id="box-selection">
+            <h3 class="font-title-md text-title-md text-primary mb-4">Pilih Kemasan</h3>
+            <div class="flex overflow-x-auto no-scrollbar gap-3 mb-6 pb-2 snap-x" id="packaging-type-scroll"></div>
+            <div class="space-y-6 border-t border-outline-variant/30 pt-6" id="variant-selection-area">
+              <div class="flex flex-col gap-2">
+                <h4 class="font-label-md text-primary uppercase tracking-wider" id="variant-selection-title">Pilih Varian Kemasan</h4>
+                <p class="text-[11px] text-on-surface-variant">Klik gambar untuk detail kemasan.</p>
+              </div>
+              <div class="relative w-full max-w-[240px] md:max-w-[280px] mx-auto aspect-square rounded-2xl overflow-hidden bg-white shadow-inner border border-outline-variant/20 mb-4 cursor-pointer group active:scale-[0.98] transition-transform" id="variant-preview-container" onclick="showBoxDetail()">
+                <img class="w-full h-full object-cover transition-all duration-200" id="variant-preview-img" src=""/>
+                <div class="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md px-3 py-2.5 rounded-xl border border-outline-variant/30 flex justify-between items-center shadow-lg">
+                  <div class="flex flex-col">
+                    <span class="text-xs font-bold text-primary uppercase tracking-tight" id="variant-preview-name">Nama Varian</span>
+                    <span class="text-[9px] text-secondary font-bold uppercase">Lihat Detail</span>
+                  </div>
+                  <i class="fa-solid fa-circle-info text-secondary"></i>
+                </div>
+              </div>
+              <div class="relative -mx-6">
+                <div class="flex overflow-x-auto desktop-scrollbar gap-2 px-6 snap-x py-2 pb-4 scroll-smooth" id="variant-options-grid"></div>
+              </div>
+            </div>
+          </div>
+          <div class="p-6 bg-surface-container-high rounded-2xl hidden" id="cart-summary">
+            <h3 class="font-title-md text-title-md text-primary mb-4">Ringkasan Pesanan</h3>
+            <div class="space-y-3" id="summary-breakdown"></div>
+            <button class="w-full mt-6 bg-secondary text-white flex items-center justify-center gap-3 py-4 rounded-full shadow-xl font-title-md active:scale-95 transition-transform" onclick="navigateTo('checkout')">Lanjut ke Form Checkout</button>
+          </div>
+        </div>
+      </div>
+      <div class="text-center py-12 hidden" id="cart-empty-msg">
+        <i class="fa-solid fa-basket-shopping text-outline text-6xl mb-4"></i>
+        <p class="text-on-surface-variant">Keranjang Anda masih kosong</p>
+        <button class="mt-4 text-secondary font-bold" onclick="navigateTo('home')">Mulai Belanja</button>
+      </div>
+    </div>
+    <div class="cart-panel" id="panel-riwayat">
+      <div id="history-list"></div>
+      <div class="text-center py-12 hidden" id="history-empty-msg">
+        <i class="fa-solid fa-receipt text-outline text-6xl mb-4"></i>
+        <p class="text-on-surface-variant">Belum ada riwayat pesanan</p>
+        <button class="mt-4 text-secondary font-bold" onclick="navigateTo('home')">Mulai Belanja</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="page-section px-margin-mobile md:px-margin-desktop" id="page-box-detail">
+    <div class="max-w-4xl mx-auto" id="box-detail-content"></div>
+  </section>
+
+  <section class="page-section px-margin-mobile md:px-margin-desktop" id="page-favs">
+    <div class="mb-6 md:mb-10">
+      <h2 class="font-headline-lg text-headline-lg text-primary">Produk Favorit</h2>
+      <p class="text-on-surface-variant font-body-md">Kumpulan kudapan yang Anda sukai</p>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6" id="favs-grid"></div>
+    <div class="text-center py-12 hidden" id="favs-empty-msg">
+      <i class="fa-solid fa-heart text-outline text-6xl mb-4"></i>
+      <p class="text-on-surface-variant">Belum ada produk favorit</p>
+      <button class="mt-4 text-secondary font-bold" onclick="navigateTo('home')">Cari Produk</button>
+    </div>
+  </section>
+
+  <section class="page-section px-margin-mobile md:px-margin-desktop" id="page-checkout">
+    <div class="max-w-xl mx-auto">
+      <div class="mb-6 md:mb-8">
+        <h2 class="font-headline-lg-mobile md:text-headline-lg text-primary">Data Pengambilan</h2>
+        <p class="text-on-surface-variant text-sm md:font-body-md">Mohon lengkapi formulir untuk pengambilan pesanan Anda</p>
+      </div>
+      <form class="space-y-4 md:space-y-6 pb-12" id="checkout-form" onsubmit="handleShowInvoice(event)">
+        <div class="space-y-1.5 md:space-y-2">
+          <label class="font-label-md text-on-surface-variant uppercase tracking-wider text-[11px] md:text-xs" for="full-name">Nama Pemesan</label>
+          <input class="w-full px-4 py-3 bg-surface-container-lowest rounded-xl border border-outline-variant/30 text-body-md" id="full-name" placeholder="Contoh: Budi Santoso" required="" type="text"/>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-1.5 md:space-y-2 cursor-pointer" onclick="document.getElementById('collection-date').showPicker()">
+            <label class="font-label-md text-on-surface-variant uppercase tracking-wider text-[11px] md:text-xs" for="collection-date">Tanggal Ambil</label>
+            <input class="w-full px-4 py-3 bg-surface-container-lowest rounded-xl border border-outline-variant/30 text-body-md cursor-pointer" id="collection-date" onclick="this.showPicker()" required="" type="date"/>
+          </div>
+          <div class="space-y-1.5 md:space-y-2 cursor-pointer" onclick="document.getElementById('collection-time').showPicker()">
+            <label class="font-label-md text-on-surface-variant uppercase tracking-wider text-[11px] md:text-xs" for="collection-time">Jam Ambil (24 Jam)</label>
+            <input class="w-full px-4 py-3 bg-surface-container-lowest rounded-xl border border-outline-variant/30 text-body-md cursor-pointer" id="collection-time" onclick="this.showPicker()" required="" step="60" type="time"/>
+          </div>
+        </div>
+        <div class="space-y-1.5 md:space-y-2">
+          <label class="font-label-md text-on-surface-variant uppercase tracking-wider text-[11px] md:text-xs" for="special-notes">Catatan Tambahan (Opsional)</label>
+          <textarea class="w-full px-4 py-3 bg-surface-container-lowest rounded-xl border border-outline-variant/30 text-body-md" id="special-notes" placeholder="Masukan catatan atau instruksi khusus" rows="2"></textarea>
+        </div>
+        <div class="pt-2 md:pt-4">
+          <button class="w-full bg-secondary text-white flex items-center justify-center gap-3 py-4 rounded-full shadow-xl font-title-md active:scale-95 transition-transform" type="submit">Review Pesanan</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <section class="page-section px-margin-mobile md:px-margin-desktop" id="page-invoice">
+    <div class="max-w-xl mx-auto">
+      <div class="bg-white rounded-3xl p-6 md:p-10 shadow-2xl invoice-paper border border-outline-variant/30 relative overflow-hidden" id="invoice-content">
+        <div class="text-center py-8"><p class="text-on-surface-variant">Memuat Invoice...</p></div>
+      </div>
+      <div class="mt-8 space-y-4 pb-12" id="invoice-actions">
+        <button class="w-full bg-whatsapp-green text-white flex items-center justify-center gap-3 py-4 rounded-full shadow-xl font-title-md active:scale-95 transition-transform hidden" id="wa-confirm-btn" onclick="finalWhatsAppRedirect()">
+          <i class="fa-solid fa-paper-plane"></i> Konfirmasi via WhatsApp
+        </button>
+        <button class="w-full bg-secondary text-white flex items-center justify-center gap-3 py-4 rounded-full shadow-xl font-title-md active:scale-95 transition-transform" id="main-print-btn" onclick="handleUnifiedPrint()">
+          <i class="fa-solid fa-print"></i> Cetak Invoice (BT)
+        </button>
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <button class="flex items-center justify-center gap-2 py-3 px-4 bg-surface-container-high text-primary rounded-xl font-label-md border border-outline-variant/30 active:scale-95 transition-transform" onclick="saveAsImage()">
+            <i class="fa-solid fa-image text-xl"></i> Simpan Image
+          </button>
+          <button class="flex items-center justify-center gap-2 py-3 px-4 bg-surface-container-high text-primary rounded-xl font-label-md border border-outline-variant/30 active:scale-95 transition-transform" onclick="shareInvoiceImage()">
+            <i class="fa-solid fa-share-nodes text-xl"></i> Share
+          </button>
+        </div>
+        <button class="w-full text-on-surface-variant font-label-md uppercase tracking-widest py-2" id="edit-data-btn" onclick="navigateTo('checkout')">Edit Data Diri</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="page-section px-margin-mobile md:px-margin-desktop space-y-8" id="page-profile">
+    <div class="max-w-4xl mx-auto space-y-8">
+      <div class="relative h-[250px] md:h-[400px] rounded-3xl overflow-hidden shadow-lg mt-4">
+        <div class="absolute inset-0 w-full h-full bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDBhNoVKW9g20GskIhjdWwA574I28r3a1dn2lBWJ28qxjsz4WuMkQRHdwPzJpS4tHcRDDTYF-Ti4nIi-EnghJw1iob4KIMTZZuRpvEtQwvYKj3CZS1a1iYBA3JXPbMrqO13c4SBnOEqM7Q1M1ASokQAqWeGx9LYxPPZSBTLazqYcZowJ9SnkQynhFnXVk7bRS7D37xTcSDpcQB8eR2fzNo-6la2QTNpBI4jTbY0K2dngGPs0vRAoe2C9g')"></div>
+        <div class="absolute inset-0 hero-gradient"></div>
+        <div class="absolute bottom-0 left-0 p-6 md:p-12">
+          <h2 class="font-serif text-3xl md:text-5xl leading-tight text-primary mb-1">Warisan Rasa,</h2>
+          <p class="font-serif text-xl md:text-2xl text-on-primary-container italic">Sentuhan Modern.</p>
+        </div>
+      </div>
+      <div class="glass-card p-6 md:p-10 rounded-3xl">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-1 bg-secondary rounded-full"></div>
+          <h3 class="font-serif text-2xl md:text-3xl text-primary">Tentang Kami</h3>
+        </div>
+        <p class="text-on-surface-variant text-body-md md:text-body-lg leading-relaxed max-w-2xl" id="profile-description">Berawal dari kecintaan akan tradisi kuliner Indonesia...</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="glass-card p-6 rounded-3xl space-y-4">
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-store text-secondary"></i>
+            <h3 class="font-serif text-xl text-primary">Kontak & Alamat</h3>
+          </div>
+          <div class="space-y-3 text-on-surface-variant">
+            <div class="flex items-start gap-3 min-w-0">
+              <i class="fa-solid fa-location-dot text-secondary text-sm mt-1 flex-shrink-0 w-6 h-6 flex items-center justify-center"></i>
+              <span id="profile-address" class="break-words flex-1"></span>
+            </div>
+            <div class="flex items-center gap-3 min-w-0">
+              <i class="fa-solid fa-phone text-secondary flex-shrink-0 w-6 h-6 flex items-center justify-center"></i>
+              <span id="profile-whatsapp" class="break-words flex-1"></span>
+            </div>
+            <div class="flex items-center gap-3 min-w-0">
+              <i class="fa-brands fa-instagram text-secondary text-lg flex-shrink-0 w-6 h-6 flex items-center justify-center"></i>
+              <a href="#" target="_blank" id="profile-instagram" class="break-words flex-1 hover:text-secondary transition-colors"></a>
+            </div>
+            <div class="flex items-center gap-3 min-w-0">
+              <i class="fa-brands fa-tiktok text-secondary text-lg flex-shrink-0 w-6 h-6 flex items-center justify-center"></i>
+              <a href="#" target="_blank" id="profile-tiktok" class="break-words flex-1 hover:text-secondary transition-colors"></a>
+            </div>
+            <div class="flex items-center gap-3 min-w-0">
+              <i class="fa-brands fa-facebook text-secondary text-lg flex-shrink-0 w-6 h-6 flex items-center justify-center"></i>
+              <a href="#" target="_blank" id="profile-facebook" class="break-words flex-1 hover:text-secondary transition-colors"></a>
+            </div>
+            <a href="#" target="_blank" id="profile-wa-btn" class="mt-4 inline-flex items-center gap-2 bg-whatsapp-green text-white px-6 py-3 rounded-full font-bold shadow-lg hover:scale-105 transition-transform hidden">
+              <i class="fa-brands fa-whatsapp"></i>
+              Hubungi Kami
+            </a>
+          </div>
+        </div>
+        <div class="glass-card p-6 rounded-3xl">
+          <div class="flex items-center gap-3 mb-4">
+            <i class="fa-solid fa-map text-secondary"></i>
+            <h3 class="font-serif text-xl text-primary">Lokasi Kami</h3>
+          </div>
+          <div class="rounded-xl overflow-hidden shadow-md">
+            <iframe id="profile-maps" src="" width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="image-viewer">
+  <button class="viewer-close-btn" onclick="closeImageViewer()">
+    <i class="fa-solid fa-xmark text-3xl"></i>
+  </button>
+  <div class="viewer-content" onclick="event.stopPropagation()">
+    <img id="viewer-image" src="" alt="Product Image" onclick="toggleZoom()">
+    <div id="viewer-indicator" class="viewer-indicator"></div>
+  </div>
+</div>
+
+<div id="toast">
+  <i class="fa-solid fa-circle-check toast-icon"></i>
+  <span class="toast-message" id="toast-message">Berhasil ditambahkan</span>
+</div>
+
+<a href="#" target="_blank" id="home-fab" class="fixed right-6 bottom-24 md:bottom-6 bg-whatsapp-green text-white p-3 rounded-full shadow-lg hover:scale-110 active:scale-90 transition-transform duration-200 z-40 flex items-center justify-center w-14 h-14 hidden">
+  <i class="fa-brands fa-whatsapp text-3xl"></i>
+</a>
+
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-margin-mobile pb-safe pt-2 bg-surface shadow-[0_-4px_15px_rgba(51,33,13,0.05)] rounded-t-xl h-20">
+  <button class="nav-item flex flex-col items-center justify-center rounded-2xl px-4 py-1 text-on-secondary-container bg-secondary-container transition-all" id="nav-home" onclick="navigateTo('home')">
+    <i class="fa-solid fa-house"></i>
+    <span class="font-label-sm text-label-sm">Beranda</span>
+  </button>
+  <button class="nav-item flex flex-col items-center justify-center rounded-2xl px-4 py-1 text-on-surface-variant transition-all" id="nav-cart" onclick="navigateTo('cart')">
+    <i class="fa-solid fa-receipt"></i>
+    <span class="font-label-sm text-label-sm">Pesanan</span>
+  </button>
+  <button class="nav-item flex flex-col items-center justify-center rounded-2xl px-4 py-1 text-on-surface-variant transition-all" id="nav-favs" onclick="navigateTo('favs')">
+    <i class="fa-solid fa-heart"></i>
+    <span class="font-label-sm text-label-sm">Favs</span>
+  </button>
+  <button class="nav-item flex flex-col items-center justify-center rounded-2xl px-4 py-1 text-on-surface-variant transition-all" id="nav-profile" onclick="navigateTo('profile')">
+    <i class="fa-solid fa-user"></i>
+    <span class="font-label-sm text-label-sm">Profile</span>
+  </button>
+</nav>
+
+<script src="/app.js"></script>
+<script src="/printer.js"></script>
+</body>
+</html>
