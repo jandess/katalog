@@ -214,7 +214,8 @@
   let defaultData = JSON.parse(JSON.stringify(data));
   let currentTab = 'products';
   let searchQuery = '';
-  const FILENAME_JSON = 'data.json';
+  // 🔥 PERBAIKAN: Ganti path file JSON menjadi /public/data.json
+  const FILENAME_JSON = '/public/data.json';
 
   // State Sementara untuk Media Library Selection
   let activeTargetInputId = ''; 
@@ -266,7 +267,8 @@
   async function loadDataFromFile() {
     toggleSpinner(true, 'Memuat data lokal...');
     try {
-      const response = await fetch('data.json');
+      // 🔥 PERBAIKAN: Ganti path menjadi /public/data.json
+      const response = await fetch('/public/data.json');
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const jsonData = await response.json();
       if (validateData(jsonData)) {
@@ -309,15 +311,15 @@
     toggleSpinner(true, "Menarik data terupdate dari Cloud CDN...");
 
     try {
-        // Coba dari CDN (lebih cepat)
-        const urlCDN = `https://cdn.jsdelivr.net/gh/${conf.user}/${conf.repo}@${conf.branch}/${FILENAME_JSON}?t=${Date.now()}`;
+        // 🔥 PERBAIKAN: Ganti path menjadi /public/data.json di CDN
+        const urlCDN = `https://cdn.jsdelivr.net/gh/${conf.user}/${conf.repo}@${conf.branch}/public/data.json?t=${Date.now()}`;
         let response = await fetch(urlCDN);
         
         if (response.ok) {
             data = await response.json();
         } else {
             // Fallback ke GitHub API dengan token
-            const urlAPI = `https://api.github.com/repos/${conf.user}/${conf.repo}/contents/${FILENAME_JSON}?ref=${conf.branch}`;
+            const urlAPI = `https://api.github.com/repos/${conf.user}/${conf.repo}/contents/public/data.json?ref=${conf.branch}`;
             const headers = conf.token ? { 'Authorization': `token ${conf.token}` } : {};
             let resAPI = await fetch(urlAPI, { headers });
             if(resAPI.ok) {
@@ -325,7 +327,7 @@
                 let cleanJsonString = decodeURIComponent(escape(atob(resJSON.content)));
                 data = JSON.parse(cleanJsonString);
             } else {
-                throw new Error("File data.json belum ada di repositori cloud.");
+                throw new Error("File public/data.json belum ada di repositori cloud.");
             }
         }
         
@@ -350,7 +352,8 @@
     toggleSpinner(true, "Menyimpan seluruh data ke Cloud...");
 
     try {
-        const url = `https://api.github.com/repos/${conf.user}/${conf.repo}/contents/${FILENAME_JSON}`;
+        // 🔥 PERBAIKAN: Ganti path menjadi /public/data.json
+        const url = `https://api.github.com/repos/${conf.user}/${conf.repo}/contents/public/data.json`;
         let sha = "";
         let resGet = await fetch(`${url}?ref=${conf.branch}`, {
             headers: { 'Authorization': `token ${conf.token}` }
@@ -1065,6 +1068,8 @@
           <label class="text-sm flex items-center gap-1 cursor-pointer"><input type="checkbox" id="pBestseller" ${product && product.bestseller ? 'checked' : ''} /> Best Seller</label>
           <label class="text-sm flex items-center gap-1 cursor-pointer"><input type="checkbox" id="pNew" ${product && product.isNew ? 'checked' : ''} /> New</label>
           <label class="text-sm flex items-center gap-1 cursor-pointer"><input type="checkbox" id="pPromo" ${product && product.isPromo ? 'checked' : ''} /> Promo</label>
+          <!-- 🔥 TAMBAHKAN INI: Checkbox HABIS -->
+          <label class="text-sm flex items-center gap-1 cursor-pointer"><input type="checkbox" id="pOutOfStock" ${product && product.isOutOfStock ? 'checked' : ''} /> Habis</label>
         </div>
         <button onclick="saveProduct(${idx})" class="bg-[#735c00] text-white px-4 py-2 rounded text-sm font-medium w-full md:w-auto">Simpan</button>
       </div>
@@ -1080,13 +1085,16 @@
     const bestseller = document.getElementById('pBestseller').checked;
     const isNew = document.getElementById('pNew').checked;
     const isPromo = document.getElementById('pPromo').checked;
+    // 🔥 TAMBAHKAN INI: Ambil status stok habis
+    const isOutOfStock = document.getElementById('pOutOfStock').checked;
     
     if (!name) { showToast('Nama produk wajib diisi', 'error'); return; }
     if (images.length === 0) { showToast('Minimal isi 1 gambar pada galeri!', 'error'); return; }
     
     const mainImg = images[0]; 
     
-    const obj = { id: idx !== undefined ? data.products[idx].id : generateId(), name, price, cat, img: mainImg, images, desc, bestseller, isNew, isPromo };
+    // 🔥 TAMBAHKAN isOutOfStock ke objek
+    const obj = { id: idx !== undefined ? data.products[idx].id : generateId(), name, price, cat, img: mainImg, images, desc, bestseller, isNew, isPromo, isOutOfStock };
     if (idx !== undefined) data.products[idx] = obj;
     else data.products.push(obj);
     
