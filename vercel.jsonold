@@ -1,7 +1,0 @@
-{
-  "rewrites": [
-    { "source": "/product/:slug", "destination": "/api/product/:slug" },
-    { "source": "/", "destination": "/index.html" }
-  ],
-  "cleanUrls": true
-}
