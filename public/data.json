@@ -90,7 +90,8 @@
       "desc": "terbuat dari ketan pulen berisi abon atau ayam suwir berbumbu gurih, kemudian dibungkus dengan daun pisang dan dikukus.",
       "bestseller": false,
       "isNew": false,
-      "isPromo": false
+      "isPromo": false,
+      "isOutOfStock": true
     },
     {
       "id": 1761330657461,
