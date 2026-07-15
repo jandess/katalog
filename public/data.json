@@ -80,9 +80,9 @@
       "id_varian": "VAR012",
       "id_tipe": "Standard",
       "name": "Marun",
-      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783476451170_artifial_marun.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/stmarun.jpg",
       "images": [
-        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783476451170_artifial_marun.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/stmarun.jpg"
       ],
       "desc": "",
       "features": [
