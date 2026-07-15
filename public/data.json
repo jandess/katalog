@@ -21,7 +21,10 @@
       "id_tipe": "Artificial bunga",
       "name": "Biru",
       "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783473322555_artifial_Biru.jpg",
-      "desc": "Kotak seserahan mewah berbahan hardbox kokoh berwarna biru muda dengan tutup mika transparan yang elegan. Bagian sudut dipercantik ornamen siku emas, serta dipermanis dengan balutan kain tile dan hiasan bunga artifisial biru di bagian atas. Memberikan kesan rapi, eksklusif, dan siap mempercantik momen spesial Anda.",
+      "images": [
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783473322555_artifial_Biru.jpg"
+      ],
+      "desc": "Kotak seserahan mewah berbahan hardbox kokoh berwarna biru muda dengan tutup mika transparan yang elegan. Bagian sudut dipercantik ornamen siku emas, serta dipermanis dengan balutan kain tile dan hiasan bunga artifisial di bagian atas. Memberikan kesan rapi, eksklusif, dan siap mempercantik momen spesial Anda.",
       "features": [
         "Material berkualitas, kokoh dan tahan.",
         "Ramah lingkungan.",
@@ -33,7 +36,10 @@
       "id_tipe": "Artificial bunga",
       "name": "Pink",
       "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783477426734_artifial_pink.jpg",
-      "desc": "Kotak seserahan mewah berbahan hardbox kokoh berwarna biru muda dengan tutup mika transparan yang elegan. Bagian sudut dipercantik ornamen siku emas, serta dipermanis dengan balutan kain tile dan hiasan bunga artifisial Pink di bagian atas. Memberikan kesan rapi, eksklusif, dan siap mempercantik momen spesial Anda.",
+      "images": [
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783477426734_artifial_pink.jpg"
+      ],
+      "desc": "Kotak seserahan mewah berbahan hardbox kokoh berwarna Merah muda dengan tutup mika transparan yang elegan. Bagian sudut dipercantik ornamen siku emas, serta dipermanis dengan balutan kain tile dan hiasan bunga artifisial di bagian atas. Memberikan kesan rapi, eksklusif, dan siap mempercantik momen spesial Anda.",
       "features": [
         "Material berkualitas, kokoh dan tahan.",
         "Ramah lingkungan.",
@@ -45,7 +51,10 @@
       "id_tipe": "Artificial bunga",
       "name": "Marun",
       "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783476451170_artifial_marun.jpg",
-      "desc": "Kotak seserahan mewah berbahan hardbox kokoh berwarna biru muda dengan tutup mika transparan yang elegan. Bagian sudut dipercantik ornamen siku emas, serta dipermanis dengan balutan kain tile dan hiasan bunga artifisial Marun di bagian atas. Memberikan kesan rapi, eksklusif, dan siap mempercantik momen spesial Anda.",
+      "images": [
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783476451170_artifial_marun.jpg"
+      ],
+      "desc": "Kotak seserahan mewah berbahan hardbox kokoh berwarna Merah marun dengan tutup mika transparan yang elegan. Bagian sudut dipercantik ornamen siku emas, serta dipermanis dengan balutan kain tile dan hiasan bunga artifisial di bagian atas. Memberikan kesan rapi, eksklusif, dan siap mempercantik momen spesial Anda.",
       "features": [
         "Material berkualitas, kokoh dan tahan.",
         "Ramah lingkungan.",
@@ -60,7 +69,7 @@
       "images": [
         "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/stpink.jpg"
       ],
-      "desc": "Kotak seserahan mewah berbahan hardbox kokoh berwarna pink dengan tutup mika transparan yang elegan. Bagian sudut dipercantik ornamen siku emas, serta dipermanis dengan balutan kain tile dan hiasan pita & bunga di bagian atas. Memberikan kesan rapi, eksklusif, dan siap mempercantik momen spesial Anda.",
+      "desc": "Kotak seserahan mewah berbahan hardbox kokoh berwarna Merah muda dengan tutup mika transparan yang elegan. Bagian sudut dipercantik ornamen siku emas, serta dipermanis dengan balutan kain tile dan hiasan pita & bunga di bagian atas. Memberikan kesan rapi, eksklusif, dan siap mempercantik momen spesial Anda.",
       "features": [
         "Material berkualitas, kokoh dan tahan.",
         "Ramah lingkungan.",
@@ -75,7 +84,7 @@
       "images": [
         "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/stmarun.jpg"
       ],
-      "desc": "Kotak seserahan mewah berbahan hardbox kokoh berwarna marun dengan tutup mika transparan yang elegan. Bagian sudut dipercantik ornamen siku emas, serta dipermanis dengan balutan kain tile dan hiasan pita & bunga di bagian atas. Memberikan kesan rapi, eksklusif, dan siap mempercantik momen spesial Anda.",
+      "desc": "Kotak seserahan mewah berbahan hardbox kokoh berwarna merah marun dengan tutup mika transparan yang elegan. Bagian sudut dipercantik ornamen siku emas, serta dipermanis dengan balutan kain tile dan hiasan pita & bunga di bagian atas. Memberikan kesan rapi, eksklusif, dan siap mempercantik momen spesial Anda.",
       "features": [
         "Material berkualitas, kokoh dan tahan.",
         "Ramah lingkungan.",
@@ -135,11 +144,11 @@
       "images": [
         "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/artifial_hijau.jpg"
       ],
-      "desc": "",
+      "desc": "Kotak seserahan mewah berbahan hardbox kokoh berwarna hijau dengan tutup mika transparan yang elegan. Bagian sudut dipercantik ornamen siku emas, serta dipermanis dengan balutan kain tile dan hiasan bunga artifisial di bagian atas. Memberikan kesan rapi, eksklusif, dan siap mempercantik momen spesial Anda.",
       "features": [
         "Material berkualitas, kokoh dan tahan.",
         "Ramah lingkungan.",
-        "Desain minimalis dan elegan."
+        "Desain elegan Artificial bunga."
       ]
     },
     {
@@ -148,13 +157,14 @@
       "name": "Golden brown",
       "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/artifial_gold.jpg",
       "images": [
-        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/artifial_gold.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/artifial_gold.jpg",
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/artifial_gold2.jpg"
       ],
-      "desc": "",
+      "desc": "Kotak seserahan mewah berbahan hardbox kokoh berwarna gold dengan tutup mika transparan yang elegan. Bagian sudut dipercantik ornamen siku emas, serta dipermanis dengan balutan kain tile dan hiasan bunga artifisial di bagian atas. Memberikan kesan rapi, eksklusif, dan siap mempercantik momen spesial Anda.",
       "features": [
         "Material berkualitas, kokoh dan tahan.",
         "Ramah lingkungan.",
-        "Desain minimalis dan elegan."
+        "Desain elegan Artificial bunga."
       ]
     }
   ],
