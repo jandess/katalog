@@ -62,7 +62,7 @@ module.exports = async function handler(req, res) {
       <script>
         setTimeout(() => {
           window.location.href = '/#/product/${slug}';
-        }, 1000);
+        }, 3000);
       </script>
     </body>
     </html>
