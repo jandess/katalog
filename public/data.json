@@ -75,6 +75,96 @@
         "Ramah lingkungan.",
         "Desain minimalis dan elegan."
       ]
+    },
+    {
+      "id_varian": "VAR012",
+      "id_tipe": "Standard",
+      "name": "Marun",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783476451170_artifial_marun.jpg",
+      "images": [
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783476451170_artifial_marun.jpg"
+      ],
+      "desc": "",
+      "features": [
+        "Material berkualitas, kokoh dan tahan.",
+        "Ramah lingkungan.",
+        "Desain minimalis dan elegan."
+      ]
+    },
+    {
+      "id_varian": "VAR013",
+      "id_tipe": "Standard",
+      "name": "Hijau",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783476451170_artifial_marun.jpg",
+      "images": [
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783476451170_artifial_marun.jpg"
+      ],
+      "desc": "",
+      "features": [
+        "Material berkualitas, kokoh dan tahan.",
+        "Ramah lingkungan.",
+        "Desain minimalis dan elegan."
+      ]
+    },
+    {
+      "id_varian": "VAR014",
+      "id_tipe": "Standard",
+      "name": "Golden brown",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783476451170_artifial_marun.jpg",
+      "images": [
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783476451170_artifial_marun.jpg"
+      ],
+      "desc": "",
+      "features": [
+        "Material berkualitas, kokoh dan tahan.",
+        "Ramah lingkungan.",
+        "Desain minimalis dan elegan."
+      ]
+    },
+    {
+      "id_varian": "VAR015",
+      "id_tipe": "Standard",
+      "name": "Navy",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783476451170_artifial_marun.jpg",
+      "images": [
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783476451170_artifial_marun.jpg"
+      ],
+      "desc": "",
+      "features": [
+        "Material berkualitas, kokoh dan tahan.",
+        "Ramah lingkungan.",
+        "Desain minimalis dan elegan."
+      ]
+    },
+    {
+      "id_varian": "VAR006",
+      "id_tipe": "Artificial bunga",
+      "name": "Hijau",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783476451170_artifial_marun.jpg",
+      "images": [
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783476451170_artifial_marun.jpg"
+      ],
+      "desc": "",
+      "features": [
+        "Material berkualitas, kokoh dan tahan.",
+        "Ramah lingkungan.",
+        "Desain minimalis dan elegan."
+      ]
+    },
+    {
+      "id_varian": "VAR005",
+      "id_tipe": "Artificial bunga",
+      "name": "Golden brown",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783476451170_artifial_marun.jpg",
+      "images": [
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783476451170_artifial_marun.jpg"
+      ],
+      "desc": "",
+      "features": [
+        "Material berkualitas, kokoh dan tahan.",
+        "Ramah lingkungan.",
+        "Desain minimalis dan elegan."
+      ]
     }
   ],
   "products": [
