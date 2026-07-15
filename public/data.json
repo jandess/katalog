@@ -131,9 +131,9 @@
       "id_varian": "VAR006",
       "id_tipe": "Artificial bunga",
       "name": "Hijau",
-      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783476451170_artifial_marun.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/artifial_hijau.jpg",
       "images": [
-        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783476451170_artifial_marun.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/artifial_hijau.jpg"
       ],
       "desc": "",
       "features": [
@@ -146,9 +146,9 @@
       "id_varian": "VAR005",
       "id_tipe": "Artificial bunga",
       "name": "Golden brown",
-      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783476451170_artifial_marun.jpg",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/artifial_gold.jpg",
       "images": [
-        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/img_1783476451170_artifial_marun.jpg"
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/artifial_gold.jpg"
       ],
       "desc": "",
       "features": [
