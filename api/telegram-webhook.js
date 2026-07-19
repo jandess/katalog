@@ -1,6 +1,6 @@
 // api/telegram-webhook.js
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).send('Method Not Allowed');
     }
@@ -130,24 +130,28 @@ export default async function handler(req, res) {
                     return res.status(200).send('OK');
                 }
 
-                await sendTelegramMessage(botToken, chatId, `⏳ *Menyiapkan Gambar Invoice #${param}...*`);
+                await sendTelegramMessage(botToken, chatId, `⏳ *Menyiapkan Struk Invoice #${param}...*`);
                 const host = req.headers.host || 'djandes15.vercel.app';
                 const protocol = req.headers['x-forwarded-proto'] || 'https';
-                const receiptUrl = `${protocol}://${host}/api/product-receipt?invoiceId=${param}`;
+                const receiptHtmlUrl = `${protocol}://${host}/api/product-receipt?invoiceId=${param}`;
+                // Gunakan microlink.io untuk screenshot HTML receipt → kirim sebagai gambar ke Telegram
+                const screenshotUrl = `https://api.microlink.io/?url=${encodeURIComponent(receiptHtmlUrl)}&screenshot=true&embed=screenshot.url&viewport.width=560&viewport.height=800&waitFor=800`;
 
                 const photoRes = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         chat_id: chatId,
-                        photo: receiptUrl,
-                        caption: `Nota Pembayaran #${param} - DJANDES`
+                        photo: screenshotUrl,
+                        caption: `🧾 Nota Pembayaran #${param} - DJANDES`
                     })
                 });
                 const photoJson = await photoRes.json();
 
                 if (!photoJson.ok) {
-                    await sendTelegramMessage(botToken, chatId, `❌ Gagal mengambil gambar dari server. Pastikan nomor Invoice #${param} ada di Sheets.`);
+                    // Fallback: kirim link HTML langsung jika screenshot gagal
+                    await sendTelegramMessage(botToken, chatId,
+                        `⚠️ Gagal membuat gambar otomatis. Buka struk manual di sini:\n${receiptHtmlUrl}`);
                 }
                 return res.status(200).send('OK');
             }
@@ -172,22 +176,28 @@ export default async function handler(req, res) {
                 const payJson = await payRes.json();
 
                 if (payJson.status === 'success') {
-                    await sendTelegramMessage(botToken, chatId, `🎉 *Sukses!* Invoice #${param} telah ditandai sebagai *LUNAS* di Google Sheets.\n\n*Menyiapkan Struk Lunas...*`);
+                    await sendTelegramMessage(botToken, chatId, `🎉 *Sukses!* Invoice #${param} telah ditandai sebagai *LUNAS* di Google Sheets.\n\n⏳ *Menyiapkan Struk Lunas...*`);
 
-                    // Kirim struk berstatus LUNAS secara langsung
+                    // Kirim struk LUNAS via microlink screenshot
                     const host = req.headers.host || 'djandes15.vercel.app';
                     const protocol = req.headers['x-forwarded-proto'] || 'https';
-                    const receiptUrl = `${protocol}://${host}/api/product-receipt?invoiceId=${param}`;
+                    const receiptHtmlUrl = `${protocol}://${host}/api/product-receipt?invoiceId=${param}`;
+                    const screenshotUrl = `https://api.microlink.io/?url=${encodeURIComponent(receiptHtmlUrl)}&screenshot=true&embed=screenshot.url&viewport.width=560&viewport.height=800&waitFor=800`;
 
-                    await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+                    const payPhotoRes = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             chat_id: chatId,
-                            photo: receiptUrl,
-                            caption: `Nota DJANDES #${param} - LUNAS`
+                            photo: screenshotUrl,
+                            caption: `🟢 Nota DJANDES #${param} - *LUNAS*`
                         })
                     });
+                    const payPhotoJson = await payPhotoRes.json();
+                    if (!payPhotoJson.ok) {
+                        await sendTelegramMessage(botToken, chatId,
+                            `⚠️ Gagal membuat gambar otomatis. Buka struk manual di sini:\n${receiptHtmlUrl}`);
+                    }
                 } else {
                     await sendTelegramMessage(botToken, chatId, `❌ Gagal memperbarui status ke Lunas: ${payJson.message}`);
                 }
