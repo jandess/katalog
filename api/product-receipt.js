@@ -1,6 +1,6 @@
 // api/product-receipt.js
-// Endpoint HTML murni — tidak butuh library apapun.
-// Body tanpa margin/padding agar microlink `element=.card` hanya meng-capture area kartu.
+// Endpoint HTML murni — tidak butuh library tambahan.
+// Body tanpa margin/padding agar microlink `element=.card` hanya menangkap area kartu.
 
 module.exports = async function handler(req, res) {
     try {
@@ -27,16 +27,38 @@ module.exports = async function handler(req, res) {
         const order = sheetJson.data;
         const isPaid = order.status && order.status.toLowerCase() === 'lunas';
 
-        // Parse items: format "Nama Item (Nx)|harga,Nama Item2 (Nx)|harga"
+        // 1. Parsing Items: format "Nama|Qty|HargaTotal"
         const itemsList = order.items
             ? order.items.split(',').map(x => {
-                const [name, price] = x.trim().split('|');
-                return { name: (name || '').trim(), price: parseInt(price, 10) || 0 };
+                const parts = x.trim().split('|');
+                const name = parts[0] || '';
+                const qty = parts[1] || '1x';
+                const price = parseInt(parts[2], 10) || 0;
+
+                // Hitung harga satuan
+                const qtyNumber = parseInt(qty.replace(/[^0-9]/g, ''), 10) || 1;
+                const unitPrice = Math.round(price / qtyNumber);
+
+                return { name, qty, price, unitPrice };
             }).filter(i => i.name)
             : [];
 
+        // 2. Parsing Packaging: format "Tipe|Varian|Harga"
+        let boxType = '';
+        let boxVariant = '';
+        let boxPrice = 0;
+        if (order.packaging && order.packaging.includes('|')) {
+            const parts = order.packaging.split('|');
+            boxType = parts[0] || '';
+            boxVariant = parts[1] || '';
+            boxPrice = parseInt(parts[2], 10) || 0;
+        } else if (order.packaging) {
+            boxType = order.packaging;
+        }
+
+        // 3. Setup Nilai Keuangan
         const subtotal = Number(order.subtotal) || itemsList.reduce((s, i) => s + i.price, 0);
-        const boxTotal = Number(order.boxTotal) || 0;
+        const boxTotal = boxPrice || Number(order.boxTotal) || 0;
         const total = Number(order.total) || subtotal + boxTotal;
 
         const statusColor = isPaid ? '#065f46' : '#991b1b';
@@ -44,25 +66,39 @@ module.exports = async function handler(req, res) {
         const statusBorder = isPaid ? '#34d399' : '#f87171';
         const statusText = isPaid ? 'LUNAS' : 'BELUM BAYAR';
 
-        // Render baris item + harga
+        // 4. Perbaikan tampilan Jam dari Google Sheets (format ISO tanggal epoch "1899-12-30T...")
+        let cleanTime = order.timePickup || '-';
+        if (cleanTime.includes('T')) {
+            const tMatch = cleanTime.match(/T(\d{2}:\d{2})/);
+            if (tMatch) cleanTime = tMatch[1];
+        }
+
+        // 5. Render Daftar Items (Identik Web Struk)
         const itemsHtml = itemsList.map(item => `
-      <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px dashed #ede9de;">
-        <span style="font-size:13px;color:#1a1a1a;font-weight:600;">${item.name}</span>
-        <span style="font-size:13px;color:#735c00;font-weight:700;white-space:nowrap;margin-left:12px;">Rp ${item.price.toLocaleString('id-ID')}</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 10px;border-bottom:1px dashed #ede9de;">
+        <div style="display:flex;flex-direction:column;">
+          <span style="font-size:14px;color:#1a1a1a;font-weight:700;font-family:'Inter',sans-serif;">${item.name}</span>
+          <span style="font-size:11px;color:#9ca3af;font-weight:500;margin-top:2px;font-family:'Inter',sans-serif;">${item.qty} x Rp ${item.unitPrice.toLocaleString('id-ID')}</span>
+        </div>
+        <span style="font-size:13px;color:#735c00;font-weight:700;font-family:'Inter',sans-serif;white-space:nowrap;margin-left:12px;">Rp ${item.price.toLocaleString('id-ID')}</span>
       </div>
     `).join('');
 
-        const packagingHtml = order.packaging ? `
-      <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px dashed #ede9de;">
-        <span style="font-size:12px;color:#6b5c3e;font-style:italic;">Kemasan ${order.packaging}</span>
-        <span style="font-size:12px;color:#6b5c3e;font-weight:600;white-space:nowrap;margin-left:12px;">Rp ${boxTotal.toLocaleString('id-ID')}</span>
+        // Render Box Kemasan (Identik Web Struk)
+        const packagingHtml = boxType ? `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px dashed #ede9de;">
+        <div style="display:flex;flex-direction:column;">
+          <span style="font-size:13px;color:#1a1a1a;font-family:'Inter',sans-serif;font-style:italic;">Kemasan: ${boxType}</span>
+          ${boxVariant ? `<span style="font-size:9px;color:#735c00;font-weight:800;text-transform:uppercase;margin-top:2px;letter-spacing:0.5px;font-family:'Inter',sans-serif;">${boxVariant}</span>` : ''}
+        </div>
+        <span style="font-size:12px;color:#735c00;font-weight:700;font-family:'Inter',sans-serif;white-space:nowrap;margin-left:12px;">Rp ${boxTotal.toLocaleString('id-ID')}</span>
       </div>
     ` : '';
 
         const notesHtml = order.notes ? `
-      <div style="margin-top:16px;background:#fffff5;border:1px dashed #c9b96a;padding:10px 14px;border-radius:8px;">
-        <div style="font-size:9px;font-weight:700;color:#8b6914;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;">Catatan Tambahan</div>
-        <div style="font-size:12px;font-style:italic;color:#5c4a1e;">"${order.notes}"</div>
+      <div style="margin-top:18px;background:#faeae1;border:1px dashed #dfbaa8;padding:10px 14px;border-radius:8px;">
+        <div style="font-size:9px;font-weight:700;color:#995431;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;">Catatan Tambahan</div>
+        <div style="font-size:12px;font-style:italic;color:#703f28;">"${order.notes}"</div>
       </div>
     ` : '';
 
@@ -76,48 +112,53 @@ module.exports = async function handler(req, res) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Invoice ${order.invoiceId} - Djandes</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Inter', sans-serif;
-      /* Tidak ada background/padding agar microlink element=.card hanya tangkap kartu */
       background: transparent;
     }
     .card {
       background: #ffffff;
       width: 520px;
       padding: 32px 36px 28px;
-      border-radius: 0;  /* tanpa rounded, karena ini seluruh snapshot */
     }
     /* ── Header ── */
     .header {
       display: flex; justify-content: space-between; align-items: center;
       border-bottom: 2px solid #ede9de; padding-bottom: 18px; margin-bottom: 18px;
     }
-    .brand-name { font-size: 30px; font-weight: 800; color: #735c00; line-height: 1; }
-    .brand-sub  { font-size: 9px; font-weight: 700; color: #9ca3af; letter-spacing: 3px; text-transform: uppercase; margin-top: 3px; }
-    .inv-lbl    { font-size: 9px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; text-align: right; margin-bottom: 3px; }
-    .inv-num    { font-size: 17px; font-weight: 800; color: #1a1a1a; text-align: right; }
-    .inv-date   { font-size: 9px; color: #9ca3af; font-weight: 500; text-align: right; margin-top: 2px; }
-    /* ── Info boxes ── */
-    .info-row   { display: flex; gap: 12px; margin-bottom: 20px; }
-    .info-box   { flex: 1; background: #faf8f2; border-radius: 10px; padding: 12px 14px; }
-    .info-lbl   { font-size: 9px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-    .info-val   { font-size: 14px; font-weight: 700; color: #1a1a1a; }
-    .info-val.sm { font-size: 12px; }
-    /* ── Items ── */
-    .sec-lbl    { font-size: 9px; font-weight: 700; color: #9ca3af; letter-spacing: 1.5px; text-transform: uppercase; border-bottom: 1px solid #ede9de; padding-bottom: 6px; margin-bottom: 4px; }
-    /* ── Totals ── */
+    .brand-name { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700; color: #735c00; line-height: 1; }
+    .brand-sub  { font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 700; color: #9ca3af; letter-spacing: 2px; text-transform: uppercase; margin-top: 3px; }
+    .inv-lbl    { font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; text-align: right; margin-bottom: 3px; }
+    .inv-num    { font-family: 'Inter', sans-serif; font-size: 17px; font-weight: 800; color: #1a1a1a; text-align: right; }
+    
+    /* ── Info Box Layout: Customer Full Width, Pickup di bawah 50/50 ── */
+    .info-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+    .info-box-full  { background: #faf8f2; border-radius: 12px; padding: 12px 14px; width: 100%; }
+    .info-row       { display: flex; gap: 10px; width: 100%; }
+    .info-box-half  { background: #faf8f2; border-radius: 12px; padding: 12px 14px; flex: 1; }
+    .info-lbl       { font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .info-val       { font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 700; color: #1a1a1a; }
+    .info-val.sm    { font-size: 13px; }
+    
+    /* ── Rincian Pesanan ── */
+    .sec-lbl    { font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 700; color: #9ca3af; letter-spacing: 1.5px; text-transform: uppercase; border-bottom: 1px solid #ede9de; padding-bottom: 6px; margin-bottom: 4px; }
+    
+    /* ── Total Rincian ── */
     .totals     { margin-top: 14px; border-top: 1.5px solid #ede9de; padding-top: 12px; }
-    .tot-row    { display: flex; justify-content: space-between; font-size: 12px; color: #6b7280; margin-bottom: 6px; }
-    .tot-final  { display: flex; justify-content: space-between; align-items: baseline; margin-top: 8px; }
-    .tot-label  { font-size: 11px; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: 0.5px; }
+    .tot-row    { font-family: 'Inter', sans-serif; display: flex; justify-content: space-between; font-size: 12px; color: #6b7280; margin-bottom: 6px; }
+    .tot-final  { font-family: 'Inter', sans-serif; display: flex; justify-content: space-between; align-items: baseline; margin-top: 8px; }
+    .tot-label  { font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: 0.5px; }
     .tot-value  { font-size: 24px; font-weight: 800; color: #735c00; }
-    /* ── Footer ── */
+    
+    /* ── Footer Status ── */
     .footer-row { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 16px; border-top: 1.5px solid #ede9de; }
-    .badge      { padding: 7px 18px; border-radius: 100px; font-size: 12px; font-weight: 800; letter-spacing: 0.5px; }
-    .thank-you  { text-align: center; margin-top: 20px; font-size: 10px; font-weight: 700; color: #d1d5db; letter-spacing: 3px; text-transform: uppercase; }
+    .badge      { font-family: 'Inter', sans-serif; padding: 7px 18px; border-radius: 100px; font-size: 12px; font-weight: 800; letter-spacing: 0.5px; }
+    .thank-you  { font-family: 'Inter', sans-serif; text-align: center; margin-top: 20px; font-size: 10px; font-weight: 700; color: #d1d5db; letter-spacing: 3px; text-transform: uppercase; }
   </style>
 </head>
 <body>
@@ -134,19 +175,21 @@ module.exports = async function handler(req, res) {
       </div>
     </div>
 
-    <!-- Info -->
-    <div class="info-row">
-      <div class="info-box">
+    <!-- Info Pemesan & Jadwal Pengambilan -->
+    <div class="info-container">
+      <div class="info-box-full">
         <div class="info-lbl">Informasi Pemesan</div>
         <div class="info-val">${order.name || '-'}</div>
       </div>
-      <div class="info-box" style="flex:0.9;">
-        <div class="info-lbl">Tanggal Ambil</div>
-        <div class="info-val sm">${order.datePickup || '-'}</div>
-      </div>
-      <div class="info-box" style="flex:0.5;">
-        <div class="info-lbl">Jam Ambil</div>
-        <div class="info-val sm">${order.timePickup || '-'}</div>
+      <div class="info-row">
+        <div class="info-box-half">
+          <div class="info-lbl">Tanggal Ambil</div>
+          <div class="info-val sm">${order.datePickup || '-'}</div>
+        </div>
+        <div class="info-box-half">
+          <div class="info-lbl">Jam Ambil</div>
+          <div class="info-val sm">${cleanTime}</div>
+        </div>
       </div>
     </div>
 
@@ -155,7 +198,7 @@ module.exports = async function handler(req, res) {
     ${itemsHtml}
     ${packagingHtml}
 
-    <!-- Totals -->
+    <!-- Rincian Ringkasan Total -->
     <div class="totals">
       <div class="tot-row">
         <span>Subtotal Produk</span>
@@ -168,14 +211,14 @@ module.exports = async function handler(req, res) {
       </div>
     </div>
 
-    <!-- Status Badge -->
+    <!-- Status Pembayaran di Kiri Bawah -->
     <div class="footer-row">
       <div class="badge" style="background:${statusBg};color:${statusColor};border:2px solid ${statusBorder};">
         ${statusText}
       </div>
     </div>
 
-    <!-- Catatan -->
+    <!-- Catatan Tambahan -->
     ${notesHtml}
 
     <div class="thank-you">— Terima Kasih —</div>
