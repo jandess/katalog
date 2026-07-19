@@ -1,0 +1,13 @@
+{
+    "name": "djandes-catalog",
+    "version": "1.0.0",
+    "description": "Catalog website for Djandes Sweet & Savoury",
+    "main": "index.js",
+    "scripts": {
+        "dev": "vite"
+    },
+    "dependencies": {
+        "@vercel/og": "^0.6.2",
+        "react": "^18.2.0"
+    }
+}
