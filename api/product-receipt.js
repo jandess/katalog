@@ -56,33 +56,87 @@ module.exports = async function handler(req, res) {
             boxType = order.packaging;
         }
 
-        // 3. Setup Nilai Keuangan
+        // 3. Setup Nilai Keuangan dan Status Bayar
         const subtotal = Number(order.subtotal) || itemsList.reduce((s, i) => s + i.price, 0);
         const boxTotal = boxPrice || Number(order.boxTotal) || 0;
         const total = Number(order.total) || subtotal + boxTotal;
 
-        const statusColor = isPaid ? '#065f46' : '#991b1b';
-        const statusBg = isPaid ? '#d1fae5' : '#fee2e2';
-        const statusBorder = isPaid ? '#34d399' : '#f87171';
-        const statusText = isPaid ? 'LUNAS' : 'BELUM BAYAR';
+        const statusStr = (order.status || '').toLowerCase();
+        let statusText = 'PENDING';
+        let statusColor = '#991b1b'; // Red
+        let statusBg = '#fee2e2';
+        let statusBorder = '#f87171';
 
-        // 4. Perbaikan tampilan Jam dari Google Sheets (format ISO tanggal epoch "1899-12-30T...")
-        let cleanTime = order.timePickup || '-';
-        if (cleanTime.includes('T')) {
-            const tMatch = cleanTime.match(/T(\d{2}:\d{2})/);
-            if (tMatch) cleanTime = tMatch[1];
+        if (statusStr.startsWith('lunas')) {
+            statusText = order.status.toUpperCase();
+            statusColor = '#065f46'; // Green
+            statusBg = '#d1fae5';
+            statusBorder = '#34d399';
+        } else if (statusStr.startsWith('dp')) {
+            statusText = 'KURANG BAYAR';
+            statusColor = '#c2410c'; // Orange
+            statusBg = '#ffedd5';
+            statusBorder = '#fb923c';
         }
 
-        // 5. Render Daftar Items (Identik Web Struk)
-        const itemsHtml = itemsList.map(item => `
+        // Tampilkan detail DP jika status cicilan / pelunasan DP
+        let dpHistoryHtml = '';
+        if (statusStr.startsWith('dp')) {
+            const dpMatch = order.status.match(/DP Rp\s*([\d\.,\s]+)/i);
+            const shortMatch = order.status.match(/Kurang Rp\s*([\d\.,\s]+)/i);
+            if (dpMatch && shortMatch) {
+                dpHistoryHtml = `
+                  <div style="margin-top:8px; border-top:1px dashed #ede9de; padding-top:8px; font-family:'Inter',sans-serif; display:flex; flex-direction:column; gap:4px; font-size:12px;">
+                    <div style="display:flex; justify-content:space-between; color:#4b5563;">
+                      <span>Uang Muka (DP)</span>
+                      <span style="font-weight:700; color:#16a34a;">- Rp ${dpMatch[1].trim()}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; color:#b91c1c; font-weight:700;">
+                      <span>Sisa Kurang Bayar</span>
+                      <span>Rp ${shortMatch[1].trim()}</span>
+                    </div>
+                  </div>
+                `;
+            }
+        } else if (statusStr.startsWith('lunas') && statusStr.includes('dp')) {
+            const dpMatch = order.status.match(/DP Rp\s*([\d\.,\s]+)/i);
+            const payMatch = order.status.match(/Lunas Rp\s*([\d\.,\s]+)/i);
+            if (dpMatch && payMatch) {
+                dpHistoryHtml = `
+                  <div style="margin-top:8px; border-top:1px dashed #ede9de; padding-top:8px; font-family:'Inter',sans-serif; display:flex; flex-direction:column; gap:4px; font-size:12px;">
+                    <div style="display:flex; justify-content:space-between; color:#4b5563;">
+                      <span>Uang Muka (DP)</span>
+                      <span style="font-weight:600;">Rp ${dpMatch[1].trim()}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; color:#4b5563;">
+                      <span>Pelunasan</span>
+                      <span style="font-weight:600;">Rp ${payMatch[1].trim()}</span>
+                    </div>
+                  </div>
+                `;
+            }
+        }
+
+        // 4. Perbaikan tampilan Jam secara universal (entah format ISO, string panjang, Epoch dsb)
+        let cleanTime = order.timePickup || '-';
+        const timeRegexMatch = cleanTime.match(/(\d{2}:\d{2})/);
+        if (timeRegexMatch) {
+            cleanTime = timeRegexMatch[1];
+        }
+
+        // 5. Render Daftar Items (Identik Web Struk, fix double 'x')
+        const itemsHtml = itemsList.map(item => {
+            const cleanQty = item.qty.replace(/x/gi, '').trim();
+            return `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 10px;border-bottom:1px dashed #ede9de;">
         <div style="display:flex;flex-direction:column;">
           <span style="font-size:14px;color:#1a1a1a;font-weight:700;font-family:'Inter',sans-serif;">${item.name}</span>
-          <span style="font-size:11px;color:#9ca3af;font-weight:500;margin-top:2px;font-family:'Inter',sans-serif;">${item.qty} x Rp ${item.unitPrice.toLocaleString('id-ID')}</span>
+          <span style="font-size:11px;color:#9ca3af;font-weight:500;margin-top:2px;font-family:'Inter',sans-serif;">${cleanQty} x Rp ${item.unitPrice.toLocaleString('id-ID')}</span>
         </div>
         <span style="font-size:13px;color:#735c00;font-weight:700;font-family:'Inter',sans-serif;white-space:nowrap;margin-left:12px;">Rp ${item.price.toLocaleString('id-ID')}</span>
       </div>
-    `).join('');
+    `;
+        }).join('');
 
         // Render Box Kemasan (Identik Web Struk)
         const packagingHtml = boxType ? `
@@ -209,6 +263,7 @@ module.exports = async function handler(req, res) {
         <span class="tot-label">Total Akhir</span>
         <span class="tot-value">Rp ${totalFormatted}</span>
       </div>
+      ${dpHistoryHtml}
     </div>
 
     <!-- Status Pembayaran di Kiri Bawah -->
