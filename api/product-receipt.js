@@ -1,10 +1,6 @@
 // api/product-receipt.js
 import { ImageResponse } from '@vercel/og';
 
-export const config = {
-    runtime: 'edge', // Edge runtime sangat cepat dan cocok untuk @vercel/og
-};
-
 export default async function handler(req) {
     try {
         const { searchParams } = new URL(req.url);
