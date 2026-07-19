@@ -1,11 +1,23 @@
 // api/product/[slug].js
-const data = require('../../public/data.json');
 
 module.exports = async function handler(req, res) {
   const { slug } = req.query;
 
+  // Fetch data.json dynamically from the same host to avoid packaging/bundling issues in Vercel
+  let data;
+  try {
+    const host = req.headers.host || 'djandes15.vercel.app';
+    const protocol = req.headers['x-forwarded-proto'] || 'https';
+    const dataUrl = `${protocol}://${host}/data.json`;
+    const response = await fetch(dataUrl);
+    data = await response.json();
+  } catch (error) {
+    console.error('Error fetching data.json:', error);
+    return res.status(500).send('Error loading product data');
+  }
+
   // Cari produk berdasarkan slug
-  const product = data.products.find(p => slugify(p.name) === slug);
+  const product = data.products && data.products.find(p => slugify(p.name) === slug);
 
   if (!product) {
     return res.status(404).send('Product not found');
@@ -62,7 +74,7 @@ module.exports = async function handler(req, res) {
       <script>
         setTimeout(() => {
           window.location.href = '/#/product/${slug}';
-        }, 3000);
+        }, 100);
       </script>
     </body>
     </html>
