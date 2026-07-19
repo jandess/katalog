@@ -488,7 +488,7 @@ module.exports = async function handler(req, res) {
                             `💳 <b>Status:</b> ${icon} <b>${escapeHtml((d.status || '').toUpperCase())}</b>\n\n` +
                             `<b>Tindakan:</b>\n` +
                             `🧾 /struk_${cleanInvoiceId}\n` +
-                            `💰 /dp_${cleanInvoiceId}_500000\n` +
+                            `💰 /dp_${cleanInvoiceId}_\n` +
                             `✅ /bayar_${cleanInvoiceId}`
                         );
                     } else {
@@ -623,8 +623,8 @@ module.exports = async function handler(req, res) {
                             const cleanDateCmd = ds.replace(/-/g, '_');
 
                             msg += `<b>${i + 1}. 📅 ${escapeHtml(dateFmt)}</b>\n`;
-                            msg += `   � Jumlah: <b>${g.count} pesanan</b>\n`;
-                            msg += `   � /jadwal_${cleanDateCmd}\n\n`;
+                            msg += `   ✅ Jumlah: <b>${g.count} pesanan</b>\n`;
+                            msg += `   ✅ /jadwal_${cleanDateCmd}\n\n`;
                         });
 
                         const grandTotalOrders = sortedDates.reduce((sum, ds) => sum + groups[ds].count, 0);
