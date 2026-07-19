@@ -150,8 +150,8 @@ module.exports = async function handler(req, res) {
                 `👋 <b>Halo Admin DJANDES!</b>\n\n` +
                 `Copas teks pesanan WhatsApp ke sini untuk mencatat otomatis.\n\n` +
                 `<b>📋 Daftar Perintah:</b>\n` +
-                `📅 <b>Jadwal</b> — Lihat semua pesanan mendatang\n` +
-                `📊 <b>Laporan Hari/Minggu/Bulan</b> — Gunakan tombol di bawah\n\n` +
+                `📅 <b>/jadwal</b> — Lihat semua pesanan mendatang\n` +
+                `📊 <b>/laporan Hari/Minggu/Bulan</b> — Gunakan tombol di bawah\n\n` +
                 `<i>Atau ketik perintah berikut:</i>\n` +
                 `📋 /status_<b>[invoice]</b> — Cek detail pesanan\n` +
                 `🧾 /struk_<b>[invoice]</b> — Print struk gambar\n` +
