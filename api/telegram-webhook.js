@@ -255,7 +255,7 @@ module.exports = async function handler(req, res) {
                     `💳 <b>Status:</b> 🔴 <b>PENDING</b>\n\n` +
                     `<b>Tindakan cepat:</b>\n` +
                     `🧾 /struk_${cleanInvoiceId}\n` +
-                    `💰 /dp_${cleanInvoiceId}_500000 <i>(ganti nominal DP)</i>\n` +
+                    `💰 /dp_${cleanInvoiceId}_ <i>(ganti nominal DP)</i>\n` +
                     `✅ /bayar_${cleanInvoiceId}`
                 );
             } else {
