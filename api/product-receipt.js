@@ -68,59 +68,106 @@ module.exports = async function handler(req, res) {
     let statusBorder = '#f87171';
 
     if (statusStr.startsWith('lunas')) {
-      statusText = order.status.toUpperCase();
+      statusText = 'LUNAS';
       statusColor = '#065f46'; // Green
       statusBg = '#d1fae5';
       statusBorder = '#34d399';
-    } else if (statusStr.startsWith('dp')) {
+    } else if (statusStr.startsWith('dp') || statusStr.startsWith('kurang')) {
       statusText = 'KURANG BAYAR';
       statusColor = '#c2410c'; // Orange
       statusBg = '#ffedd5';
       statusBorder = '#fb923c';
-    } else if (statusStr.startsWith('belum') || statusStr.startsWith('pending') || !statusStr) {
+    } else {
       statusText = 'PENDING';
       statusColor = '#991b1b'; // Red
       statusBg = '#fee2e2';
       statusBorder = '#f87171';
-    } else {
-      statusText = order.status.toUpperCase();
     }
 
-    // Tampilkan detail DP jika status cicilan / pelunasan DP
+    // Tampilkan detail DP/Pelunasan
     let dpHistoryHtml = '';
-    if (statusStr.startsWith('dp')) {
-      const dpMatch = order.status.match(/DP Rp\s*([\d\.,\s]+)/i);
-      const shortMatch = order.status.match(/Kurang Rp\s*([\d\.,\s]+)/i);
-      if (dpMatch && shortMatch) {
-        dpHistoryHtml = `
-                  <div style="margin-top:8px; border-top:1px dashed #ede9de; padding-top:8px; font-family:'Inter',sans-serif; display:flex; flex-direction:column; gap:4px; font-size:12px;">
-                    <div style="display:flex; justify-content:space-between; color:#4b5563;">
-                      <span>Uang Muka (DP)</span>
-                      <span style="font-weight:700; color:#16a34a;">- Rp ${dpMatch[1].trim()}</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; color:#b91c1c; font-weight:700;">
-                      <span>Sisa Kurang Bayar</span>
-                      <span>Rp ${shortMatch[1].trim()}</span>
-                    </div>
-                  </div>
-                `;
+    const paidAmount = Number(order.paidAmount) || 0;
+    const changeAmount = Number(order.changeAmount) || 0;
+
+    if (statusText === 'KURANG BAYAR') {
+      let paidShow = paidAmount;
+      let remainingShow = total - paidAmount;
+
+      // Fallback untuk data lama
+      if (paidShow === 0) {
+        const dpMatch = order.status.match(/DP Rp\s*([\d\.,\s]+)/i);
+        const shortMatch = order.status.match(/Kurang Rp\s*([\d\.,\s]+)/i);
+        if (dpMatch && shortMatch) {
+          paidShow = parseInt(dpMatch[1].replace(/[\.,]/g, ''), 10) || 0;
+          remainingShow = parseInt(shortMatch[1].replace(/[\.,]/g, ''), 10) || 0;
+        }
       }
-    } else if (statusStr.startsWith('lunas') && statusStr.includes('dp')) {
-      const dpMatch = order.status.match(/DP Rp\s*([\d\.,\s]+)/i);
-      const payMatch = order.status.match(/Lunas Rp\s*([\d\.,\s]+)/i);
-      if (dpMatch && payMatch) {
+
+      if (paidShow > 0) {
         dpHistoryHtml = `
-                  <div style="margin-top:8px; border-top:1px dashed #ede9de; padding-top:8px; font-family:'Inter',sans-serif; display:flex; flex-direction:column; gap:4px; font-size:12px;">
-                    <div style="display:flex; justify-content:space-between; color:#4b5563;">
-                      <span>Uang Muka (DP)</span>
-                      <span style="font-weight:600;">Rp ${dpMatch[1].trim()}</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; color:#4b5563;">
-                      <span>Pelunasan</span>
-                      <span style="font-weight:600;">Rp ${payMatch[1].trim()}</span>
-                    </div>
-                  </div>
-                `;
+          <div style="margin-top:8px; border-top:1px dashed #ede9de; padding-top:8px; font-family:'Inter',sans-serif; display:flex; flex-direction:column; gap:4px; font-size:12px;">
+            <div style="display:flex; justify-content:space-between; color:#4b5563;">
+              <span>Uang Muka (DP)</span>
+              <span style="font-weight:700; color:#16a34a;">- Rp ${paidShow.toLocaleString('id-ID')}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; color:#b91c1c; font-weight:700;">
+              <span>Sisa Kurang Bayar</span>
+              <span>Rp ${remainingShow.toLocaleString('id-ID')}</span>
+            </div>
+          </div>
+        `;
+      }
+    } else if (statusText === 'LUNAS') {
+      let paidShow = paidAmount;
+      let changeShow = changeAmount;
+
+      // Fallback untuk data lama
+      if (paidShow === 0) {
+        const dpMatch = order.status.match(/DP Rp\s*([\d\.,\s]+)/i);
+        const payMatch = order.status.match(/Pelunasan Rp\s*([\d\.,\s]+)/i) || order.status.match(/Lunas Rp\s*([\d\.,\s]+)/i);
+        const changeMatch = order.status.match(/Kembalian Rp\s*([\d\.,\s]+)/i);
+        if (dpMatch) {
+          const dpVal = parseInt(dpMatch[1].replace(/[\.,]/g, ''), 10) || 0;
+          let payVal = payMatch ? (parseInt(payMatch[1].replace(/[\.,]/g, ''), 10) || 0) : (total - dpVal);
+          let kembalianVal = changeMatch ? (parseInt(changeMatch[1].replace(/[\.,]/g, ''), 10) || 0) : 0;
+
+          dpHistoryHtml = `
+            <div style="margin-top:8px; border-top:1px dashed #ede9de; padding-top:8px; font-family:'Inter',sans-serif; display:flex; flex-direction:column; gap:4px; font-size:12px;">
+              <div style="display:flex; justify-content:space-between; color:#4b5563;">
+                <span>Uang Muka (DP)</span>
+                <span style="font-weight:600;">Rp ${dpVal.toLocaleString('id-ID')}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; color:#4b5563;">
+                <span>Pelunasan</span>
+                <span style="font-weight:600;">Rp ${payVal.toLocaleString('id-ID')}</span>
+              </div>
+              ${kembalianVal > 0 ? `
+              <div style="display:flex; justify-content:space-between; color:#065f46; font-weight:700;">
+                <span>Uang Kembali</span>
+                <span>Rp ${kembalianVal.toLocaleString('id-ID')}</span>
+              </div>
+              ` : ''}
+            </div>
+          `;
+        }
+      } else {
+        // Deteksi apakah ada cicilan/kembalian terbayar
+        if (paidShow > total || changeShow > 0 || paidShow > 0) {
+          dpHistoryHtml = `
+            <div style="margin-top:8px; border-top:1px dashed #ede9de; padding-top:8px; font-family:'Inter',sans-serif; display:flex; flex-direction:column; gap:4px; font-size:12px;">
+              <div style="display:flex; justify-content:space-between; color:#4b5563;">
+                <span>Total Terbayar</span>
+                <span style="font-weight:600;">Rp ${paidShow.toLocaleString('id-ID')}</span>
+              </div>
+              ${changeShow > 0 ? `
+              <div style="display:flex; justify-content:space-between; color:#065f46; font-weight:700;">
+                <span>Uang Kembali</span>
+                <span>Rp ${changeShow.toLocaleString('id-ID')}</span>
+              </div>
+              ` : ''}
+            </div>
+          `;
+        }
       }
     }
 
