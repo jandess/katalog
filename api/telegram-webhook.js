@@ -74,14 +74,34 @@ module.exports = async function handler(req, res) {
         function parseDate(dateStr) {
             if (!dateStr || dateStr === '-') return null;
             const s = String(dateStr).trim();
-            if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return new Date(s + 'T00:00:00+07:00');
+
+            if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+                const d = new Date(s + 'T00:00:00+07:00');
+                return isNaN(d.getTime()) ? null : d;
+            }
+
+            const parsed = Date.parse(s);
+            if (!isNaN(parsed)) {
+                return new Date(parsed);
+            }
+
             const dmyM = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-            if (dmyM) return new Date(`${dmyM[3]}-${dmyM[2].padStart(2, '0')}-${dmyM[1].padStart(2, '0')}T00:00:00+07:00`);
+            if (dmyM) {
+                let d = new Date(`${dmyM[3]}-${dmyM[2].padStart(2, '0')}-${dmyM[1].padStart(2, '0')}T00:00:00+07:00`);
+                if (isNaN(d.getTime())) {
+                    d = new Date(`${dmyM[3]}-${dmyM[1].padStart(2, '0')}-${dmyM[2].padStart(2, '0')}T00:00:00+07:00`);
+                }
+                return isNaN(d.getTime()) ? null : d;
+            }
+
             const idMonths = { 'januari': '01', 'februari': '02', 'maret': '03', 'april': '04', 'mei': '05', 'juni': '06', 'juli': '07', 'agustus': '08', 'september': '09', 'oktober': '10', 'november': '11', 'desember': '12' };
             const idM = s.match(/(\d{1,2})\s+(\w+)\s+(\d{4})/i);
             if (idM) {
                 const mon = idMonths[idM[2].toLowerCase()];
-                if (mon) return new Date(`${idM[3]}-${mon}-${idM[1].padStart(2, '0')}T00:00:00+07:00`);
+                if (mon) {
+                    const d = new Date(`${idM[3]}-${mon}-${idM[1].padStart(2, '0')}T00:00:00+07:00`);
+                    return isNaN(d.getTime()) ? null : d;
+                }
             }
             return null;
         }
@@ -220,10 +240,10 @@ module.exports = async function handler(req, res) {
             let extraParam = '';
 
             if (uParts.length >= 2) {
-                // Mendukung format baru tanpa dash: /status_DJDZPBMJ9 -> ["/status", "DJDZPBMJ9"]
-                // Serta format lama: /status_DJD_ZPBMJ9 -> ["/status", "DJD", "ZPBMJ9"]
-                // Serta DP: /dp_DJDZPBMJ9_500000 -> ["/dp", "DJDZPBMJ9", "500000"]
-                if (uParts[1].startsWith('DJD') && uParts[1].length > 4) {
+                // Mendukung format baru tanpa dash: /status_djdzpbmj9 -> ["/status", "djdzpbmj9"]
+                // Serta format lama: /status_djd_zpbmj9 -> ["/status", "djd", "zpbmj9"]
+                // Serta DP: /dp_djdzpbmj9_500000 -> ["/dp", "djdzpbmj9", "500000"]
+                if (uParts[1].startsWith('djd') && uParts[1].length > 4) {
                     invoiceId = uParts[1].toUpperCase();
                     extraParam = uParts[2] || '';
                 } else if (uParts[2]) {
@@ -234,7 +254,7 @@ module.exports = async function handler(req, res) {
                 }
             }
 
-            // Override dengan format baru (spasi) jika ada
+            // Override dengan format baru (spasi) jika ada / dipaket
             if (spaceParts[0]) invoiceId = spaceParts[0].toUpperCase();
             if (spaceParts[1]) extraParam = spaceParts[1];
 
@@ -245,8 +265,8 @@ module.exports = async function handler(req, res) {
                     `Copas teks pesanan WhatsApp ke sini untuk mencatat otomatis.\n\n` +
                     `*📋 Daftar Perintah:*\n` +
                     `📅 /jadwal - Cek jadwal pengiriman\n` +
-                    `📊 /laporan hari | minggu | bulan\n` +
-                    `📊 /laporan [tgl_mulai] [tgl_akhir]\n` +
+                    `📊 /laporan - Laporan pendapatan (hari/minggu/bulan)\n` +
+                    `📊 /laporan_[tgl_mulai]_[tgl_akhir]\n` +
                     `📋 /status_[invoice] - Cek status pesanan\n` +
                     `🧾 /struk_[invoice] - Print struk gambar\n` +
                     `💰 /dp_[invoice]_[nominal] - Catat pembayaran DP\n` +
@@ -257,114 +277,146 @@ module.exports = async function handler(req, res) {
 
             // ── /struk ──
             if (baseCmd === '/struk') {
-                if (!invoiceId) { await sendMsg('⚠️ Format: `/struk [invoice]`'); return res.status(200).send('OK'); }
+                if (!invoiceId) { await sendMsg('⚠️ Format: `/struk_[invoice]`'); return res.status(200).send('OK'); }
                 await sendMsg(`⏳ *Menyiapkan Struk #${invoiceId}...*`);
-                await sendReceipt(invoiceId, `🧾 Nota Pembayaran #${invoiceId} - DJANDES`);
+                try {
+                    await sendReceipt(invoiceId, `🧾 Nota Pembayaran #${invoiceId} - DJANDES`);
+                } catch (err) {
+                    await sendMsg(`❌ Gagal mengambil gambar struk: ${err.message}`);
+                }
                 return res.status(200).send('OK');
             }
 
             // ── /dp ──
             if (baseCmd === '/dp') {
-                if (!invoiceId || !extraParam) { await sendMsg('⚠️ Format: `/dp [invoice] [nominal]`'); return res.status(200).send('OK'); }
+                if (!invoiceId || !extraParam) { await sendMsg('⚠️ Format: `/dp_[invoice]_[nominal]`'); return res.status(200).send('OK'); }
                 const dpAmount = parseInt(extraParam.replace(/[\.,]/g, ''), 10);
                 if (!dpAmount || dpAmount <= 0) { await sendMsg('⚠️ Nominal DP tidak valid.'); return res.status(200).send('OK'); }
 
                 await sendMsg(`⏳ *Mencatat DP Rp ${dpAmount.toLocaleString('id-ID')} untuk #${invoiceId}...*`);
-                const getRes = await fetch(`${gasUrl}?action=getInvoice&invoiceId=${invoiceId}`);
-                const getJson = await getRes.json();
+                try {
+                    const getRes = await fetch(`${gasUrl}?action=getInvoice&invoiceId=${invoiceId}`);
+                    const getText = await getRes.text();
+                    let getJson;
+                    try { getJson = JSON.parse(getText); } catch (e) {
+                        throw new Error(`Respon GAS Aplikasi Web bukan JSON. Status: ${getRes.status}. Data: ${getText.substring(0, 150)}`);
+                    }
 
-                if (getJson.status !== 'success' || !getJson.data) {
-                    await sendMsg(`❌ Invoice #${invoiceId} tidak ditemukan.`);
-                    return res.status(200).send('OK');
-                }
+                    if (getJson.status !== 'success' || !getJson.data) {
+                        await sendMsg(`❌ Invoice #${invoiceId} tidak ditemukan.`);
+                        return res.status(200).send('OK');
+                    }
 
-                const grandTotal = parseInt(getJson.data.total, 10) || 0;
-                const shortAmount = grandTotal - dpAmount;
-                const statusString = shortAmount <= 0
-                    ? 'Lunas'
-                    : `DP Rp ${dpAmount.toLocaleString('id-ID')} (Kurang Rp ${shortAmount.toLocaleString('id-ID')})`;
+                    const grandTotal = parseInt(getJson.data.total, 10) || 0;
+                    const shortAmount = grandTotal - dpAmount;
+                    const statusString = shortAmount <= 0
+                        ? 'Lunas'
+                        : `DP Rp ${dpAmount.toLocaleString('id-ID')} (Kurang Rp ${shortAmount.toLocaleString('id-ID')})`;
 
-                const payRes = await fetch(gasUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'setStatus', invoiceId, status: statusString }) });
-                const payJson = await payRes.json();
+                    const payRes = await fetch(gasUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'setStatus', invoiceId, status: statusString }) });
+                    const payJson = await payRes.json();
 
-                if (payJson.status === 'success') {
-                    await sendMsg(`🎉 *DP Tercatat!*\nStatus #${invoiceId}: *${statusString}*\n\n⏳ *Menyiapkan Struk...*`);
-                    await sendReceipt(invoiceId, `🪙 Nota DP #${invoiceId} - KURANG BAYAR`);
-                } else {
-                    await sendMsg(`❌ Gagal menyimpan DP: ${payJson.message}`);
+                    if (payJson.status === 'success') {
+                        await sendMsg(`🎉 *DP Tercatat!*\nStatus #${invoiceId}: *${statusString}*\n\n⏳ *Menyiapkan Struk...*`);
+                        await sendReceipt(invoiceId, `🪙 Nota DP #${invoiceId} - KURANG BAYAR`);
+                    } else {
+                        await sendMsg(`❌ Gagal menyimpan DP ke Sheets: ${payJson.message}`);
+                    }
+                } catch (err) {
+                    await sendMsg(`❌ Gagal mencatat DP.\nError: ${err.message}`);
                 }
                 return res.status(200).send('OK');
             }
 
             // ── /bayar ──
             if (baseCmd === '/bayar') {
-                if (!invoiceId) { await sendMsg('⚠️ Format: `/bayar [invoice]`'); return res.status(200).send('OK'); }
+                if (!invoiceId) { await sendMsg('⚠️ Format: `/bayar_[invoice]`'); return res.status(200).send('OK'); }
 
-                const getRes = await fetch(`${gasUrl}?action=getInvoice&invoiceId=${invoiceId}`);
-                const getJson = await getRes.json();
-                let newStatus = 'Lunas';
+                await sendMsg(`⏳ *Mencatat pelunasan #${invoiceId}...*`);
+                try {
+                    const getRes = await fetch(`${gasUrl}?action=getInvoice&invoiceId=${invoiceId}`);
+                    const getText = await getRes.text();
+                    let getJson;
+                    try { getJson = JSON.parse(getText); } catch (e) {
+                        throw new Error(`Respon GAS Web App bukan JSON. Data: ${getText.substring(0, 150)}`);
+                    }
 
-                if (getJson.status === 'success' && getJson.data) {
+                    if (getJson.status !== 'success' || !getJson.data) {
+                        await sendMsg(`❌ Invoice #${invoiceId} tidak ditemukan.`);
+                        return res.status(200).send('OK');
+                    }
+
+                    let newStatus = 'Lunas';
                     const prev = getJson.data.status || '';
                     if (prev.toLowerCase().startsWith('dp ')) {
                         const dpM = prev.match(/DP Rp\s*([\d\.,\s]+)/i);
                         const shortM = prev.match(/Kurang Rp\s*([\d\.,\s]+)/i);
                         if (dpM && shortM) newStatus = `Lunas (DP Rp ${dpM[1].trim()} + Lunas Rp ${shortM[1].trim()})`;
                     }
-                }
 
-                const payRes = await fetch(gasUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'setStatus', invoiceId, status: newStatus }) });
-                const payJson = await payRes.json();
+                    const payRes = await fetch(gasUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'setStatus', invoiceId, status: newStatus }) });
+                    const payJson = await payRes.json();
 
-                if (payJson.status === 'success') {
-                    await sendMsg(`🎉 *Sukses!* Invoice #${invoiceId} ditandai *LUNAS*.\n\n⏳ *Menyiapkan Struk...*`);
-                    await sendReceipt(invoiceId, `🟢 Nota DJANDES #${invoiceId} - ${newStatus}`);
-                } else {
-                    await sendMsg(`❌ Gagal update status: ${payJson.message}`);
+                    if (payJson.status === 'success') {
+                        await sendMsg(`🎉 *Sukses!* Invoice #${invoiceId} ditandai *LUNAS*.\n\n⏳ *Menyiapkan Struk...*`);
+                        await sendReceipt(invoiceId, `🟢 Nota DJANDES #${invoiceId} - ${newStatus}`);
+                    } else {
+                        await sendMsg(`❌ Gagal update status di Sheets: ${payJson.message}`);
+                    }
+                } catch (err) {
+                    await sendMsg(`❌ Gagal memperbarui status ke Sheets.\nError: ${err.message}`);
                 }
                 return res.status(200).send('OK');
             }
 
             // ── /status ──
             if (baseCmd === '/status') {
-                if (!invoiceId) { await sendMsg('⚠️ Format: `/status [invoice]`'); return res.status(200).send('OK'); }
+                if (!invoiceId) { await sendMsg('⚠️ Format: `/status_[invoice]`'); return res.status(200).send('OK'); }
 
-                const getRes = await fetch(`${gasUrl}?action=getInvoice&invoiceId=${invoiceId}`);
-                const getJson = await getRes.json();
+                try {
+                    const getRes = await fetch(`${gasUrl}?action=getInvoice&invoiceId=${invoiceId}`);
+                    const getText = await getRes.text();
+                    let getJson;
+                    try { getJson = JSON.parse(getText); } catch (e) {
+                        throw new Error(`Respon GAS Web App bukan JSON. Data: ${getText.substring(0, 150)}`);
+                    }
 
-                if (getJson.status === 'success' && getJson.data) {
-                    const d = getJson.data;
-                    const cleanTime = extractTime(d.timePickup);
-                    const icon = statusIcon(d.status);
+                    if (getJson.status === 'success' && getJson.data) {
+                        const d = getJson.data;
+                        const cleanTime = extractTime(d.timePickup);
+                        const icon = statusIcon(d.status);
 
-                    const itemsText = d.items
-                        ? d.items.split(',').map(it => {
-                            const [n, q, p] = it.split('|');
-                            return `\n  • ${n || '-'} (${q || '1x'}) — Rp ${parseInt(p, 10).toLocaleString('id-ID')}`;
-                        }).join('') : '-';
+                        const itemsText = d.items
+                            ? d.items.split(',').map(it => {
+                                const [n, q, p] = it.split('|');
+                                return `\n  • ${n || '-'} (${q || '1x'}) — Rp ${parseInt(p, 10).toLocaleString('id-ID')}`;
+                            }).join('') : '-';
 
-                    const [pType, , pPrice] = (d.packaging || '').split('|');
-                    const pkgText = pType ? `${pType} — Rp ${parseInt(pPrice || 0, 10).toLocaleString('id-ID')}` : '-';
+                        const [pType, , pPrice] = (d.packaging || '').split('|');
+                        const pkgText = pType ? `${pType} — Rp ${parseInt(pPrice || 0, 10).toLocaleString('id-ID')}` : '-';
 
-                    const telInvoiceId = invoiceId.replace('-', '_');
+                        const telInvoiceId = invoiceId.replace('-', '_');
 
-                    await sendMsg(
-                        `📋 *Detail Pesanan #${invoiceId}*\n\n` +
-                        `👤 *Nama:* ${d.name}\n` +
-                        `🥞 *Item:* ${itemsText}\n` +
-                        `📦 *Kemasan:* ${pkgText}\n` +
-                        `💵 *Total:* Rp ${Number(d.total).toLocaleString('id-ID')}\n` +
-                        `📅 *Tanggal Ambil:* ${d.datePickup}\n` +
-                        `🕐 *Jam Ambil:* ${cleanTime}\n` +
-                        `📝 *Catatan:* ${d.notes || '-'}\n` +
-                        `💳 *Status:* ${icon} *${(d.status || '').toUpperCase()}*\n\n` +
-                        `*Tindakan:*\n` +
-                        `🧾 /struk_${telInvoiceId}\n` +
-                        `💰 /dp_${telInvoiceId}_500000\n` +
-                        `✅ /bayar_${telInvoiceId}`
-                    );
-                } else {
-                    await sendMsg(`❌ Invoice #${invoiceId} tidak ditemukan.`);
+                        await sendMsg(
+                            `📋 *Detail Pesanan #${invoiceId}*\n\n` +
+                            `👤 *Nama:* ${d.name}\n` +
+                            `🥞 *Item:* ${itemsText}\n` +
+                            `📦 *Kemasan:* ${pkgText}\n` +
+                            `💵 *Total:* Rp ${Number(d.total).toLocaleString('id-ID')}\n` +
+                            `📅 *Tanggal Ambil:* ${d.datePickup}\n` +
+                            `🕐 *Jam Ambil:* ${cleanTime}\n` +
+                            `📝 *Catatan:* ${d.notes || '-'}\n` +
+                            `💳 *Status:* ${icon} *${(d.status || '').toUpperCase()}*\n\n` +
+                            `*Tindakan:*\n` +
+                            `🧾 /struk_${telInvoiceId}\n` +
+                            `💰 /dp_${telInvoiceId}_500000\n` +
+                            `✅ /bayar_${telInvoiceId}`
+                        );
+                    } else {
+                        await sendMsg(`❌ Invoice #${invoiceId} tidak ditemukan.`);
+                    }
+                } catch (err) {
+                    await sendMsg(`❌ Gagal mengambil detail info.\nError: ${err.message}`);
                 }
                 return res.status(200).send('OK');
             }
@@ -372,42 +424,52 @@ module.exports = async function handler(req, res) {
             // ── /jadwal ──
             if (baseCmd === '/jadwal') {
                 await sendMsg('⏳ *Mengambil jadwal pesanan...*');
-                const getRes = await fetch(`${gasUrl}?action=getAll`);
-                const getJson = await getRes.json();
+                try {
+                    const getRes = await fetch(`${gasUrl}?action=getAll`);
+                    const getText = await getRes.text();
+                    let getJson;
+                    try {
+                        getJson = JSON.parse(getText);
+                    } catch (e) {
+                        throw new Error(`Respon GAS Web App bukan JSON. Status: ${getRes.status}. Data: ${getText.substring(0, 150)}`);
+                    }
 
-                if (getJson.status !== 'success' || !Array.isArray(getJson.data)) {
-                    await sendMsg('❌ Gagal mengambil data dari Sheets.');
-                    return res.status(200).send('OK');
-                }
+                    if (getJson.status !== 'success' || !Array.isArray(getJson.data)) {
+                        await sendMsg(`❌ Gagal mendapatkan list data dari Sheets: ${getJson.message || 'Data kosong'}`);
+                        return res.status(200).send('OK');
+                    }
 
-                const todayStr = toDateStr(new Date());
-                const upcoming = getJson.data
-                    .filter(o => { const d = parseDate(o.datePickup); return d && toDateStr(d) >= todayStr; })
-                    .sort((a, b) => {
-                        const da = parseDate(a.datePickup), db = parseDate(b.datePickup);
-                        if (da && db && da.getTime() !== db.getTime()) return da.getTime() - db.getTime();
-                        return extractTime(a.timePickup).localeCompare(extractTime(b.timePickup));
-                    });
+                    const todayStr = toDateStr(new Date());
+                    const upcoming = getJson.data
+                        .filter(o => { const d = parseDate(o.datePickup); return d && toDateStr(d) >= todayStr; })
+                        .sort((a, b) => {
+                            const da = parseDate(a.datePickup), db = parseDate(b.datePickup);
+                            if (da && db && da.getTime() !== db.getTime()) return da.getTime() - db.getTime();
+                            return extractTime(a.timePickup).localeCompare(extractTime(b.timePickup));
+                        });
 
-                if (upcoming.length === 0) {
-                    await sendMsg(`📭 *Tidak ada pesanan mendatang mulai ${todayStr}.*`);
-                } else {
-                    let msg = `📅 *Jadwal Pesanan Mendatang (${todayStr}):*\n\n`;
-                    upcoming.forEach((o, i) => {
-                        const icon = statusIcon(o.status);
-                        const timeStr = extractTime(o.timePickup);
-                        const d = parseDate(o.datePickup);
-                        const dateFmt = d
-                            ? d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' })
-                            : o.datePickup;
-                        const telInvoiceId = o.invoiceId.replace('-', '_');
-                        msg += `*${i + 1}. ${o.name}* ${icon}\n`;
-                        msg += `   📅 ${dateFmt}\n`;
-                        msg += `   🕐 ${timeStr} | 💵 Rp ${Number(o.total).toLocaleString('id-ID')}\n`;
-                        msg += `   🔍 /status_${telInvoiceId}\n\n`;
-                    });
-                    msg += `Total: *${upcoming.length}* pesanan.`;
-                    await sendMsg(msg);
+                    if (upcoming.length === 0) {
+                        await sendMsg(`📭 *Tidak ada pesanan mendatang mulai tanggal ${todayStr}.*`);
+                    } else {
+                        let msg = `📅 *Jadwal Pesanan Mendatang (${todayStr}):*\n\n`;
+                        upcoming.forEach((o, i) => {
+                            const icon = statusIcon(o.status);
+                            const timeStr = extractTime(o.timePickup);
+                            const d = parseDate(o.datePickup);
+                            const dateFmt = d
+                                ? d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' })
+                                : o.datePickup;
+                            const telInvoiceId = o.invoiceId.replace('-', '_');
+                            msg += `*${i + 1}. ${o.name}* ${icon}\n`;
+                            msg += `   📅 ${dateFmt}\n`;
+                            msg += `   🕐 ${timeStr} | 💵 Rp ${Number(o.total).toLocaleString('id-ID')}\n`;
+                            msg += `   🔍 /status_${telInvoiceId}\n\n`;
+                        });
+                        msg += `Total: *${upcoming.length}* pesanan.`;
+                        await sendMsg(msg);
+                    }
+                } catch (err) {
+                    await sendMsg(`❌ Gagal memuat jadwal.\nError: ${err.message}`);
                 }
                 return res.status(200).send('OK');
             }
@@ -415,92 +477,103 @@ module.exports = async function handler(req, res) {
             // ── /laporan ──
             if (baseCmd === '/laporan') {
                 await sendMsg('⏳ *Menyusun laporan pendapatan...*');
-                const getRes = await fetch(`${gasUrl}?action=getAll`);
-                const getJson = await getRes.json();
+                try {
+                    const getRes = await fetch(`${gasUrl}?action=getAll`);
+                    const getText = await getRes.text();
+                    let getJson;
+                    try {
+                        getJson = JSON.parse(getText);
+                    } catch (e) {
+                        throw new Error(`Respon GAS Web App bukan JSON. Data: ${getText.substring(0, 150)}`);
+                    }
 
-                if (getJson.status !== 'success' || !Array.isArray(getJson.data)) {
-                    await sendMsg('❌ Gagal mengambil data laporan dari Sheets.');
-                    return res.status(200).send('OK');
-                }
-
-                const now = new Date();
-                const todayStr2 = toDateStr(now);
-                const param0 = (spaceParts[0] || 'hari').toLowerCase();
-                let startDate = null, endDate = null, rangeLabel = '';
-
-                if (param0 === 'hari') {
-                    startDate = new Date(todayStr2 + 'T00:00:00+07:00');
-                    endDate = new Date(todayStr2 + 'T23:59:59+07:00');
-                    rangeLabel = `Hari Ini (${todayStr2})`;
-                } else if (param0 === 'minggu') {
-                    const day = now.getDay();
-                    const diffMon = day === 0 ? -6 : 1 - day;
-                    const mon = new Date(now); mon.setDate(now.getDate() + diffMon);
-                    const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
-                    startDate = mon; endDate = sun;
-                    rangeLabel = `Minggu Ini (${toDateStr(mon)} s/d ${toDateStr(sun)})`;
-                } else if (param0 === 'bulan') {
-                    startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-                    endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-                    const mn = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-                    rangeLabel = `${mn[now.getMonth()]} ${now.getFullYear()}`;
-                } else {
-                    // Custom date range: "/laporan 01/07/2026 31/07/2026" atau "/laporan 2026-07-01 2026-07-31"
-                    startDate = parseDate(spaceParts[0]);
-                    endDate = parseDate(spaceParts[1] || spaceParts[0]);
-                    rangeLabel = `${spaceParts[0] || '?'}${spaceParts[1] ? ' s/d ' + spaceParts[1] : ''}`;
-                    if (!startDate) {
-                        await sendMsg(
-                            '⚠️ Format tidak dikenali.\n\nContoh:\n' +
-                            '`/laporan hari`\n`/laporan minggu`\n`/laporan bulan`\n' +
-                            '`/laporan 01/07/2026 31/07/2026`\n`/laporan 2026-07-01 2026-07-31`'
-                        );
+                    if (getJson.status !== 'success' || !Array.isArray(getJson.data)) {
+                        await sendMsg(`❌ Gagal mengambil data laporan: ${getJson.message || 'Format salah'}`);
                         return res.status(200).send('OK');
                     }
+
+                    const now = new Date();
+                    const todayStr2 = toDateStr(now);
+                    const param0 = (spaceParts[0] || 'hari').toLowerCase();
+                    let startDate = null, endDate = null, rangeLabel = '';
+
+                    if (param0 === 'hari') {
+                        startDate = new Date(todayStr2 + 'T00:00:00+07:00');
+                        endDate = new Date(todayStr2 + 'T23:59:59+07:00');
+                        rangeLabel = `Hari Ini (${todayStr2})`;
+                    } else if (param0 === 'minggu') {
+                        const day = now.getDay();
+                        const diffMon = day === 0 ? -6 : 1 - day;
+                        const mon = new Date(now); mon.setDate(now.getDate() + diffMon);
+                        const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+                        startDate = mon; endDate = sun;
+                        rangeLabel = `Minggu Ini (${toDateStr(mon)} s/d ${toDateStr(sun)})`;
+                    } else if (param0 === 'bulan') {
+                        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                        const mn = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                        rangeLabel = `${mn[now.getMonth()]} ${now.getFullYear()}`;
+                    } else {
+                        // Custom range: "/laporan 01/07/2026 31/07/2026"
+                        startDate = parseDate(spaceParts[0]);
+                        endDate = parseDate(spaceParts[1] || spaceParts[0]);
+                        rangeLabel = `${spaceParts[0] || '?'}${spaceParts[1] ? ' s/d ' + spaceParts[1] : ''}`;
+                        if (!startDate) {
+                            await sendMsg(
+                                '⚠️ Format tidak dikenali.\n\nContoh:\n' +
+                                '`📅 Jadwal` -> Tekan tombol di bawah\n' +
+                                '`/laporan hari`\n`/laporan minggu`\n`/laporan bulan`\n' +
+                                '`/laporan 01/07/2026 31/07/2026`\n`/laporan 2026-07-01 2026-07-31`'
+                            );
+                            return res.status(200).send('OK');
+                        }
+                    }
+
+                    const startStr = toDateStr(startDate);
+                    const endStr = toDateStr(endDate);
+
+                    const filtered = getJson.data.filter(o => {
+                        const d = parseDate(o.datePickup);
+                        if (!d) return false;
+                        const ds = toDateStr(d);
+                        return ds >= startStr && ds <= endStr;
+                    });
+
+                    let totalTagihan = 0, totalMasuk = 0;
+                    let countLunas = 0, lunasMasuk = 0;
+                    let countDP = 0, dpMasuk = 0;
+                    let countPending = 0;
+
+                    filtered.forEach(o => {
+                        const total = parseInt(o.total, 10) || 0;
+                        totalTagihan += total;
+                        const paid = getPaidAmount(o.status, total);
+                        totalMasuk += paid;
+                        const s = (o.status || '').toLowerCase();
+                        if (s.startsWith('lunas')) { countLunas++; lunasMasuk += total; }
+                        else if (s.startsWith('dp')) { countDP++; dpMasuk += paid; }
+                        else { countPending++; }
+                    });
+
+                    const piutang = totalTagihan - totalMasuk;
+
+                    await sendMsg(
+                        `📊 *Laporan Pendapatan DJANDES*\n` +
+                        `📆 *Periode:* ${rangeLabel}\n` +
+                        `━━━━━━━━━━━━━━━━━━━━\n\n` +
+                        `🧾 *Total Pesanan:* ${filtered.length}\n` +
+                        `🟢 Lunas: ${countLunas} — Rp ${lunasMasuk.toLocaleString('id-ID')}\n` +
+                        `🟡 DP/Cicilan: ${countDP} — Rp ${dpMasuk.toLocaleString('id-ID')} masuk\n` +
+                        `🔴 Pending: ${countPending} pesanan\n\n` +
+                        `━━━━━━━━━━━━━━━━━━━━\n` +
+                        `💰 *Total Uang Masuk:* Rp ${totalMasuk.toLocaleString('id-ID')}\n` +
+                        `📋 *Total Tagihan:* Rp ${totalTagihan.toLocaleString('id-ID')}\n` +
+                        `⚠️ *Piutang Belum Masuk:* Rp ${piutang.toLocaleString('id-ID')}\n\n` +
+                        `_Gunakan /jadwal untuk detail pesanan_`
+                    );
+                } catch (err) {
+                    await sendMsg(`❌ Gagal menyusun laporan.\nError: ${err.message}`);
                 }
-
-                const startStr = toDateStr(startDate);
-                const endStr = toDateStr(endDate);
-
-                const filtered = getJson.data.filter(o => {
-                    const d = parseDate(o.datePickup);
-                    if (!d) return false;
-                    const ds = toDateStr(d);
-                    return ds >= startStr && ds <= endStr;
-                });
-
-                let totalTagihan = 0, totalMasuk = 0;
-                let countLunas = 0, lunasMasuk = 0;
-                let countDP = 0, dpMasuk = 0;
-                let countPending = 0;
-
-                filtered.forEach(o => {
-                    const total = parseInt(o.total, 10) || 0;
-                    totalTagihan += total;
-                    const paid = getPaidAmount(o.status, total);
-                    totalMasuk += paid;
-                    const s = (o.status || '').toLowerCase();
-                    if (s.startsWith('lunas')) { countLunas++; lunasMasuk += total; }
-                    else if (s.startsWith('dp')) { countDP++; dpMasuk += paid; }
-                    else { countPending++; }
-                });
-
-                const piutang = totalTagihan - totalMasuk;
-
-                await sendMsg(
-                    `📊 *Laporan Pendapatan DJANDES*\n` +
-                    `📆 *Periode:* ${rangeLabel}\n` +
-                    `━━━━━━━━━━━━━━━━━━━━\n\n` +
-                    `🧾 *Total Pesanan:* ${filtered.length}\n` +
-                    `🟢 Lunas: ${countLunas} — Rp ${lunasMasuk.toLocaleString('id-ID')}\n` +
-                    `🟡 DP/Cicilan: ${countDP} — Rp ${dpMasuk.toLocaleString('id-ID')} masuk\n` +
-                    `🔴 Pending: ${countPending} pesanan\n\n` +
-                    `━━━━━━━━━━━━━━━━━━━━\n` +
-                    `💰 *Total Uang Masuk:* Rp ${totalMasuk.toLocaleString('id-ID')}\n` +
-                    `📋 *Total Tagihan:* Rp ${totalTagihan.toLocaleString('id-ID')}\n` +
-                    `⚠️ *Piutang Belum Masuk:* Rp ${piutang.toLocaleString('id-ID')}\n\n` +
-                    `_Gunakan /jadwal untuk detail pesanan_`
-                );
                 return res.status(200).send('OK');
             }
         }
