@@ -65,8 +65,10 @@ module.exports = async function handler(req, res) {
         }
 
         async function sendReceipt(invoiceId, caption) {
-            const htmlUrl = `${protocol}://${host}/api/product-receipt?invoiceId=${invoiceId}`;
-            const screenshotUrl = `https://api.microlink.io/?url=${encodeURIComponent(htmlUrl)}&screenshot=true&embed=screenshot.url&viewport.width=520&viewport.height=4000&waitFor=1000&element=.card`;
+            // Tambah timestamp ke URL sumber agar microlink.io TIDAK pakai cache lama
+            const ts = Date.now();
+            const htmlUrl = `${protocol}://${host}/api/product-receipt?invoiceId=${invoiceId}&t=${ts}`;
+            const screenshotUrl = `https://api.microlink.io/?url=${encodeURIComponent(htmlUrl)}&screenshot=true&embed=screenshot.url&viewport.width=520&viewport.height=4000&waitFor=1500&element=.card&force=true`;
             const resp = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -293,16 +295,17 @@ module.exports = async function handler(req, res) {
             // ── /start ──
             if (baseCmd === '/start') {
                 await sendMsg(
-                    `👋 *Halo Admin DJANDES!*\n\n` +
+                    `👋 <b>Halo Admin DJANDES!</b>\n\n` +
                     `Copas teks pesanan WhatsApp ke sini untuk mencatat otomatis.\n\n` +
-                    `*📋 Daftar Perintah:*\n` +
-                    `📅 /jadwal - Cek jadwal pengiriman\n` +
-                    `📊 /laporan - Laporan pendapatan (hari/minggu/bulan)\n` +
-                    `📊 /laporan_[tgl_mulai]_[tgl_akhir]\n` +
-                    `📋 /status_[invoice] - Cek status pesanan\n` +
-                    `🧾 /struk_[invoice] - Print struk gambar\n` +
-                    `💰 /dp_[invoice]_[nominal] - Catat pembayaran DP\n` +
-                    `✅ /bayar_[invoice] - Bayar Lunas`
+                    `<b>📋 Daftar Perintah:</b>\n` +
+                    `📅 <b>Jadwal</b> — Lihat semua pesanan mendatang (tombol bawah)\n` +
+                    `📊 <b>Laporan</b> Hari/Minggu/Bulan — tombol bawah\n\n` +
+                    `📋 /status_[invoice] — Cek detail pesanan\n` +
+                    `🧾 /struk_[invoice] — Print struk gambar terbaru\n` +
+                    `💰 /bayar_[invoice]_[nominal] — Catat pembayaran (DP/Lunas/Kembalian)\n` +
+                    `✅ /bayar_[invoice] — Tandai Lunas penuh\n` +
+                    `📊 /laporan hari | minggu | bulan\n\n` +
+                    `<i>Keyboard cepat aktif di bawah input 👇</i>`
                 );
                 return res.status(200).send('OK');
             }
@@ -319,76 +322,15 @@ module.exports = async function handler(req, res) {
                 return res.status(200).send('OK');
             }
 
-            // ── /dp ──
-            if (baseCmd === '/dp') {
-                if (!invoiceId || !extraParam) { await sendMsg('⚠️ Format: `/dp_[invoice]_[nominal]`'); return res.status(200).send('OK'); }
-                const dpAmount = parseInt(extraParam.replace(/[\.,]/g, ''), 10);
-                if (!dpAmount || dpAmount <= 0) { await sendMsg('⚠️ Nominal bayar tidak valid.'); return res.status(200).send('OK'); }
-
-                await sendMsg(`⏳ *Mencatat pembayaran Rp ${dpAmount.toLocaleString('id-ID')} untuk #${invoiceId}...*`);
-                try {
-                    const getRes = await fetch(`${gasUrl}?action=getInvoice&invoiceId=${invoiceId}`);
-                    const getText = await getRes.text();
-                    let getJson;
-                    try { getJson = JSON.parse(getText); } catch (e) {
-                        throw new Error(`Respon GAS bukan JSON. Status: ${getRes.status}. Data: ${getText.substring(0, 150)}`);
-                    }
-
-                    if (getJson.status !== 'success' || !getJson.data) {
-                        await sendMsg(`❌ Invoice #${invoiceId} tidak ditemukan.`);
-                        return res.status(200).send('OK');
-                    }
-
-                    const grandTotal = parseInt(getJson.data.total, 10) || 0;
-                    const kembalian = dpAmount - grandTotal; // positif = ada kembalian
-                    const kurang = grandTotal - dpAmount;   // positif = kurang bayar
-
-                    let statusString, receiptCaption, konfirmasiMsg;
-
-                    if (dpAmount >= grandTotal) {
-                        // Bayar penuh atau lebih → Lunas
-                        statusString = kembalian > 0
-                            ? `Lunas (Bayar Rp ${dpAmount.toLocaleString('id-ID')}, Kembalian Rp ${kembalian.toLocaleString('id-ID')})`
-                            : 'Lunas';
-                        receiptCaption = `🟢 Nota LUNAS #${invoiceId} - DJANDES`;
-                        konfirmasiMsg =
-                            `🎉 <b>LUNAS!</b> Invoice #${invoiceId}\n` +
-                            `💵 Total: Rp ${grandTotal.toLocaleString('id-ID')}\n` +
-                            `💳 Bayar: Rp ${dpAmount.toLocaleString('id-ID')}\n` +
-                            (kembalian > 0 ? `💰 <b>Kembalian: Rp ${kembalian.toLocaleString('id-ID')}</b>\n` : '') +
-                            `\n⏳ Menyiapkan struk...`;
-                    } else {
-                        // Kurang bayar → DP
-                        statusString = `DP Rp ${dpAmount.toLocaleString('id-ID')} (Kurang Rp ${kurang.toLocaleString('id-ID')})`;
-                        receiptCaption = `🟡 Nota DP #${invoiceId} - KURANG BAYAR`;
-                        konfirmasiMsg =
-                            `🪙 <b>DP Tercatat!</b> Invoice #${invoiceId}\n` +
-                            `💵 Total: Rp ${grandTotal.toLocaleString('id-ID')}\n` +
-                            `💳 Bayar: Rp ${dpAmount.toLocaleString('id-ID')}\n` +
-                            `⚠️ <b>Kurang: Rp ${kurang.toLocaleString('id-ID')}</b>\n` +
-                            `\n⏳ Menyiapkan struk...`;
-                    }
-
-                    const payRes = await fetch(gasUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'setStatus', invoiceId, status: statusString }) });
-                    const payJson = await payRes.json();
-
-                    if (payJson.status === 'success') {
-                        await sendMsg(konfirmasiMsg);
-                        await sendReceipt(invoiceId, receiptCaption);
-                    } else {
-                        await sendMsg(`❌ Gagal menyimpan ke Sheets: ${escapeHtml(payJson.message)}`);
-                    }
-                } catch (err) {
-                    await sendMsg(`❌ Gagal mencatat pembayaran.\nError: ${escapeHtml(err.message)}`);
+            // ── /bayar (bayar dengan nominal ATAU tandai lunas penuh) ──
+            // Format: /bayar_[invoice]_[nominal] atau /bayar_[invoice]
+            if (baseCmd === '/bayar' || baseCmd === '/dp') {
+                if (!invoiceId) {
+                    await sendMsg('⚠️ Format:\n/bayar_[invoice]_[nominal] — bayar dengan nominal\n/bayar_[invoice] — tandai lunas penuh');
+                    return res.status(200).send('OK');
                 }
-                return res.status(200).send('OK');
-            }
 
-            // ── /bayar (langsung lunas penuh) ──
-            if (baseCmd === '/bayar') {
-                if (!invoiceId) { await sendMsg('⚠️ Format: `/bayar_[invoice]`'); return res.status(200).send('OK'); }
-
-                await sendMsg(`⏳ *Mencatat pelunasan #${invoiceId}...*`);
+                await sendMsg(`⏳ <b>Memproses pembayaran #${invoiceId}...</b>`);
                 try {
                     const getRes = await fetch(`${gasUrl}?action=getInvoice&invoiceId=${invoiceId}`);
                     const getText = await getRes.text();
@@ -402,29 +344,91 @@ module.exports = async function handler(req, res) {
                         return res.status(200).send('OK');
                     }
 
-                    const prev = getJson.data.status || '';
-                    let newStatus = 'Lunas';
+                    const grandTotal = parseInt(getJson.data.total, 10) || 0;
+                    const prevStatus = getJson.data.status || '';
+                    const prevStatusLow = prevStatus.toLowerCase();
 
-                    // Jika sebelumnya ada DP, simpan riwayat
-                    if (prev.toLowerCase().startsWith('dp ')) {
-                        const dpM = prev.match(/DP Rp\s*([\d\.,\s]+)/i);
-                        const shortM = prev.match(/Kurang Rp\s*([\d\.,\s]+)/i);
-                        if (dpM && shortM) {
-                            newStatus = `Lunas (DP Rp ${dpM[1].trim()} + Pelunasan Rp ${shortM[1].trim()})`;
+                    // Hitung sisa yang harus dibayar berdasarkan status sebelumnya
+                    let sisaSebelumnya = grandTotal;
+                    let dpSebelumnya = 0;
+                    if (prevStatusLow.startsWith('dp ')) {
+                        const kurangM = prevStatus.match(/Kurang Rp\s*([\d\.,]+)/i);
+                        const dpM = prevStatus.match(/DP Rp\s*([\d\.,]+)/i);
+                        if (kurangM) sisaSebelumnya = parseInt(kurangM[1].replace(/[\.,]/g, ''), 10) || grandTotal;
+                        if (dpM) dpSebelumnya = parseInt(dpM[1].replace(/[\.,]/g, ''), 10) || 0;
+                    } else if (prevStatusLow.startsWith('lunas')) {
+                        await sendMsg(`ℹ️ Invoice #${invoiceId} sudah berstatus <b>LUNAS</b>.`);
+                        return res.status(200).send('OK');
+                    }
+
+                    let statusString, receiptCaption, konfirmasiMsg;
+
+                    if (!extraParam) {
+                        // Tidak ada nominal → Tandai Lunas Penuh
+                        statusString = dpSebelumnya > 0
+                            ? `Lunas (DP Rp ${dpSebelumnya.toLocaleString('id-ID')} + Pelunasan Rp ${sisaSebelumnya.toLocaleString('id-ID')})`
+                            : 'Lunas';
+                        receiptCaption = `🟢 Nota LUNAS #${invoiceId} - DJANDES`;
+                        konfirmasiMsg =
+                            `🎉 <b>LUNAS!</b> Invoice #${invoiceId}\n` +
+                            `💵 Total: Rp ${grandTotal.toLocaleString('id-ID')}\n` +
+                            (dpSebelumnya > 0 ? `� DP Sebelumnya: Rp ${dpSebelumnya.toLocaleString('id-ID')}\n` : '') +
+                            `\n⏳ Menyiapkan struk...`;
+                    } else {
+                        // Ada nominal → proses bayar cerdas
+                        const bayarAmount = parseInt(extraParam.replace(/[\.,]/g, ''), 10);
+                        if (!bayarAmount || bayarAmount <= 0) {
+                            await sendMsg('⚠️ Nominal bayar tidak valid.');
+                            return res.status(200).send('OK');
+                        }
+
+                        const kembalian = bayarAmount - sisaSebelumnya; // positif = ada kembalian
+                        const kurang = sisaSebelumnya - bayarAmount;    // positif = masih kurang
+
+                        if (bayarAmount >= sisaSebelumnya) {
+                            // Bayar cukup atau lebih → LUNAS
+                            statusString = (dpSebelumnya > 0)
+                                ? ((kembalian > 0)
+                                    ? `Lunas (DP Rp ${dpSebelumnya.toLocaleString('id-ID')} + Pelunasan Rp ${bayarAmount.toLocaleString('id-ID')}, Kembalian Rp ${kembalian.toLocaleString('id-ID')})`
+                                    : `Lunas (DP Rp ${dpSebelumnya.toLocaleString('id-ID')} + Pelunasan Rp ${bayarAmount.toLocaleString('id-ID')})`)
+                                : ((kembalian > 0)
+                                    ? `Lunas (Bayar Rp ${bayarAmount.toLocaleString('id-ID')}, Kembalian Rp ${kembalian.toLocaleString('id-ID')})`
+                                    : 'Lunas');
+                            receiptCaption = `🟢 Nota LUNAS #${invoiceId} - DJANDES`;
+                            konfirmasiMsg =
+                                `🎉 <b>LUNAS!</b> Invoice #${invoiceId}\n` +
+                                `💵 Total: Rp ${grandTotal.toLocaleString('id-ID')}\n` +
+                                (dpSebelumnya > 0 ? `🪙 DP Sebelumnya: Rp ${dpSebelumnya.toLocaleString('id-ID')}\n` : '') +
+                                `💳 Bayar Kali Ini: Rp ${bayarAmount.toLocaleString('id-ID')}\n` +
+                                (kembalian > 0 ? `💰 <b>Kembalian: Rp ${kembalian.toLocaleString('id-ID')}</b>\n` : '') +
+                                `\n⏳ Menyiapkan struk...`;
+                        } else {
+                            // Masih kurang → DP (akumulasi)
+                            const totalDPBaru = dpSebelumnya + bayarAmount;
+                            statusString = `DP Rp ${totalDPBaru.toLocaleString('id-ID')} (Kurang Rp ${kurang.toLocaleString('id-ID')})`;
+                            receiptCaption = `🟡 Nota DP #${invoiceId} - KURANG BAYAR`;
+                            konfirmasiMsg =
+                                `🪙 <b>DP Tercatat!</b> Invoice #${invoiceId}\n` +
+                                `💵 Total: Rp ${grandTotal.toLocaleString('id-ID')}\n` +
+                                (dpSebelumnya > 0 ? `💳 DP Sebelumnya: Rp ${dpSebelumnya.toLocaleString('id-ID')}\n` : '') +
+                                `💳 Bayar Kali Ini: Rp ${bayarAmount.toLocaleString('id-ID')}\n` +
+                                `✅ Total Terbayar: Rp ${totalDPBaru.toLocaleString('id-ID')}\n` +
+                                `⚠️ <b>Kurang: Rp ${kurang.toLocaleString('id-ID')}</b>\n` +
+                                `\n⏳ Menyiapkan struk...`;
                         }
                     }
 
-                    const payRes = await fetch(gasUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'setStatus', invoiceId, status: newStatus }) });
+                    const payRes = await fetch(gasUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'setStatus', invoiceId, status: statusString }) });
                     const payJson = await payRes.json();
 
                     if (payJson.status === 'success') {
-                        await sendMsg(`🎉 <b>Sukses!</b> Invoice #${invoiceId} ditandai <b>LUNAS</b>.\n\n⏳ <b>Menyiapkan Struk...</b>`);
-                        await sendReceipt(invoiceId, `🟢 Nota LUNAS #${invoiceId} - DJANDES`);
+                        await sendMsg(konfirmasiMsg);
+                        await sendReceipt(invoiceId, receiptCaption);
                     } else {
-                        await sendMsg(`❌ Gagal update status di Sheets: ${escapeHtml(payJson.message)}`);
+                        await sendMsg(`❌ Gagal menyimpan ke Sheets: ${payJson.message}`);
                     }
                 } catch (err) {
-                    await sendMsg(`❌ Gagal memperbarui status.\nError: ${escapeHtml(err.message)}`);
+                    await sendMsg(`❌ Gagal memproses pembayaran.\nError: ${err.message}`);
                 }
                 return res.status(200).send('OK');
             }
