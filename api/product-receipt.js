@@ -3,89 +3,96 @@
 // Body tanpa margin/padding agar microlink `element=.card` hanya menangkap area kartu.
 
 module.exports = async function handler(req, res) {
-    try {
-        const urlObj = new URL(req.url, `https://${req.headers.host}`);
-        const invoiceId = urlObj.searchParams.get('invoiceId');
+  try {
+    const urlObj = new URL(req.url, `https://${req.headers.host}`);
+    const invoiceId = urlObj.searchParams.get('invoiceId');
 
-        if (!invoiceId) {
-            return res.status(400).send('invoiceId diperlukan');
-        }
+    if (!invoiceId) {
+      return res.status(400).send('invoiceId diperlukan');
+    }
 
-        const gasUrl = process.env.GOOGLE_SCRIPT_URL;
-        if (!gasUrl) {
-            return res.status(500).send('GOOGLE_SCRIPT_URL belum dikonfigurasi');
-        }
+    const gasUrl = process.env.GOOGLE_SCRIPT_URL;
+    if (!gasUrl) {
+      return res.status(500).send('GOOGLE_SCRIPT_URL belum dikonfigurasi');
+    }
 
-        // Ambil data invoice dari Google Sheets via Apps Script
-        const sheetRes = await fetch(`${gasUrl}?action=getInvoice&invoiceId=${invoiceId}`);
-        const sheetJson = await sheetRes.json();
+    // Ambil data invoice dari Google Sheets via Apps Script
+    const sheetRes = await fetch(`${gasUrl}?action=getInvoice&invoiceId=${invoiceId}`);
+    const sheetJson = await sheetRes.json();
 
-        if (sheetJson.status !== 'success' || !sheetJson.data) {
-            return res.status(404).send(`Invoice ${invoiceId} tidak ditemukan`);
-        }
+    if (sheetJson.status !== 'success' || !sheetJson.data) {
+      return res.status(404).send(`Invoice ${invoiceId} tidak ditemukan`);
+    }
 
-        const order = sheetJson.data;
-        const isPaid = order.status && order.status.toLowerCase() === 'lunas';
+    const order = sheetJson.data;
+    const isPaid = order.status && order.status.toLowerCase() === 'lunas';
 
-        // 1. Parsing Items: format "Nama|Qty|HargaTotal"
-        const itemsList = order.items
-            ? order.items.split(',').map(x => {
-                const parts = x.trim().split('|');
-                const name = parts[0] || '';
-                const qty = parts[1] || '1x';
-                const price = parseInt(parts[2], 10) || 0;
+    // 1. Parsing Items: format "Nama|Qty|HargaTotal"
+    const itemsList = order.items
+      ? order.items.split(',').map(x => {
+        const parts = x.trim().split('|');
+        const name = parts[0] || '';
+        const qty = parts[1] || '1x';
+        const price = parseInt(parts[2], 10) || 0;
 
-                // Hitung harga satuan
-                const qtyNumber = parseInt(qty.replace(/[^0-9]/g, ''), 10) || 1;
-                const unitPrice = Math.round(price / qtyNumber);
+        // Hitung harga satuan
+        const qtyNumber = parseInt(qty.replace(/[^0-9]/g, ''), 10) || 1;
+        const unitPrice = Math.round(price / qtyNumber);
 
-                return { name, qty, price, unitPrice };
-            }).filter(i => i.name)
-            : [];
+        return { name, qty, price, unitPrice };
+      }).filter(i => i.name)
+      : [];
 
-        // 2. Parsing Packaging: format "Tipe|Varian|Harga"
-        let boxType = '';
-        let boxVariant = '';
-        let boxPrice = 0;
-        if (order.packaging && order.packaging.includes('|')) {
-            const parts = order.packaging.split('|');
-            boxType = parts[0] || '';
-            boxVariant = parts[1] || '';
-            boxPrice = parseInt(parts[2], 10) || 0;
-        } else if (order.packaging) {
-            boxType = order.packaging;
-        }
+    // 2. Parsing Packaging: format "Tipe|Varian|Harga"
+    let boxType = '';
+    let boxVariant = '';
+    let boxPrice = 0;
+    if (order.packaging && order.packaging.includes('|')) {
+      const parts = order.packaging.split('|');
+      boxType = parts[0] || '';
+      boxVariant = parts[1] || '';
+      boxPrice = parseInt(parts[2], 10) || 0;
+    } else if (order.packaging) {
+      boxType = order.packaging;
+    }
 
-        // 3. Setup Nilai Keuangan dan Status Bayar
-        const subtotal = Number(order.subtotal) || itemsList.reduce((s, i) => s + i.price, 0);
-        const boxTotal = boxPrice || Number(order.boxTotal) || 0;
-        const total = Number(order.total) || subtotal + boxTotal;
+    // 3. Setup Nilai Keuangan dan Status Bayar
+    const subtotal = Number(order.subtotal) || itemsList.reduce((s, i) => s + i.price, 0);
+    const boxTotal = boxPrice || Number(order.boxTotal) || 0;
+    const total = Number(order.total) || subtotal + boxTotal;
 
-        const statusStr = (order.status || '').toLowerCase();
-        let statusText = 'PENDING';
-        let statusColor = '#991b1b'; // Red
-        let statusBg = '#fee2e2';
-        let statusBorder = '#f87171';
+    const statusStr = (order.status || '').toLowerCase().trim();
+    let statusText = 'PENDING';
+    let statusColor = '#991b1b'; // Red
+    let statusBg = '#fee2e2';
+    let statusBorder = '#f87171';
 
-        if (statusStr.startsWith('lunas')) {
-            statusText = order.status.toUpperCase();
-            statusColor = '#065f46'; // Green
-            statusBg = '#d1fae5';
-            statusBorder = '#34d399';
-        } else if (statusStr.startsWith('dp')) {
-            statusText = 'KURANG BAYAR';
-            statusColor = '#c2410c'; // Orange
-            statusBg = '#ffedd5';
-            statusBorder = '#fb923c';
-        }
+    if (statusStr.startsWith('lunas')) {
+      statusText = order.status.toUpperCase();
+      statusColor = '#065f46'; // Green
+      statusBg = '#d1fae5';
+      statusBorder = '#34d399';
+    } else if (statusStr.startsWith('dp')) {
+      statusText = 'KURANG BAYAR';
+      statusColor = '#c2410c'; // Orange
+      statusBg = '#ffedd5';
+      statusBorder = '#fb923c';
+    } else if (statusStr.startsWith('belum') || statusStr.startsWith('pending') || !statusStr) {
+      statusText = 'PENDING';
+      statusColor = '#991b1b'; // Red
+      statusBg = '#fee2e2';
+      statusBorder = '#f87171';
+    } else {
+      statusText = order.status.toUpperCase();
+    }
 
-        // Tampilkan detail DP jika status cicilan / pelunasan DP
-        let dpHistoryHtml = '';
-        if (statusStr.startsWith('dp')) {
-            const dpMatch = order.status.match(/DP Rp\s*([\d\.,\s]+)/i);
-            const shortMatch = order.status.match(/Kurang Rp\s*([\d\.,\s]+)/i);
-            if (dpMatch && shortMatch) {
-                dpHistoryHtml = `
+    // Tampilkan detail DP jika status cicilan / pelunasan DP
+    let dpHistoryHtml = '';
+    if (statusStr.startsWith('dp')) {
+      const dpMatch = order.status.match(/DP Rp\s*([\d\.,\s]+)/i);
+      const shortMatch = order.status.match(/Kurang Rp\s*([\d\.,\s]+)/i);
+      if (dpMatch && shortMatch) {
+        dpHistoryHtml = `
                   <div style="margin-top:8px; border-top:1px dashed #ede9de; padding-top:8px; font-family:'Inter',sans-serif; display:flex; flex-direction:column; gap:4px; font-size:12px;">
                     <div style="display:flex; justify-content:space-between; color:#4b5563;">
                       <span>Uang Muka (DP)</span>
@@ -97,12 +104,12 @@ module.exports = async function handler(req, res) {
                     </div>
                   </div>
                 `;
-            }
-        } else if (statusStr.startsWith('lunas') && statusStr.includes('dp')) {
-            const dpMatch = order.status.match(/DP Rp\s*([\d\.,\s]+)/i);
-            const payMatch = order.status.match(/Lunas Rp\s*([\d\.,\s]+)/i);
-            if (dpMatch && payMatch) {
-                dpHistoryHtml = `
+      }
+    } else if (statusStr.startsWith('lunas') && statusStr.includes('dp')) {
+      const dpMatch = order.status.match(/DP Rp\s*([\d\.,\s]+)/i);
+      const payMatch = order.status.match(/Lunas Rp\s*([\d\.,\s]+)/i);
+      if (dpMatch && payMatch) {
+        dpHistoryHtml = `
                   <div style="margin-top:8px; border-top:1px dashed #ede9de; padding-top:8px; font-family:'Inter',sans-serif; display:flex; flex-direction:column; gap:4px; font-size:12px;">
                     <div style="display:flex; justify-content:space-between; color:#4b5563;">
                       <span>Uang Muka (DP)</span>
@@ -114,20 +121,20 @@ module.exports = async function handler(req, res) {
                     </div>
                   </div>
                 `;
-            }
-        }
+      }
+    }
 
-        // 4. Perbaikan tampilan Jam secara universal (entah format ISO, string panjang, Epoch dsb)
-        let cleanTime = order.timePickup || '-';
-        const timeRegexMatch = cleanTime.match(/(\d{2}:\d{2})/);
-        if (timeRegexMatch) {
-            cleanTime = timeRegexMatch[1];
-        }
+    // 4. Perbaikan tampilan Jam secara universal (entah format ISO, string panjang, Epoch dsb)
+    let cleanTime = order.timePickup || '-';
+    const timeRegexMatch = cleanTime.match(/(\d{2}:\d{2})/);
+    if (timeRegexMatch) {
+      cleanTime = timeRegexMatch[1];
+    }
 
-        // 5. Render Daftar Items (Identik Web Struk, fix double 'x')
-        const itemsHtml = itemsList.map(item => {
-            const cleanQty = item.qty.replace(/x/gi, '').trim();
-            return `
+    // 5. Render Daftar Items (Identik Web Struk, fix double 'x')
+    const itemsHtml = itemsList.map(item => {
+      const cleanQty = item.qty.replace(/x/gi, '').trim();
+      return `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 10px;border-bottom:1px dashed #ede9de;">
         <div style="display:flex;flex-direction:column;">
           <span style="font-size:14px;color:#1a1a1a;font-weight:700;font-family:'Inter',sans-serif;">${item.name}</span>
@@ -136,10 +143,10 @@ module.exports = async function handler(req, res) {
         <span style="font-size:13px;color:#735c00;font-weight:700;font-family:'Inter',sans-serif;white-space:nowrap;margin-left:12px;">Rp ${item.price.toLocaleString('id-ID')}</span>
       </div>
     `;
-        }).join('');
+    }).join('');
 
-        // Render Box Kemasan (Identik Web Struk)
-        const packagingHtml = boxType ? `
+    // Render Box Kemasan (Identik Web Struk)
+    const packagingHtml = boxType ? `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px dashed #ede9de;">
         <div style="display:flex;flex-direction:column;">
           <span style="font-size:13px;color:#1a1a1a;font-family:'Inter',sans-serif;font-style:italic;">Kemasan: ${boxType}</span>
@@ -149,18 +156,18 @@ module.exports = async function handler(req, res) {
       </div>
     ` : '';
 
-        const notesHtml = order.notes ? `
+    const notesHtml = order.notes ? `
       <div style="margin-top:18px;background:#faeae1;border:1px dashed #dfbaa8;padding:10px 14px;border-radius:8px;">
         <div style="font-size:9px;font-weight:700;color:#995431;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;">Catatan Tambahan</div>
         <div style="font-size:12px;font-style:italic;color:#703f28;">"${order.notes}"</div>
       </div>
     ` : '';
 
-        const totalFormatted = total.toLocaleString('id-ID');
-        const subtotalFormatted = subtotal.toLocaleString('id-ID');
-        const boxFormatted = boxTotal.toLocaleString('id-ID');
+    const totalFormatted = total.toLocaleString('id-ID');
+    const subtotalFormatted = subtotal.toLocaleString('id-ID');
+    const boxFormatted = boxTotal.toLocaleString('id-ID');
 
-        const html = `<!DOCTYPE html>
+    const html = `<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -281,12 +288,12 @@ module.exports = async function handler(req, res) {
 </body>
 </html>`;
 
-        res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        res.setHeader('Cache-Control', 'no-store');
-        res.status(200).send(html);
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-store');
+    res.status(200).send(html);
 
-    } catch (e) {
-        console.error('Receipt HTML Error:', e);
-        res.status(500).send(`Error: ${e.message}`);
-    }
+  } catch (e) {
+    console.error('Receipt HTML Error:', e);
+    res.status(500).send(`Error: ${e.message}`);
+  }
 };
