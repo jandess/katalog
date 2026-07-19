@@ -31,15 +31,16 @@ module.exports = async function handler(req, res) {
         async function sendMsg(txt, replyMarkup = null) {
             const adminKeyboard = {
                 keyboard: [
-                    [{ text: '📅 Jadwal' }, { text: '📊 Laporan Hari' }],
-                    [{ text: '📊 Laporan Minggu' }, { text: '📊 Laporan Bulan' }]
+                    [{ text: '\u{1F4C5} Jadwal' }, { text: '\u{1F4CA} Laporan Hari' }],
+                    [{ text: '\u{1F4CA} Laporan Minggu' }, { text: '\u{1F4CA} Laporan Bulan' }]
                 ],
                 resize_keyboard: true,
-                persistent: true
+                one_time_keyboard: false,
+                is_persistent: true
             };
-            const markup = replyMarkup || adminKeyboard;
+            const markup = replyMarkup !== null ? replyMarkup : adminKeyboard;
 
-            await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            const sendRes = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -49,6 +50,10 @@ module.exports = async function handler(req, res) {
                     reply_markup: markup
                 })
             });
+            const sendJson = await sendRes.json();
+            if (!sendJson.ok) {
+                console.error('sendMessage error:', JSON.stringify(sendJson));
+            }
         }
 
         async function sendReceipt(invoiceId, caption) {
@@ -80,10 +85,7 @@ module.exports = async function handler(req, res) {
                 return isNaN(d.getTime()) ? null : d;
             }
 
-            const parsed = Date.parse(s);
-            if (!isNaN(parsed)) {
-                return new Date(parsed);
-            }
+            // Jangan pakai Date.parse() umum - tidak bisa parsing format Indonesia
 
             const dmyM = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
             if (dmyM) {
@@ -203,8 +205,9 @@ module.exports = async function handler(req, res) {
                     ? `${pType} (${pVar}) — Rp ${parseInt(pPrice, 10).toLocaleString('id-ID')}`
                     : 'Standard';
 
-                // Buat versi invoiceId yang aman untuk Telegram command (no dashes)
-                const telInvoiceId = invoiceId.replace('-', '_');
+                // Buat versi invoiceId clean tanpa dash, pakai _ sebagai pemisah command
+                // DJD-XXXX → DJDXXXX, DJDXXXX → DJDXXXX (sudah bersih)
+                const cleanInvoiceId = invoiceId.replace(/-/g, '');
 
                 await sendMsg(
                     `✅ *Invoice ${invoiceId} Berhasil Dicatat!*\n\n` +
@@ -217,9 +220,9 @@ module.exports = async function handler(req, res) {
                     `📝 *Catatan:* ${notesStr || '-'}\n` +
                     `💳 *Status:* 🔴 *PENDING*\n\n` +
                     `*Tindakan cepat:*\n` +
-                    `🧾 /struk_${telInvoiceId}\n` +
-                    `💰 /dp_${telInvoiceId}_500000 (Ganti nominal DP jika beda)\n` +
-                    `✅ /bayar_${telInvoiceId}`
+                    `🧾 /struk\\_${cleanInvoiceId}\n` +
+                    `💰 /dp\\_${cleanInvoiceId}\\_500000 _(ganti nominal DP)_\n` +
+                    `✅ /bayar\\_${cleanInvoiceId}`
                 );
             } else {
                 await sendMsg(`❌ Gagal menyimpan ke Sheets: ${sheetJson.message}`);
@@ -395,7 +398,7 @@ module.exports = async function handler(req, res) {
                         const [pType, , pPrice] = (d.packaging || '').split('|');
                         const pkgText = pType ? `${pType} — Rp ${parseInt(pPrice || 0, 10).toLocaleString('id-ID')}` : '-';
 
-                        const telInvoiceId = invoiceId.replace('-', '_');
+                        const cleanInvoiceId = invoiceId.replace(/-/g, '');
 
                         await sendMsg(
                             `📋 *Detail Pesanan #${invoiceId}*\n\n` +
@@ -408,9 +411,9 @@ module.exports = async function handler(req, res) {
                             `📝 *Catatan:* ${d.notes || '-'}\n` +
                             `💳 *Status:* ${icon} *${(d.status || '').toUpperCase()}*\n\n` +
                             `*Tindakan:*\n` +
-                            `🧾 /struk_${telInvoiceId}\n` +
-                            `💰 /dp_${telInvoiceId}_500000\n` +
-                            `✅ /bayar_${telInvoiceId}`
+                            `🧾 /struk\_${cleanInvoiceId}\n` +
+                            `💰 /dp\_${cleanInvoiceId}\_500000\n` +
+                            `✅ /bayar\_${cleanInvoiceId}`
                         );
                     } else {
                         await sendMsg(`❌ Invoice #${invoiceId} tidak ditemukan.`);
@@ -459,11 +462,11 @@ module.exports = async function handler(req, res) {
                             const dateFmt = d
                                 ? d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' })
                                 : o.datePickup;
-                            const telInvoiceId = o.invoiceId.replace('-', '_');
+                            const cleanInvoiceId = o.invoiceId.replace(/-/g, '');
                             msg += `*${i + 1}. ${o.name}* ${icon}\n`;
                             msg += `   📅 ${dateFmt}\n`;
                             msg += `   🕐 ${timeStr} | 💵 Rp ${Number(o.total).toLocaleString('id-ID')}\n`;
-                            msg += `   🔍 /status_${telInvoiceId}\n\n`;
+                            msg += `   🔍 /status\_${cleanInvoiceId}\n\n`;
                         });
                         msg += `Total: *${upcoming.length}* pesanan.`;
                         await sendMsg(msg);
