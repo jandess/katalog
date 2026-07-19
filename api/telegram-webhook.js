@@ -43,28 +43,37 @@ module.exports = async function handler(req, res) {
             const timePickup = timeMatch ? timeMatch[1].trim() : '-';
             const notesStr = notesMatch ? notesMatch[1].trim() : '';
 
-            // Bersihkan nilai Total ke angka integer murni (misal: "120.000" -> 120000)
+            // Bersihkan nilai Total ke angka integer murni
             let totalVal = 0;
             if (totalMatch) {
                 totalVal = parseInt(totalMatch[1].replace(/[\.,]/g, ''), 10) || 0;
             }
 
-            // Parsing Rincian Daftar Kue dan Varian Kemasan
+            // Parsing Rincian Daftar Kue + Harga Per Item
             const lines = text.split('\n');
-            const itemsCollected = [];
+            const itemsCollected = [];  // format: "Nama Item (Nx)|harga"
             let packagingFetched = '';
+            let boxTotalVal = 0;
 
             for (const line of lines) {
                 if (line.trim().startsWith('- ')) {
-                    const cleanedLine = line.replace('- ', '').split(':')[0].trim();
-                    if (cleanedLine.toLowerCase().startsWith('kemasan ')) {
-                        packagingFetched = cleanedLine.replace(/kemasan\s+/i, '');
+                    const withoutDash = line.replace(/^-\s+/, '');
+                    const colonIdx = withoutDash.lastIndexOf(':');
+                    const itemName = colonIdx > -1 ? withoutDash.substring(0, colonIdx).trim() : withoutDash.trim();
+                    const priceRaw = colonIdx > -1 ? withoutDash.substring(colonIdx + 1).trim() : '';
+                    const priceVal = parseInt(priceRaw.replace(/[Rp\s\.,']/g, ''), 10) || 0;
+
+                    if (itemName.toLowerCase().startsWith('kemasan ')) {
+                        packagingFetched = itemName.replace(/kemasan\s+/i, '');
+                        boxTotalVal = priceVal;
                     } else {
-                        itemsCollected.push(cleanedLine);
+                        itemsCollected.push(`${itemName}|${priceVal}`);
                     }
                 }
             }
-            const itemsStr = itemsCollected.join(', ');
+
+            const subtotalVal = totalVal - boxTotalVal;
+            const itemsStr = itemsCollected.join(',');
 
             // Kirim Data Upsert ke Google Sheet lewat Apps Script
             const sheetRes = await fetch(gasUrl, {
@@ -77,6 +86,8 @@ module.exports = async function handler(req, res) {
                     items: itemsStr,
                     packaging: packagingFetched,
                     total: totalVal,
+                    subtotal: subtotalVal,
+                    boxTotal: boxTotalVal,
                     notes: notesStr,
                     datePickup: datePickup,
                     timePickup: timePickup,
@@ -135,7 +146,7 @@ module.exports = async function handler(req, res) {
                 const protocol = req.headers['x-forwarded-proto'] || 'https';
                 const receiptHtmlUrl = `${protocol}://${host}/api/product-receipt?invoiceId=${param}`;
                 // Gunakan microlink.io untuk screenshot HTML receipt → kirim sebagai gambar ke Telegram
-                const screenshotUrl = `https://api.microlink.io/?url=${encodeURIComponent(receiptHtmlUrl)}&screenshot=true&embed=screenshot.url&viewport.width=560&viewport.height=800&waitFor=800`;
+                const screenshotUrl = `https://api.microlink.io/?url=${encodeURIComponent(receiptHtmlUrl)}&screenshot=true&embed=screenshot.url&viewport.width=520&viewport.height=900&waitFor=800&element=.card`;
 
                 const photoRes = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
                     method: 'POST',
@@ -182,7 +193,7 @@ module.exports = async function handler(req, res) {
                     const host = req.headers.host || 'djandes15.vercel.app';
                     const protocol = req.headers['x-forwarded-proto'] || 'https';
                     const receiptHtmlUrl = `${protocol}://${host}/api/product-receipt?invoiceId=${param}`;
-                    const screenshotUrl = `https://api.microlink.io/?url=${encodeURIComponent(receiptHtmlUrl)}&screenshot=true&embed=screenshot.url&viewport.width=560&viewport.height=800&waitFor=800`;
+                    const screenshotUrl = `https://api.microlink.io/?url=${encodeURIComponent(receiptHtmlUrl)}&screenshot=true&embed=screenshot.url&viewport.width=520&viewport.height=900&waitFor=800&element=.card`;
 
                     const payPhotoRes = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
                         method: 'POST',
