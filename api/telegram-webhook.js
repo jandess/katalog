@@ -1,29 +1,87 @@
 // api/telegram-webhook.js
 
 module.exports = async function handler(req, res) {
-    if (req.method !== 'POST') {
-        return res.status(405).send('Method Not Allowed');
-    }
+    if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const gasUrl = process.env.GOOGLE_SCRIPT_URL;
-
-    if (!botToken || !gasUrl) {
-        console.error('Konfigurasi TELEGRAM_BOT_TOKEN atau GOOGLE_SCRIPT_URL belum diatur.');
-        return res.status(500).send('Configuration Error');
-    }
+    if (!botToken || !gasUrl) return res.status(500).send('Configuration Error');
 
     try {
         const update = req.body;
-        if (!update || !update.message) {
-            return res.status(200).send('No message received');
+        if (!update || !update.message) return res.status(200).send('No message');
+
+        const chatId = update.message.chat.id;
+        const text = update.message.text || '';
+        const host = req.headers.host || 'djandes15.vercel.app';
+        const protocol = req.headers['x-forwarded-proto'] || 'https';
+
+        // ── HELPERS ─────────────────────────────────────────────────────
+        async function sendMsg(txt) {
+            await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: chatId, text: txt, parse_mode: 'Markdown' })
+            });
         }
 
-        const message = update.message;
-        const chatId = message.chat.id;
-        const text = message.text || '';
+        async function sendReceipt(invoiceId, caption) {
+            const htmlUrl = `${protocol}://${host}/api/product-receipt?invoiceId=${invoiceId}`;
+            const screenshotUrl = `https://api.microlink.io/?url=${encodeURIComponent(htmlUrl)}&screenshot=true&embed=screenshot.url&viewport.width=520&viewport.height=4000&waitFor=1000&element=.card`;
+            const resp = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: chatId, photo: screenshotUrl, caption })
+            });
+            const json = await resp.json();
+            if (!json.ok) await sendMsg(`⚠️ Gagal buat gambar struk. Buka manual:\n${htmlUrl}`);
+        }
 
-        // 1. PENANGANAN FORMAT WHATSAPP (AUTO-PARSING & RECORD TO GOOGLE SHEETS)
+        // Ekstrak HH:mm dari string waktu format apapun
+        function extractTime(str) {
+            if (!str || str === '-') return '-';
+            const m = String(str).match(/(\d{2}:\d{2})/);
+            return m ? m[1] : '-';
+        }
+
+        // Parse berbagai format tanggal ke objek Date
+        function parseDate(dateStr) {
+            if (!dateStr || dateStr === '-') return null;
+            const s = String(dateStr).trim();
+            if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return new Date(s + 'T00:00:00+07:00');
+            const dmyM = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            if (dmyM) return new Date(`${dmyM[3]}-${dmyM[2].padStart(2, '0')}-${dmyM[1].padStart(2, '0')}T00:00:00+07:00`);
+            const idMonths = { 'januari': '01', 'februari': '02', 'maret': '03', 'april': '04', 'mei': '05', 'juni': '06', 'juli': '07', 'agustus': '08', 'september': '09', 'oktober': '10', 'november': '11', 'desember': '12' };
+            const idM = s.match(/(\d{1,2})\s+(\w+)\s+(\d{4})/i);
+            if (idM) {
+                const mon = idMonths[idM[2].toLowerCase()];
+                if (mon) return new Date(`${idM[3]}-${mon}-${idM[1].padStart(2, '0')}T00:00:00+07:00`);
+            }
+            return null;
+        }
+
+        function toDateStr(d) {
+            return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(d);
+        }
+
+        function getPaidAmount(status, total) {
+            const s = (status || '').toLowerCase();
+            if (s.startsWith('lunas')) return Number(total) || 0;
+            if (s.startsWith('dp')) {
+                const m = String(status).match(/DP Rp\s*([\d\.,]+)/i);
+                if (m) return parseInt(m[1].replace(/[\.,]/g, ''), 10) || 0;
+            }
+            return 0;
+        }
+
+        function statusIcon(status) {
+            const s = (status || '').toLowerCase();
+            if (s.startsWith('lunas')) return '🟢';
+            if (s.startsWith('dp')) return '🟡';
+            return '🔴';
+        }
+
+        // ── 1. AUTO-PARSING WHATSAPP → SHEETS ────────────────────────────
         if (text.includes('*No. Invoice:*') && text.includes('DJD-')) {
             const invoiceMatch = text.match(/\*No\. Invoice:\*\s*(DJD-[A-Z0-9]+)/i);
             const nameMatch = text.match(/\*Nama:\*\s*(.*)/i);
@@ -33,7 +91,7 @@ module.exports = async function handler(req, res) {
             const notesMatch = text.match(/\*Catatan:\*\s*(.*)/i);
 
             if (!invoiceMatch) {
-                await sendTelegramMessage(botToken, chatId, '❌ Gagal merekam pesanan. Nomor Invoice tidak terbaca dalam teks.');
+                await sendMsg('❌ Gagal merekam: Nomor Invoice tidak terbaca.');
                 return res.status(200).send('OK');
             }
 
@@ -42,423 +100,371 @@ module.exports = async function handler(req, res) {
             const datePickup = dateMatch ? dateMatch[1].trim() : '-';
             const timePickup = timeMatch ? timeMatch[1].trim() : '-';
             const notesStr = notesMatch ? notesMatch[1].trim() : '';
+            const totalVal = totalMatch ? parseInt(totalMatch[1].replace(/[\.,]/g, ''), 10) || 0 : 0;
 
-            // Bersihkan nilai Total ke angka murni
-            let totalVal = 0;
-            if (totalMatch) {
-                totalVal = parseInt(totalMatch[1].replace(/[\.,]/g, ''), 10) || 0;
-            }
-
-            // Parsing Rincian Daftar Kue + Harga Per Item & Kemasan
             const lines = text.split('\n');
-            const itemsCollected = [];  // format: "Nama Item|Qty|HargaTotal"
-            let packagingFetched = '';  // format: "Tipe Kemasan|Varian|Harga"
+            const itemsCollected = [];
+            let packagingFetched = '';
             let boxTotalVal = 0;
 
             for (const line of lines) {
-                if (line.trim().startsWith('- ')) {
-                    const withoutDash = line.replace(/^-\s+/, '');
-                    const colonIdx = withoutDash.lastIndexOf(':');
-                    const itemName = colonIdx > -1 ? withoutDash.substring(0, colonIdx).trim() : withoutDash.trim();
-                    const priceRaw = colonIdx > -1 ? withoutDash.substring(colonIdx + 1).trim() : '';
-                    const priceVal = parseInt(priceRaw.replace(/[Rp\s\.,']/g, ''), 10) || 0;
+                if (!line.trim().startsWith('- ')) continue;
+                const withoutDash = line.replace(/^-\s+/, '');
+                const colonIdx = withoutDash.lastIndexOf(':');
+                const itemName = colonIdx > -1 ? withoutDash.substring(0, colonIdx).trim() : withoutDash.trim();
+                const priceRaw = colonIdx > -1 ? withoutDash.substring(colonIdx + 1).trim() : '';
+                const priceVal = parseInt(priceRaw.replace(/[Rp\s\.,']/g, ''), 10) || 0;
 
-                    if (itemName.toLowerCase().startsWith('kemasan ')) {
-                        // Teks: "Kemasan Standard (Pink)" -> Tipe: "Standard", Varian: "Pink"
-                        const cleanPkg = itemName.replace(/kemasan\s+/i, '');
-                        const pkgMatch = cleanPkg.match(/^(.*?)\s+\((.*?)\)$/);
-                        const type = pkgMatch ? pkgMatch[1] : cleanPkg;
-                        const variant = pkgMatch ? pkgMatch[2] : '-';
-                        packagingFetched = `${type}|${variant}|${priceVal}`;
-                        boxTotalVal = priceVal;
-                    } else {
-                        // Teks: "Lemper Kipas (1x)" -> Name: "Lemper Kipas", Qty: "1x"
-                        const itemMatch = itemName.match(/^(.*?)\s+\((.*?)\)$/);
-                        const name = itemMatch ? itemMatch[1] : itemName;
-                        const qty = itemMatch ? itemMatch[2] : '1x';
-                        itemsCollected.push(`${name}|${qty}|${priceVal}`);
-                    }
+                if (itemName.toLowerCase().startsWith('kemasan ')) {
+                    const cleanPkg = itemName.replace(/kemasan\s+/i, '');
+                    const pkgM = cleanPkg.match(/^(.*?)\s+\((.*?)\)$/);
+                    const type = pkgM ? pkgM[1] : cleanPkg;
+                    const variant = pkgM ? pkgM[2] : '-';
+                    packagingFetched = `${type}|${variant}|${priceVal}`;
+                    boxTotalVal = priceVal;
+                } else {
+                    const itemM = itemName.match(/^(.*?)\s+\((.*?)\)$/);
+                    const name = itemM ? itemM[1] : itemName;
+                    const qty = itemM ? itemM[2] : '1x';
+                    itemsCollected.push(`${name}|${qty}|${priceVal}`);
                 }
             }
 
             const subtotalVal = totalVal - boxTotalVal;
             const itemsStr = itemsCollected.join(',');
 
-            // Kirim Data Upsert ke Google Sheet lewat Apps Script
             const sheetRes = await fetch(gasUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    action: 'upsert',
-                    invoiceId: invoiceId,
-                    name: customerName,
-                    items: itemsStr,
-                    packaging: packagingFetched,
-                    total: totalVal,
-                    subtotal: subtotalVal,
-                    boxTotal: boxTotalVal,
-                    notes: notesStr,
-                    datePickup: datePickup,
-                    timePickup: timePickup,
-                    status: 'Belum Bayar'
+                    action: 'upsert', invoiceId,
+                    name: customerName, items: itemsStr,
+                    packaging: packagingFetched, total: totalVal,
+                    subtotal: subtotalVal, boxTotal: boxTotalVal,
+                    notes: notesStr, datePickup, timePickup, status: 'Pending'
                 })
             });
             const sheetJson = await sheetRes.json();
 
             if (sheetJson.status === 'success') {
-                // Format ulang items untuk Tampilan Telegram Chat
-                const telegramItemsList = itemsCollected.map(item => {
+                const itemLines = itemsCollected.map(item => {
                     const [n, q, p] = item.split('|');
                     return `  • *${n}* (${q}) — Rp ${parseInt(p, 10).toLocaleString('id-ID')}`;
                 }).join('\n');
 
                 const [pType, pVar, pPrice] = packagingFetched.split('|');
-                const packagingTxt = pType ? `${pType} (${pVar}) — Rp ${parseInt(pPrice, 10).toLocaleString('id-ID')}` : 'Standard';
+                const pkgTxt = pType
+                    ? `${pType} (${pVar}) — Rp ${parseInt(pPrice, 10).toLocaleString('id-ID')}`
+                    : 'Standard';
 
-                // Ganti tanda minus pada command telegram agar link dapat diklik penuh
-                // misal DJD-05YTQ8 -> DJD_05YTQ8
-                const telegramInvoiceId = invoiceId.replace('-', '_');
-
-                const replyText = `✅ *Invoice ${invoiceId} Berhasil Dicatat!*\n\n` +
+                await sendMsg(
+                    `✅ *Invoice ${invoiceId} Berhasil Dicatat!*\n\n` +
                     `👤 *Nama:* ${customerName}\n` +
-                    `🥞 *Rincian Pesanan:*\n${telegramItemsList}\n` +
-                    `📦 *Kemasan:* ${packagingTxt}\n` +
-                    `💵 *Total Keseluruhan:* Rp ${totalVal.toLocaleString('id-ID')}\n` +
+                    `🥞 *Rincian Pesanan:*\n${itemLines}\n` +
+                    `📦 *Kemasan:* ${pkgTxt}\n` +
+                    `💵 *Total:* Rp ${totalVal.toLocaleString('id-ID')}\n` +
                     `📅 *Tanggal Ambil:* ${datePickup}\n` +
                     `🕐 *Jam Ambil:* ${timePickup}\n` +
                     `📝 *Catatan:* ${notesStr || '-'}\n` +
                     `💳 *Status:* 🔴 *PENDING*\n\n` +
-                    `Gunakan tombol klik berikut:\n` +
-                    `👉 /bayar_${telegramInvoiceId} - Ubah status ke LUNAS\n` +
-                    `👉 /struk_${telegramInvoiceId} - Lihat & ambil gambar Struk`;
-                await sendTelegramMessage(botToken, chatId, replyText);
+                    `*Tindakan cepat:*\n` +
+                    `🧾 /struk ${invoiceId}\n` +
+                    `💰 /dp ${invoiceId} [nominal]\n` +
+                    `✅ /bayar ${invoiceId}`
+                );
             } else {
-                await sendTelegramMessage(botToken, chatId, `❌ Gagal menyimpan ke Google Sheets: ${sheetJson.message}`);
+                await sendMsg(`❌ Gagal menyimpan ke Sheets: ${sheetJson.message}`);
             }
             return res.status(200).send('OK');
         }
 
-        // 2. PENANGANAN TELEGRAM COMMANDS
+        // ── 2. TELEGRAM COMMANDS ─────────────────────────────────────────
         if (text.startsWith('/')) {
-            const commandText = text.trim();
-            const host = req.headers.host || 'djandes15.vercel.app';
-            const protocol = req.headers['x-forwarded-proto'] || 'https';
+            const parts = text.trim().split(/\s+/);
+            const rawCmd = parts[0].toLowerCase();
+            const spaceParts = parts.slice(1);
 
-            // Ambil pencocokan command DP (Space dan Underscore)
-            // Mendukung: /dp DJD-05YTQ8 500000, /dp_DJD_05YTQ8_500000, /bayar DJD-05YTQ8 dp 500000, /bayar_DJD_05YTQ8_dp_500000
-            let matchDp = commandText.match(/^\/dp\s+([A-Z0-9\-]+)\s+(\d+)/i) ||
-                commandText.match(/^\/bayar\s+([A-Z0-9\-]+)\s+dp\s+(\d+)/i);
+            // Pisahkan base command dari underscore params (format lama)
+            const uParts = rawCmd.split('_');
+            const baseCmd = uParts[0];
+            let invoiceId = '';
+            let extraParam = '';
 
-            if (!matchDp) {
-                const matchUnderscore = commandText.match(/^\/dp_([A-Z0-9]+)_([A-Z0-9]+)_(\d+)/i) ||
-                    commandText.match(/^\/bayar_([A-Z0-9]+)_([A-Z0-9]+)_dp_(\d+)/i);
-                if (matchUnderscore) {
-                    matchDp = [
-                        null,
-                        `${matchUnderscore[1]}-${matchUnderscore[2]}`,
-                        matchUnderscore[3]
-                    ];
-                }
+            if (uParts.length >= 3) {
+                invoiceId = `${uParts[1]}-${uParts[2]}`.toUpperCase();
+                extraParam = uParts[3] || '';
+            }
+            // Override dengan format baru (spasi) jika ada
+            if (spaceParts[0]) invoiceId = spaceParts[0].toUpperCase();
+            if (spaceParts[1]) extraParam = spaceParts[1];
+
+            // ── /start ──
+            if (baseCmd === '/start') {
+                await sendMsg(
+                    `👋 *Halo Admin DJANDES!*\n\n` +
+                    `Copas teks pesanan WhatsApp ke sini untuk mencatat otomatis.\n\n` +
+                    `*📋 Daftar Perintah:*\n` +
+                    `📅 /jadwal\n` +
+                    `📊 /laporan hari | minggu | bulan\n` +
+                    `📊 /laporan DD/MM/YYYY DD/MM/YYYY\n` +
+                    `📋 /status DJD-XXXXXX\n` +
+                    `🧾 /struk DJD-XXXXXX\n` +
+                    `💰 /dp DJD-XXXXXX [nominal]\n` +
+                    `✅ /bayar DJD-XXXXXX`
+                );
+                return res.status(200).send('OK');
             }
 
-            if (matchDp) {
-                const invoiceId = matchDp[1].toUpperCase();
-                const dpAmount = parseInt(matchDp[2], 10);
+            // ── /struk ──
+            if (baseCmd === '/struk') {
+                if (!invoiceId) { await sendMsg('⚠️ Format: `/struk DJD-XXXXXX`'); return res.status(200).send('OK'); }
+                await sendMsg(`⏳ *Menyiapkan Struk #${invoiceId}...*`);
+                await sendReceipt(invoiceId, `🧾 Nota Pembayaran #${invoiceId} - DJANDES`);
+                return res.status(200).send('OK');
+            }
 
-                await sendTelegramMessage(botToken, chatId, `⏳ *Mencatat DP Rp ${dpAmount.toLocaleString('id-ID')} untuk #${invoiceId}...*`);
+            // ── /dp ──
+            if (baseCmd === '/dp') {
+                if (!invoiceId || !extraParam) { await sendMsg('⚠️ Format: `/dp DJD-XXXXXX 500000`'); return res.status(200).send('OK'); }
+                const dpAmount = parseInt(extraParam.replace(/[\.,]/g, ''), 10);
+                if (!dpAmount || dpAmount <= 0) { await sendMsg('⚠️ Nominal DP tidak valid.'); return res.status(200).send('OK'); }
 
-                // Ambil data invoice untuk menghitung sisa
+                await sendMsg(`⏳ *Mencatat DP Rp ${dpAmount.toLocaleString('id-ID')} untuk #${invoiceId}...*`);
+                const getRes = await fetch(`${gasUrl}?action=getInvoice&invoiceId=${invoiceId}`);
+                const getJson = await getRes.json();
+
+                if (getJson.status !== 'success' || !getJson.data) {
+                    await sendMsg(`❌ Invoice #${invoiceId} tidak ditemukan.`);
+                    return res.status(200).send('OK');
+                }
+
+                const grandTotal = parseInt(getJson.data.total, 10) || 0;
+                const shortAmount = grandTotal - dpAmount;
+                const statusString = shortAmount <= 0
+                    ? 'Lunas'
+                    : `DP Rp ${dpAmount.toLocaleString('id-ID')} (Kurang Rp ${shortAmount.toLocaleString('id-ID')})`;
+
+                const payRes = await fetch(gasUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'setStatus', invoiceId, status: statusString }) });
+                const payJson = await payRes.json();
+
+                if (payJson.status === 'success') {
+                    await sendMsg(`🎉 *DP Tercatat!*\nStatus #${invoiceId}: *${statusString}*\n\n⏳ *Menyiapkan Struk...*`);
+                    await sendReceipt(invoiceId, `🪙 Nota DP #${invoiceId} - KURANG BAYAR`);
+                } else {
+                    await sendMsg(`❌ Gagal menyimpan DP: ${payJson.message}`);
+                }
+                return res.status(200).send('OK');
+            }
+
+            // ── /bayar ──
+            if (baseCmd === '/bayar') {
+                if (!invoiceId) { await sendMsg('⚠️ Format: `/bayar DJD-XXXXXX`'); return res.status(200).send('OK'); }
+
+                const getRes = await fetch(`${gasUrl}?action=getInvoice&invoiceId=${invoiceId}`);
+                const getJson = await getRes.json();
+                let newStatus = 'Lunas';
+
+                if (getJson.status === 'success' && getJson.data) {
+                    const prev = getJson.data.status || '';
+                    if (prev.toLowerCase().startsWith('dp ')) {
+                        const dpM = prev.match(/DP Rp\s*([\d\.,\s]+)/i);
+                        const shortM = prev.match(/Kurang Rp\s*([\d\.,\s]+)/i);
+                        if (dpM && shortM) newStatus = `Lunas (DP Rp ${dpM[1].trim()} + Lunas Rp ${shortM[1].trim()})`;
+                    }
+                }
+
+                const payRes = await fetch(gasUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'setStatus', invoiceId, status: newStatus }) });
+                const payJson = await payRes.json();
+
+                if (payJson.status === 'success') {
+                    await sendMsg(`🎉 *Sukses!* Invoice #${invoiceId} ditandai *LUNAS*.\n\n⏳ *Menyiapkan Struk...*`);
+                    await sendReceipt(invoiceId, `🟢 Nota DJANDES #${invoiceId} - ${newStatus}`);
+                } else {
+                    await sendMsg(`❌ Gagal update status: ${payJson.message}`);
+                }
+                return res.status(200).send('OK');
+            }
+
+            // ── /status ──
+            if (baseCmd === '/status') {
+                if (!invoiceId) { await sendMsg('⚠️ Format: `/status DJD-XXXXXX`'); return res.status(200).send('OK'); }
+
                 const getRes = await fetch(`${gasUrl}?action=getInvoice&invoiceId=${invoiceId}`);
                 const getJson = await getRes.json();
 
                 if (getJson.status === 'success' && getJson.data) {
-                    const detail = getJson.data;
-                    const grandTotal = parseInt(detail.total, 10) || 0;
-                    const shortAmount = grandTotal - dpAmount;
+                    const d = getJson.data;
+                    const cleanTime = extractTime(d.timePickup);
+                    const icon = statusIcon(d.status);
 
-                    let statusString = "";
-                    if (shortAmount <= 0) {
-                        statusString = "Lunas";
-                    } else {
-                        statusString = `DP Rp ${dpAmount.toLocaleString('id-ID')} (Kurang Rp ${shortAmount.toLocaleString('id-ID')})`;
-                    }
+                    const itemsText = d.items
+                        ? d.items.split(',').map(it => {
+                            const [n, q, p] = it.split('|');
+                            return `\n  • ${n || '-'} (${q || '1x'}) — Rp ${parseInt(p, 10).toLocaleString('id-ID')}`;
+                        }).join('') : '-';
 
-                    // Update status di Google Sheet
-                    const payRes = await fetch(gasUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            action: 'setStatus',
-                            invoiceId: invoiceId,
-                            status: statusString
-                        })
-                    });
-                    const payJson = await payRes.json();
+                    const [pType, , pPrice] = (d.packaging || '').split('|');
+                    const pkgText = pType ? `${pType} — Rp ${parseInt(pPrice || 0, 10).toLocaleString('id-ID')}` : '-';
 
-                    if (payJson.status === 'success') {
-                        const receiptHtmlUrl = `${protocol}://${host}/api/product-receipt?invoiceId=${invoiceId}`;
-                        const screenshotUrl = `https://api.microlink.io/?url=${encodeURIComponent(receiptHtmlUrl)}&screenshot=true&embed=screenshot.url&viewport.width=520&viewport.height=900&waitFor=800&element=.card`;
-
-                        await sendTelegramMessage(botToken, chatId, `🎉 *Sukses DP!* Invoice #${invoiceId} telah ditandai dengan status:\n*${statusString}*\n\n⏳ *Menyiapkan Struk...*`);
-
-                        const photoRes = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                chat_id: chatId,
-                                photo: screenshotUrl,
-                                caption: `🪙 Nota DP #${invoiceId} - KURANG BAYAR`
-                            })
-                        });
-                        const photoJson = await photoRes.json();
-                        if (!photoJson.ok) {
-                            await sendTelegramMessage(botToken, chatId, `⚠️ Gagal membuat gambar struk otomatis. Silakan buka manual: ${receiptHtmlUrl}`);
-                        }
-                    } else {
-                        await sendTelegramMessage(botToken, chatId, `❌ Gagal menyimpan status DP ke Google Sheets: ${payJson.message}`);
-                    }
-                } else {
-                    await sendTelegramMessage(botToken, chatId, `❌ Invoice #${invoiceId} tidak ditemukan.`);
-                }
-                return res.status(200).send('OK');
-            }
-
-            const commandParts = text.split(' ')[0].split('_');
-            const command = commandParts[0].toLowerCase();
-            let param = "";
-            if (commandParts.length > 2) {
-                // e.g. ["/bayar", "DJD", "05YTQ8"] => slice(1) adalah ["DJD", "05YTQ8"] => join('-') -> "DJD-05YTQ8"
-                param = commandParts.slice(1).join('-');
-            } else {
-                param = commandParts[1] || text.split(' ')[1];
-            }
-            if (param) param = param.trim().toUpperCase();
-
-            // COMMAND: /start
-            if (command === '/start') {
-                const welcomeText = `👋 *Halo Admin DJANDES!*\n\n` +
-                    `Kirimkan (copas) teks pesanan format WhatsApp Anda ke sini, saya akan langsung mencatatnya ke Google Sheets.\n\n` +
-                    `*Daftar Perintah:* \n` +
-                    `👉 \`/status <invoice_id>\` - Cek detail pembayaran\n` +
-                    `👉 \`/bayar <invoice_id>\` - Tandai sebagai Lunas\n` +
-                    `👉 \`/dp <invoice_id> <nominal>\` - Catat pembayaran DP\n` +
-                    `👉 \`/jadwal\` - Lihat semua daftar jadwal pesanan mendatang\n` +
-                    `👉 \`/struk <invoice_id>\` - Kirim gambar Struk premium`;
-                await sendTelegramMessage(botToken, chatId, welcomeText);
-                return res.status(200).send('OK');
-            }
-
-            // COMMAND: /struk <invoiceId>
-            if (command === '/struk') {
-                if (!param) {
-                    await sendTelegramMessage(botToken, chatId, '⚠️ Format salah. Contoh: `/struk DJD-FG5T4W`');
-                    return res.status(200).send('OK');
-                }
-
-                await sendTelegramMessage(botToken, chatId, `⏳ *Menyiapkan Struk Invoice #${param}...*`);
-                const receiptHtmlUrl = `${protocol}://${host}/api/product-receipt?invoiceId=${param}`;
-                // Gunakan microlink.io untuk screenshot HTML receipt
-                const screenshotUrl = `https://api.microlink.io/?url=${encodeURIComponent(receiptHtmlUrl)}&screenshot=true&embed=screenshot.url&viewport.width=520&viewport.height=900&waitFor=800&element=.card`;
-
-                const photoRes = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: chatId,
-                        photo: screenshotUrl,
-                        caption: `🧾 Nota Pembayaran #${param} - DJANDES`
-                    })
-                });
-                const photoJson = await photoRes.json();
-
-                if (!photoJson.ok) {
-                    await sendTelegramMessage(botToken, chatId,
-                        `⚠️ Gagal membuat gambar otomatis. Buka struk manual di sini:\n${receiptHtmlUrl}`);
-                }
-                return res.status(200).send('OK');
-            }
-
-            // COMMAND: /bayar <invoiceId>
-            if (command === '/bayar') {
-                if (!param) {
-                    await sendTelegramMessage(botToken, chatId, '⚠️ Format salah. Contoh: `/bayar DJD-FG5T4W`');
-                    return res.status(200).send('OK');
-                }
-
-                // Dapatkan detail invoice dulu untuk mengecek history DP
-                const getRes = await fetch(`${gasUrl}?action=getInvoice&invoiceId=${param}`);
-                const getJson = await getRes.json();
-
-                let newStatus = "Lunas";
-                if (getJson.status === 'success' && getJson.data) {
-                    const prevStatus = getJson.data.status || "";
-                    if (prevStatus.toLowerCase().startsWith("dp ")) {
-                        const dpMatch = prevStatus.match(/DP Rp\s*([\d\.,\s]+)/i);
-                        const shortMatch = prevStatus.match(/Kurang Rp\s*([\d\.,\s]+)/i);
-                        if (dpMatch && shortMatch) {
-                            const prevDpText = dpMatch[1].trim();
-                            const prevShortText = shortMatch[1].trim();
-                            newStatus = `Lunas (DP Rp ${prevDpText} + Lunas Rp ${prevShortText})`;
-                        }
-                    }
-                }
-
-                // Jalankan POST update ke Google Sheet
-                const payRes = await fetch(gasUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'setStatus',
-                        invoiceId: param,
-                        status: newStatus
-                    })
-                });
-                const payJson = await payRes.json();
-
-                if (payJson.status === 'success') {
-                    await sendTelegramMessage(botToken, chatId, `🎉 *Sukses!* Invoice #${param} telah ditandai sebagai *LUNAS* di Google Sheets.\n\n⏳ *Menyiapkan Struk Lunas...*`);
-
-                    // Kirim struk LUNAS via microlink screenshot
-                    const receiptHtmlUrl = `${protocol}://${host}/api/product-receipt?invoiceId=${param}`;
-                    const screenshotUrl = `https://api.microlink.io/?url=${encodeURIComponent(receiptHtmlUrl)}&screenshot=true&embed=screenshot.url&viewport.width=520&viewport.height=900&waitFor=800&element=.card`;
-
-                    const payPhotoRes = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            chat_id: chatId,
-                            photo: screenshotUrl,
-                            caption: `🟢 Nota DJANDES #${param} - ${newStatus}`
-                        })
-                    });
-                    const payPhotoJson = await payPhotoRes.json();
-                    if (!payPhotoJson.ok) {
-                        await sendTelegramMessage(botToken, chatId,
-                            `⚠️ Gagal membuat gambar otomatis. Buka struk manual di sini:\n${receiptHtmlUrl}`);
-                    }
-                } else {
-                    await sendTelegramMessage(botToken, chatId, `❌ Gagal memperbarui status ke Lunas: ${payJson.message}`);
-                }
-                return res.status(200).send('OK');
-            }
-
-            // COMMAND: /status <invoiceId>
-            if (command === '/status') {
-                if (!param) {
-                    await sendTelegramMessage(botToken, chatId, '⚠️ Format salah. Contoh: `/status DJD-FG5T4W`');
-                    return res.status(200).send('OK');
-                }
-
-                const getRes = await fetch(`${gasUrl}?action=getInvoice&invoiceId=${param}`);
-                const getJson = await getRes.json();
-
-                if (getJson.status === 'success' && getJson.data) {
-                    const detail = getJson.data;
-                    const statusStrLower = (detail.status || '').toLowerCase();
-                    let icon = '🔴';
-                    if (statusStrLower.startsWith('lunas')) {
-                        icon = '🟢';
-                    } else if (statusStrLower.startsWith('dp')) {
-                        icon = '🟡';
-                    }
-
-                    const statusItemsText = detail.items
-                        ? detail.items.split(',').map(item => {
-                            const [n, q, p] = item.split('|');
-                            return `\n  • ${n} (${q}) — Rp ${parseInt(p, 10).toLocaleString('id-ID')}`;
-                        }).join('')
-                        : '-';
-
-                    let cleanTime = detail.timePickup || '-';
-                    if (cleanTime.includes('T')) {
-                        const tMatch = cleanTime.match(/T(\d{2}:\d{2})/);
-                        if (tMatch) cleanTime = tMatch[1];
-                    }
-
-                    const detailsText = `📋 *Status Pesanan #${param}*\n\n` +
-                        `👤 *Nama:* ${detail.name}\n` +
-                        `🥞 *Item:* ${statusItemsText}\n` +
-                        `💵 *Total:* Rp ${Number(detail.total).toLocaleString('id-ID')}\n` +
-                        `📅 *Jadwal Tanggal:* ${detail.datePickup}\n` +
+                    await sendMsg(
+                        `📋 *Detail Pesanan #${invoiceId}*\n\n` +
+                        `👤 *Nama:* ${d.name}\n` +
+                        `🥞 *Item:* ${itemsText}\n` +
+                        `📦 *Kemasan:* ${pkgText}\n` +
+                        `💵 *Total:* Rp ${Number(d.total).toLocaleString('id-ID')}\n` +
+                        `📅 *Tanggal Ambil:* ${d.datePickup}\n` +
                         `🕐 *Jam Ambil:* ${cleanTime}\n` +
-                        `💬 *Status Pembayaran:* ${icon} *${detail.status.toUpperCase()}*`;
-                    await sendTelegramMessage(botToken, chatId, detailsText);
+                        `📝 *Catatan:* ${d.notes || '-'}\n` +
+                        `💳 *Status:* ${icon} *${(d.status || '').toUpperCase()}*\n\n` +
+                        `*Tindakan:*\n` +
+                        `/struk ${invoiceId}\n` +
+                        `/dp ${invoiceId} [nominal]\n` +
+                        `/bayar ${invoiceId}`
+                    );
                 } else {
-                    await sendTelegramMessage(botToken, chatId, `❌ Invoice #${param} tidak ditemukan.`);
+                    await sendMsg(`❌ Invoice #${invoiceId} tidak ditemukan.`);
                 }
                 return res.status(200).send('OK');
             }
 
-            // COMMAND: /jadwal
-            if (command === '/jadwal') {
-                await sendTelegramMessage(botToken, chatId, `⏳ *Mengambil antrean jadwal pesanan...*`);
+            // ── /jadwal ──
+            if (baseCmd === '/jadwal') {
+                await sendMsg('⏳ *Mengambil jadwal pesanan...*');
                 const getRes = await fetch(`${gasUrl}?action=getAll`);
                 const getJson = await getRes.json();
 
-                if (getJson.status === 'success' && Array.isArray(getJson.data)) {
-                    // Dapatkan tanggal hari ini (di Jakarta timezone)
-                    const now = new Date();
-                    const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(now); // yyyy-mm-dd
+                if (getJson.status !== 'success' || !Array.isArray(getJson.data)) {
+                    await sendMsg('❌ Gagal mengambil data dari Sheets.');
+                    return res.status(200).send('OK');
+                }
 
-                    // Filter pesanan yang tanggalnya >= hari ini
-                    const upcoming = getJson.data.filter(order => {
-                        return order.datePickup && order.datePickup >= todayStr;
+                const todayStr = toDateStr(new Date());
+                const upcoming = getJson.data
+                    .filter(o => { const d = parseDate(o.datePickup); return d && toDateStr(d) >= todayStr; })
+                    .sort((a, b) => {
+                        const da = parseDate(a.datePickup), db = parseDate(b.datePickup);
+                        if (da && db && da.getTime() !== db.getTime()) return da.getTime() - db.getTime();
+                        return extractTime(a.timePickup).localeCompare(extractTime(b.timePickup));
                     });
 
-                    if (upcoming.length === 0) {
-                        await sendTelegramMessage(botToken, chatId, `📭 *Tidak ada pesanan mendatang mulai hari ini (${todayStr}).*`);
-                    } else {
-                        // Urutkan berdasarkan tanggal & jam ambil
-                        upcoming.sort((a, b) => {
-                            if (a.datePickup !== b.datePickup) {
-                                return a.datePickup.localeCompare(b.datePickup);
-                            }
-                            return a.timePickup.localeCompare(b.timePickup);
-                        });
-
-                        let listMsg = `📅 *Daftar Jadwal Pesanan (Mulai Hari Ini):*\n\n`;
-                        upcoming.forEach((o, index) => {
-                            let cleanTime = o.timePickup || '-';
-                            if (cleanTime.includes('T')) {
-                                const tMatch = cleanTime.match(/T(\d{2}:\d{2})/);
-                                if (tMatch) cleanTime = tMatch[1];
-                            }
-                            const telInvoiceId = o.invoiceId.replace('-', '_');
-                            // Tampilkan Nama, Tanggal, Jam, Link status
-                            listMsg += `${index + 1}. *${o.name}* — ${o.datePickup} @ ${cleanTime}\n`;
-                            listMsg += `   💵 Total: Rp ${Number(o.total).toLocaleString('id-ID')} | Status: *${o.status}*\n`;
-                            listMsg += `   🔍 Detail: /status_${telInvoiceId}\n\n`;
-                        });
-                        listMsg += `Total: *${upcoming.length}* Pesanan terdaftar.`;
-                        await sendTelegramMessage(botToken, chatId, listMsg);
-                    }
+                if (upcoming.length === 0) {
+                    await sendMsg(`📭 *Tidak ada pesanan mendatang mulai ${todayStr}.*`);
                 } else {
-                    await sendTelegramMessage(botToken, chatId, `❌ Gagal mengambil data jadwal dari Google Sheets.`);
+                    let msg = `📅 *Jadwal Pesanan Mendatang (${todayStr}):*\n\n`;
+                    upcoming.forEach((o, i) => {
+                        const icon = statusIcon(o.status);
+                        const timeStr = extractTime(o.timePickup);
+                        const d = parseDate(o.datePickup);
+                        const dateFmt = d
+                            ? d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' })
+                            : o.datePickup;
+                        msg += `*${i + 1}. ${o.name}* ${icon}\n`;
+                        msg += `   📅 ${dateFmt}\n`;
+                        msg += `   🕐 ${timeStr} | 💵 Rp ${Number(o.total).toLocaleString('id-ID')}\n`;
+                        msg += `   🔍 /status ${o.invoiceId}\n\n`;
+                    });
+                    msg += `Total: *${upcoming.length}* pesanan.`;
+                    await sendMsg(msg);
                 }
                 return res.status(200).send('OK');
             }
+
+            // ── /laporan ──
+            if (baseCmd === '/laporan') {
+                await sendMsg('⏳ *Menyusun laporan pendapatan...*');
+                const getRes = await fetch(`${gasUrl}?action=getAll`);
+                const getJson = await getRes.json();
+
+                if (getJson.status !== 'success' || !Array.isArray(getJson.data)) {
+                    await sendMsg('❌ Gagal mengambil data laporan dari Sheets.');
+                    return res.status(200).send('OK');
+                }
+
+                const now = new Date();
+                const todayStr2 = toDateStr(now);
+                const param0 = (spaceParts[0] || 'hari').toLowerCase();
+                let startDate = null, endDate = null, rangeLabel = '';
+
+                if (param0 === 'hari') {
+                    startDate = new Date(todayStr2 + 'T00:00:00+07:00');
+                    endDate = new Date(todayStr2 + 'T23:59:59+07:00');
+                    rangeLabel = `Hari Ini (${todayStr2})`;
+                } else if (param0 === 'minggu') {
+                    const day = now.getDay();
+                    const diffMon = day === 0 ? -6 : 1 - day;
+                    const mon = new Date(now); mon.setDate(now.getDate() + diffMon);
+                    const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+                    startDate = mon; endDate = sun;
+                    rangeLabel = `Minggu Ini (${toDateStr(mon)} s/d ${toDateStr(sun)})`;
+                } else if (param0 === 'bulan') {
+                    startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                    endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                    const mn = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                    rangeLabel = `${mn[now.getMonth()]} ${now.getFullYear()}`;
+                } else {
+                    // Custom date range: "/laporan 01/07/2026 31/07/2026" atau "/laporan 2026-07-01 2026-07-31"
+                    startDate = parseDate(spaceParts[0]);
+                    endDate = parseDate(spaceParts[1] || spaceParts[0]);
+                    rangeLabel = `${spaceParts[0] || '?'}${spaceParts[1] ? ' s/d ' + spaceParts[1] : ''}`;
+                    if (!startDate) {
+                        await sendMsg(
+                            '⚠️ Format tidak dikenali.\n\nContoh:\n' +
+                            '`/laporan hari`\n`/laporan minggu`\n`/laporan bulan`\n' +
+                            '`/laporan 01/07/2026 31/07/2026`\n`/laporan 2026-07-01 2026-07-31`'
+                        );
+                        return res.status(200).send('OK');
+                    }
+                }
+
+                const startStr = toDateStr(startDate);
+                const endStr = toDateStr(endDate);
+
+                const filtered = getJson.data.filter(o => {
+                    const d = parseDate(o.datePickup);
+                    if (!d) return false;
+                    const ds = toDateStr(d);
+                    return ds >= startStr && ds <= endStr;
+                });
+
+                let totalTagihan = 0, totalMasuk = 0;
+                let countLunas = 0, lunasMasuk = 0;
+                let countDP = 0, dpMasuk = 0;
+                let countPending = 0;
+
+                filtered.forEach(o => {
+                    const total = parseInt(o.total, 10) || 0;
+                    totalTagihan += total;
+                    const paid = getPaidAmount(o.status, total);
+                    totalMasuk += paid;
+                    const s = (o.status || '').toLowerCase();
+                    if (s.startsWith('lunas')) { countLunas++; lunasMasuk += total; }
+                    else if (s.startsWith('dp')) { countDP++; dpMasuk += paid; }
+                    else { countPending++; }
+                });
+
+                const piutang = totalTagihan - totalMasuk;
+
+                await sendMsg(
+                    `📊 *Laporan Pendapatan DJANDES*\n` +
+                    `📆 *Periode:* ${rangeLabel}\n` +
+                    `━━━━━━━━━━━━━━━━━━━━\n\n` +
+                    `🧾 *Total Pesanan:* ${filtered.length}\n` +
+                    `🟢 Lunas: ${countLunas} — Rp ${lunasMasuk.toLocaleString('id-ID')}\n` +
+                    `🟡 DP/Cicilan: ${countDP} — Rp ${dpMasuk.toLocaleString('id-ID')} masuk\n` +
+                    `🔴 Pending: ${countPending} pesanan\n\n` +
+                    `━━━━━━━━━━━━━━━━━━━━\n` +
+                    `💰 *Total Uang Masuk:* Rp ${totalMasuk.toLocaleString('id-ID')}\n` +
+                    `📋 *Total Tagihan:* Rp ${totalTagihan.toLocaleString('id-ID')}\n` +
+                    `⚠️ *Piutang Belum Masuk:* Rp ${piutang.toLocaleString('id-ID')}\n\n` +
+                    `_Gunakan /jadwal untuk detail pesanan_`
+                );
+                return res.status(200).send('OK');
+            }
         }
+
     } catch (error) {
         console.error('Webhook Error:', error);
     }
 
     return res.status(200).send('OK');
-}
-
-// Fungsi bantu mengirimkan Text Message ke Telegram
-async function sendTelegramMessage(botToken, chatId, text) {
-    try {
-        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: chatId,
-                text: text,
-                parse_mode: 'Markdown'
-            })
-        });
-    } catch (err) {
-        console.error('Gagal mengirim pesan Telegram:', err);
-    }
-}
-
+};
