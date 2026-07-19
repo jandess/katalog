@@ -28,6 +28,14 @@ module.exports = async function handler(req, res) {
         }
 
         // ── HELPERS ─────────────────────────────────────────────────────
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
         async function sendMsg(txt, replyMarkup = null) {
             const adminKeyboard = {
                 keyboard: [
@@ -46,7 +54,7 @@ module.exports = async function handler(req, res) {
                 body: JSON.stringify({
                     chat_id: chatId,
                     text: txt,
-                    parse_mode: 'Markdown',
+                    parse_mode: 'HTML',
                     reply_markup: markup
                 })
             });
@@ -132,20 +140,20 @@ module.exports = async function handler(req, res) {
         }
 
         // ── 0. PRIORITAS: /start dan perintah slash langsung ─────────────
-        if (normalizedText === '/start') {
+        if (normalizedText === '/start' || normalizedText.startsWith('/start')) {
             await sendMsg(
-                `👋 *Halo Admin DJANDES!*\n\n` +
+                `👋 <b>Halo Admin DJANDES!</b>\n\n` +
                 `Copas teks pesanan WhatsApp ke sini untuk mencatat otomatis.\n\n` +
-                `*📋 Daftar Perintah:*\n` +
-                `📅 Jadwal — Lihat semua pesanan mendatang\n` +
-                `📊 Laporan Hari/Minggu/Bulan — Gunakan tombol di bawah\n\n` +
-                `_Atau ketik perintah berikut:_\n` +
-                `📋 /status\\_\\[invoice\\] — Cek detail pesanan\n` +
-                `🧾 /struk\\_\\[invoice\\] — Print struk gambar\n` +
-                `💰 /dp\\_\\[invoice\\]\\_\\[nominal\\] — Catat DP\n` +
-                `✅ /bayar\\_\\[invoice\\] — Tandai Lunas\n` +
+                `<b>📋 Daftar Perintah:</b>\n` +
+                `📅 <b>Jadwal</b> — Lihat semua pesanan mendatang\n` +
+                `📊 <b>Laporan Hari/Minggu/Bulan</b> — Gunakan tombol di bawah\n\n` +
+                `<i>Atau ketik perintah berikut:</i>\n` +
+                `📋 /status_<b>[invoice]</b> — Cek detail pesanan\n` +
+                `🧾 /struk_<b>[invoice]</b> — Print struk gambar\n` +
+                `💰 /dp_<b>[invoice]</b>_<b>[nominal]</b> — Catat DP\n` +
+                `✅ /bayar_<b>[invoice]</b> — Tandai Lunas\n` +
                 `📊 /laporan hari | minggu | bulan\n\n` +
-                `_Keyboard cepat sudah aktif di bawah input!_ 👇`
+                `<i>Keyboard cepat sudah aktif di bawah input!</i> 👇`
             );
             return res.status(200).send('OK');
         }
@@ -218,12 +226,12 @@ module.exports = async function handler(req, res) {
             if (sheetJson.status === 'success') {
                 const itemLines = itemsCollected.map(item => {
                     const [n, q, p] = item.split('|');
-                    return `  • *${n}* (${q}) — Rp ${parseInt(p, 10).toLocaleString('id-ID')}`;
+                    return `  • <b>${escapeHtml(n)}</b> (${escapeHtml(q)}) — Rp ${parseInt(p, 10).toLocaleString('id-ID')}`;
                 }).join('\n');
 
                 const [pType, pVar, pPrice] = packagingFetched.split('|');
                 const pkgTxt = pType
-                    ? `${pType} (${pVar}) — Rp ${parseInt(pPrice, 10).toLocaleString('id-ID')}`
+                    ? `${escapeHtml(pType)} (${escapeHtml(pVar)}) — Rp ${parseInt(pPrice, 10).toLocaleString('id-ID')}`
                     : 'Standard';
 
                 // Buat versi invoiceId clean tanpa dash, pakai _ sebagai pemisah command
@@ -231,22 +239,22 @@ module.exports = async function handler(req, res) {
                 const cleanInvoiceId = invoiceId.replace(/-/g, '');
 
                 await sendMsg(
-                    `✅ *Invoice ${invoiceId} Berhasil Dicatat!*\n\n` +
-                    `👤 *Nama:* ${customerName}\n` +
-                    `🥞 *Rincian Pesanan:*\n${itemLines}\n` +
-                    `📦 *Kemasan:* ${pkgTxt}\n` +
-                    `💵 *Total:* Rp ${totalVal.toLocaleString('id-ID')}\n` +
-                    `📅 *Tanggal Ambil:* ${datePickup}\n` +
-                    `🕐 *Jam Ambil:* ${timePickup}\n` +
-                    `📝 *Catatan:* ${notesStr || '-'}\n` +
-                    `💳 *Status:* 🔴 *PENDING*\n\n` +
-                    `*Tindakan cepat:*\n` +
-                    `🧾 /struk\\_${cleanInvoiceId}\n` +
-                    `💰 /dp\\_${cleanInvoiceId}\\_500000 _(ganti nominal DP)_\n` +
-                    `✅ /bayar\\_${cleanInvoiceId}`
+                    `✅ <b>Invoice ${escapeHtml(invoiceId)} Berhasil Dicatat!</b>\n\n` +
+                    `👤 <b>Nama:</b> ${escapeHtml(customerName)}\n` +
+                    `🥞 <b>Rincian Pesanan:</b>\n${itemLines}\n` +
+                    `📦 <b>Kemasan:</b> ${pkgTxt}\n` +
+                    `💵 <b>Total:</b> Rp ${totalVal.toLocaleString('id-ID')}\n` +
+                    `📅 <b>Tanggal Ambil:</b> ${escapeHtml(datePickup)}\n` +
+                    `🕐 <b>Jam Ambil:</b> ${escapeHtml(timePickup)}\n` +
+                    `📝 <b>Catatan:</b> ${escapeHtml(notesStr) || '-'}\n` +
+                    `💳 <b>Status:</b> 🔴 <b>PENDING</b>\n\n` +
+                    `<b>Tindakan cepat:</b>\n` +
+                    `🧾 /struk_${cleanInvoiceId}\n` +
+                    `💰 /dp_${cleanInvoiceId}_500000 <i>(ganti nominal DP)</i>\n` +
+                    `✅ /bayar_${cleanInvoiceId}`
                 );
             } else {
-                await sendMsg(`❌ Gagal menyimpan ke Sheets: ${sheetJson.message}`);
+                await sendMsg(`❌ Gagal menyimpan ke Sheets: ${escapeHtml(sheetJson.message)}`);
             }
             return res.status(200).send('OK');
         }
@@ -344,20 +352,20 @@ module.exports = async function handler(req, res) {
                             : 'Lunas';
                         receiptCaption = `🟢 Nota LUNAS #${invoiceId} - DJANDES`;
                         konfirmasiMsg =
-                            `🎉 *LUNAS!* Invoice #${invoiceId}\n` +
+                            `🎉 <b>LUNAS!</b> Invoice #${invoiceId}\n` +
                             `💵 Total: Rp ${grandTotal.toLocaleString('id-ID')}\n` +
                             `💳 Bayar: Rp ${dpAmount.toLocaleString('id-ID')}\n` +
-                            (kembalian > 0 ? `💰 *Kembalian: Rp ${kembalian.toLocaleString('id-ID')}*\n` : '') +
+                            (kembalian > 0 ? `💰 <b>Kembalian: Rp ${kembalian.toLocaleString('id-ID')}</b>\n` : '') +
                             `\n⏳ Menyiapkan struk...`;
                     } else {
                         // Kurang bayar → DP
                         statusString = `DP Rp ${dpAmount.toLocaleString('id-ID')} (Kurang Rp ${kurang.toLocaleString('id-ID')})`;
                         receiptCaption = `🟡 Nota DP #${invoiceId} - KURANG BAYAR`;
                         konfirmasiMsg =
-                            `🪙 *DP Tercatat!* Invoice #${invoiceId}\n` +
+                            `🪙 <b>DP Tercatat!</b> Invoice #${invoiceId}\n` +
                             `💵 Total: Rp ${grandTotal.toLocaleString('id-ID')}\n` +
                             `💳 Bayar: Rp ${dpAmount.toLocaleString('id-ID')}\n` +
-                            `⚠️ *Kurang: Rp ${kurang.toLocaleString('id-ID')}*\n` +
+                            `⚠️ <b>Kurang: Rp ${kurang.toLocaleString('id-ID')}</b>\n` +
                             `\n⏳ Menyiapkan struk...`;
                     }
 
@@ -368,10 +376,10 @@ module.exports = async function handler(req, res) {
                         await sendMsg(konfirmasiMsg);
                         await sendReceipt(invoiceId, receiptCaption);
                     } else {
-                        await sendMsg(`❌ Gagal menyimpan ke Sheets: ${payJson.message}`);
+                        await sendMsg(`❌ Gagal menyimpan ke Sheets: ${escapeHtml(payJson.message)}`);
                     }
                 } catch (err) {
-                    await sendMsg(`❌ Gagal mencatat pembayaran.\nError: ${err.message}`);
+                    await sendMsg(`❌ Gagal mencatat pembayaran.\nError: ${escapeHtml(err.message)}`);
                 }
                 return res.status(200).send('OK');
             }
@@ -410,13 +418,13 @@ module.exports = async function handler(req, res) {
                     const payJson = await payRes.json();
 
                     if (payJson.status === 'success') {
-                        await sendMsg(`🎉 *Sukses!* Invoice #${invoiceId} ditandai *LUNAS*.\n\n⏳ *Menyiapkan Struk...*`);
+                        await sendMsg(`🎉 <b>Sukses!</b> Invoice #${invoiceId} ditandai <b>LUNAS</b>.\n\n⏳ <b>Menyiapkan Struk...</b>`);
                         await sendReceipt(invoiceId, `🟢 Nota LUNAS #${invoiceId} - DJANDES`);
                     } else {
-                        await sendMsg(`❌ Gagal update status di Sheets: ${payJson.message}`);
+                        await sendMsg(`❌ Gagal update status di Sheets: ${escapeHtml(payJson.message)}`);
                     }
                 } catch (err) {
-                    await sendMsg(`❌ Gagal memperbarui status.\nError: ${err.message}`);
+                    await sendMsg(`❌ Gagal memperbarui status.\nError: ${escapeHtml(err.message)}`);
                 }
                 return res.status(200).send('OK');
             }
@@ -441,41 +449,41 @@ module.exports = async function handler(req, res) {
                         const itemsText = d.items
                             ? d.items.split(',').map(it => {
                                 const [n, q, p] = it.split('|');
-                                return `\n  • ${n || '-'} (${q || '1x'}) — Rp ${parseInt(p, 10).toLocaleString('id-ID')}`;
+                                return `\n  • ${escapeHtml(n || '-')} (${escapeHtml(q || '1x')}) — Rp ${parseInt(p, 10).toLocaleString('id-ID')}`;
                             }).join('') : '-';
 
                         const [pType, , pPrice] = (d.packaging || '').split('|');
-                        const pkgText = pType ? `${pType} — Rp ${parseInt(pPrice || 0, 10).toLocaleString('id-ID')}` : '-';
+                        const pkgText = pType ? `${escapeHtml(pType)} — Rp ${parseInt(pPrice || 0, 10).toLocaleString('id-ID')}` : '-';
 
                         const cleanInvoiceId = invoiceId.replace(/-/g, '');
 
                         await sendMsg(
-                            `📋 *Detail Pesanan #${invoiceId}*\n\n` +
-                            `👤 *Nama:* ${d.name}\n` +
-                            `🥞 *Item:* ${itemsText}\n` +
-                            `📦 *Kemasan:* ${pkgText}\n` +
-                            `💵 *Total:* Rp ${Number(d.total).toLocaleString('id-ID')}\n` +
-                            `📅 *Tanggal Ambil:* ${d.datePickup}\n` +
-                            `🕐 *Jam Ambil:* ${cleanTime}\n` +
-                            `📝 *Catatan:* ${d.notes || '-'}\n` +
-                            `💳 *Status:* ${icon} *${(d.status || '').toUpperCase()}*\n\n` +
-                            `*Tindakan:*\n` +
-                            `🧾 /struk\_${cleanInvoiceId}\n` +
-                            `💰 /dp\_${cleanInvoiceId}\_500000\n` +
-                            `✅ /bayar\_${cleanInvoiceId}`
+                            `📋 <b>Detail Pesanan #${escapeHtml(invoiceId)}</b>\n\n` +
+                            `👤 <b>Nama:</b> ${escapeHtml(d.name)}\n` +
+                            `🥞 <b>Item:</b> ${itemsText}\n` +
+                            `📦 <b>Kemasan:</b> ${pkgText}\n` +
+                            `💵 <b>Total:</b> Rp ${Number(d.total).toLocaleString('id-ID')}\n` +
+                            `📅 <b>Tanggal Ambil:</b> ${escapeHtml(d.datePickup)}\n` +
+                            `🕐 <b>Jam Ambil:</b> ${escapeHtml(cleanTime)}\n` +
+                            `📝 <b>Catatan:</b> ${escapeHtml(d.notes || '-')}\n` +
+                            `💳 <b>Status:</b> ${icon} <b>${escapeHtml((d.status || '').toUpperCase())}</b>\n\n` +
+                            `<b>Tindakan:</b>\n` +
+                            `🧾 /struk_${cleanInvoiceId}\n` +
+                            `💰 /dp_${cleanInvoiceId}_500000\n` +
+                            `✅ /bayar_${cleanInvoiceId}`
                         );
                     } else {
-                        await sendMsg(`❌ Invoice #${invoiceId} tidak ditemukan.`);
+                        await sendMsg(`❌ Invoice #${escapeHtml(invoiceId)} tidak ditemukan.`);
                     }
                 } catch (err) {
-                    await sendMsg(`❌ Gagal mengambil detail info.\nError: ${err.message}`);
+                    await sendMsg(`❌ Gagal mengambil detail info.\nError: ${escapeHtml(err.message)}`);
                 }
                 return res.status(200).send('OK');
             }
 
             // ── /jadwal ──
             if (baseCmd === '/jadwal') {
-                await sendMsg('⏳ *Mengambil jadwal pesanan...*');
+                await sendMsg('⏳ <b>Mengambil jadwal pesanan...</b>');
                 try {
                     const getRes = await fetch(`${gasUrl}?action=getAll`);
                     const getText = await getRes.text();
@@ -487,7 +495,7 @@ module.exports = async function handler(req, res) {
                     }
 
                     if (getJson.status !== 'success' || !Array.isArray(getJson.data)) {
-                        await sendMsg(`❌ Gagal mendapatkan list data dari Sheets: ${getJson.message || 'Data kosong'}`);
+                        await sendMsg(`❌ Gagal mendapatkan list data dari Sheets: ${escapeHtml(getJson.message || 'Data kosong')}`);
                         return res.status(200).send('OK');
                     }
 
@@ -501,9 +509,9 @@ module.exports = async function handler(req, res) {
                         });
 
                     if (upcoming.length === 0) {
-                        await sendMsg(`📭 *Tidak ada pesanan mendatang mulai tanggal ${todayStr}.*`);
+                        await sendMsg(`📭 <b>Tidak ada pesanan mendatang mulai tanggal ${todayStr}.</b>`);
                     } else {
-                        let msg = `📅 *Jadwal Pesanan Mendatang (${todayStr}):*\n\n`;
+                        let msg = `📅 <b>Jadwal Pesanan Mendatang (${todayStr}):</b>\n\n`;
                         upcoming.forEach((o, i) => {
                             const icon = statusIcon(o.status);
                             const timeStr = extractTime(o.timePickup);
@@ -512,23 +520,23 @@ module.exports = async function handler(req, res) {
                                 ? d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' })
                                 : o.datePickup;
                             const cleanInvoiceId = o.invoiceId.replace(/-/g, '');
-                            msg += `*${i + 1}. ${o.name}* ${icon}\n`;
-                            msg += `   📅 ${dateFmt}\n`;
+                            msg += `<b>${i + 1}. ${escapeHtml(o.name)}</b> ${icon}\n`;
+                            msg += `   📅 ${escapeHtml(dateFmt)}\n`;
                             msg += `   🕐 ${timeStr} | 💵 Rp ${Number(o.total).toLocaleString('id-ID')}\n`;
-                            msg += `   🔍 /status\_${cleanInvoiceId}\n\n`;
+                            msg += `   🔍 /status_${cleanInvoiceId}\n\n`;
                         });
-                        msg += `Total: *${upcoming.length}* pesanan.`;
+                        msg += `Total: <b>${upcoming.length}</b> pesanan.`;
                         await sendMsg(msg);
                     }
                 } catch (err) {
-                    await sendMsg(`❌ Gagal memuat jadwal.\nError: ${err.message}`);
+                    await sendMsg(`❌ Gagal memuat jadwal.\nError: ${escapeHtml(err.message)}`);
                 }
                 return res.status(200).send('OK');
             }
 
             // ── /laporan ──
             if (baseCmd === '/laporan') {
-                await sendMsg('⏳ *Menyusun laporan pendapatan...*');
+                await sendMsg('⏳ <b>Menyusun laporan pendapatan...</b>');
                 try {
                     const getRes = await fetch(`${gasUrl}?action=getAll`);
                     const getText = await getRes.text();
@@ -540,7 +548,7 @@ module.exports = async function handler(req, res) {
                     }
 
                     if (getJson.status !== 'success' || !Array.isArray(getJson.data)) {
-                        await sendMsg(`❌ Gagal mengambil data laporan: ${getJson.message || 'Format salah'}`);
+                        await sendMsg(`❌ Gagal mengambil data laporan: ${escapeHtml(getJson.message || 'Format salah')}`);
                         return res.status(200).send('OK');
                     }
 
@@ -573,9 +581,9 @@ module.exports = async function handler(req, res) {
                         if (!startDate) {
                             await sendMsg(
                                 '⚠️ Format tidak dikenali.\n\nContoh:\n' +
-                                '`📅 Jadwal` -> Tekan tombol di bawah\n' +
-                                '`/laporan hari`\n`/laporan minggu`\n`/laporan bulan`\n' +
-                                '`/laporan 01/07/2026 31/07/2026`\n`/laporan 2026-07-01 2026-07-31`'
+                                '📅 <b>Jadwal</b> -> Tekan tombol di bawah\n' +
+                                '/laporan hari\n/laporan minggu\n/laporan bulan\n' +
+                                '/laporan 01/07/2026 31/07/2026\n/laporan 2026-07-01 2026-07-31'
                             );
                             return res.status(200).send('OK');
                         }
@@ -610,24 +618,37 @@ module.exports = async function handler(req, res) {
                     const piutang = totalTagihan - totalMasuk;
 
                     await sendMsg(
-                        `📊 *Laporan Pendapatan DJANDES*\n` +
-                        `📆 *Periode:* ${rangeLabel}\n` +
+                        `📊 <b>Laporan Pendapatan DJANDES</b>\n` +
+                        `📆 <b>Periode:</b> ${escapeHtml(rangeLabel)}\n` +
                         `━━━━━━━━━━━━━━━━━━━━\n\n` +
-                        `🧾 *Total Pesanan:* ${filtered.length}\n` +
+                        `🧾 <b>Total Pesanan:</b> ${filtered.length}\n` +
                         `🟢 Lunas: ${countLunas} — Rp ${lunasMasuk.toLocaleString('id-ID')}\n` +
                         `🟡 DP/Cicilan: ${countDP} — Rp ${dpMasuk.toLocaleString('id-ID')} masuk\n` +
                         `🔴 Pending: ${countPending} pesanan\n\n` +
                         `━━━━━━━━━━━━━━━━━━━━\n` +
-                        `💰 *Total Uang Masuk:* Rp ${totalMasuk.toLocaleString('id-ID')}\n` +
-                        `📋 *Total Tagihan:* Rp ${totalTagihan.toLocaleString('id-ID')}\n` +
-                        `⚠️ *Piutang Belum Masuk:* Rp ${piutang.toLocaleString('id-ID')}\n\n` +
-                        `_Gunakan /jadwal untuk detail pesanan_`
+                        `💰 <b>Total Uang Masuk:</b> Rp ${totalMasuk.toLocaleString('id-ID')}\n` +
+                        `📋 <b>Total Tagihan:</b> Rp ${totalTagihan.toLocaleString('id-ID')}\n` +
+                        `⚠️ <b>Piutang Belum Masuk:</b> Rp ${piutang.toLocaleString('id-ID')}\n\n` +
+                        `<i>Gunakan /jadwal untuk detail pesanan</i>`
                     );
                 } catch (err) {
-                    await sendMsg(`❌ Gagal menyusun laporan.\nError: ${err.message}`);
+                    await sendMsg(`❌ Gagal menyusun laporan.\nError: ${escapeHtml(err.message)}`);
                 }
                 return res.status(200).send('OK');
             }
+        } else {
+            // Jika tidak cocok dengan format Whatsapp maupun Telegram command
+            await sendMsg(
+                `👋 <b>Halo Admin DJANDES!</b>\n\n` +
+                `Silakan gunakan tombol menu cepat di bawah ini untuk melihat jadwal atau menyusun laporan harian/mingguan/bulanan.\n\n` +
+                `Untuk perintah lainnya, ketik:\n` +
+                `📅 /jadwal — Cek jadwal pesanan\n` +
+                `📊 /laporan — Susun laporan pendapatan\n` +
+                `📋 /status_<b>[invoice]</b> — Cek status pesanan\n` +
+                `🧾 /struk_<b>[invoice]</b> — Lihat struk pesanan\n` +
+                `💰 /dp_<b>[invoice]</b>_<b>[nominal]</b> — Catat pembayaran/DP\n` +
+                `✅ /bayar_<b>[invoice]</b> — Catat lunas`
+            );
         }
 
     } catch (error) {
