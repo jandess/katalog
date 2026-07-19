@@ -43,16 +43,16 @@ module.exports = async function handler(req, res) {
             const timePickup = timeMatch ? timeMatch[1].trim() : '-';
             const notesStr = notesMatch ? notesMatch[1].trim() : '';
 
-            // Bersihkan nilai Total ke angka integer murni
+            // Bersihkan nilai Total ke angka murni
             let totalVal = 0;
             if (totalMatch) {
                 totalVal = parseInt(totalMatch[1].replace(/[\.,]/g, ''), 10) || 0;
             }
 
-            // Parsing Rincian Daftar Kue + Harga Per Item
+            // Parsing Rincian Daftar Kue + Harga Per Item & Kemasan
             const lines = text.split('\n');
-            const itemsCollected = [];  // format: "Nama Item (Nx)|harga"
-            let packagingFetched = '';
+            const itemsCollected = [];  // format: "Nama Item|Qty|HargaTotal"
+            let packagingFetched = '';  // format: "Tipe Kemasan|Varian|Harga"
             let boxTotalVal = 0;
 
             for (const line of lines) {
@@ -64,10 +64,19 @@ module.exports = async function handler(req, res) {
                     const priceVal = parseInt(priceRaw.replace(/[Rp\s\.,']/g, ''), 10) || 0;
 
                     if (itemName.toLowerCase().startsWith('kemasan ')) {
-                        packagingFetched = itemName.replace(/kemasan\s+/i, '');
+                        // Teks: "Kemasan Standard (Pink)" -> Tipe: "Standard", Varian: "Pink"
+                        const cleanPkg = itemName.replace(/kemasan\s+/i, '');
+                        const pkgMatch = cleanPkg.match(/^(.*?)\s+\((.*?)\)$/);
+                        const type = pkgMatch ? pkgMatch[1] : cleanPkg;
+                        const variant = pkgMatch ? pkgMatch[2] : '-';
+                        packagingFetched = `${type}|${variant}|${priceVal}`;
                         boxTotalVal = priceVal;
                     } else {
-                        itemsCollected.push(`${itemName}|${priceVal}`);
+                        // Teks: "Lemper Kipas (1x)" -> Name: "Lemper Kipas", Qty: "1x"
+                        const itemMatch = itemName.match(/^(.*?)\s+\((.*?)\)$/);
+                        const name = itemMatch ? itemMatch[1] : itemName;
+                        const qty = itemMatch ? itemMatch[2] : '1x';
+                        itemsCollected.push(`${name}|${qty}|${priceVal}`);
                     }
                 }
             }
@@ -97,12 +106,22 @@ module.exports = async function handler(req, res) {
             const sheetJson = await sheetRes.json();
 
             if (sheetJson.status === 'success') {
+                // Format ulang items untuk Tampilan Telegram Chat
+                const telegramItemsList = itemsCollected.map(item => {
+                    const [n, q, p] = item.split('|');
+                    return `  • *${n}* (${q}) — Rp ${parseInt(p, 10).toLocaleString('id-ID')}`;
+                }).join('\n');
+
+                const [pType, pVar, pPrice] = packagingFetched.split('|');
+                const packagingTxt = pType ? `${pType} (${pVar}) — Rp ${parseInt(pPrice, 10).toLocaleString('id-ID')}` : 'Standard';
+
                 const replyText = `✅ *Invoice ${invoiceId} Berhasil Dicatat!*\n\n` +
                     `👤 *Nama:* ${customerName}\n` +
-                    `🥞 *Pesanan:* ${itemsStr}\n` +
-                    `📦 *Kemasan:* ${packagingFetched || 'Standard'}\n` +
-                    `💵 *Total:* Rp ${totalVal.toLocaleString('id-ID')}\n` +
-                    `📅 *Jadwal Ambil:* ${datePickup} @ ${timePickup}\n` +
+                    `🥞 *Rincian Pesanan:*\n${telegramItemsList}\n` +
+                    `📦 *Kemasan:* ${packagingTxt}\n` +
+                    `💵 *Total Keseluruhan:* Rp ${totalVal.toLocaleString('id-ID')}\n` +
+                    `📅 *Tanggal Ambil:* ${datePickup}\n` +
+                    `🕐 *Jam Ambil:* ${timePickup}\n` +
                     `📝 *Catatan:* ${notesStr || '-'}\n` +
                     `💳 *Status:* 🔴 *BELUM BAYAR*\n\n` +
                     `Gunakan tombol klik berikut:\n` +
