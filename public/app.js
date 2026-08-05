@@ -392,6 +392,25 @@ function setCategory(cat, btn) {
 }
 
 // --- PRODUCTS ---
+function toggleSearchClear() {
+  const input = document.getElementById('product-search');
+  const clearBtn = document.getElementById('search-clear-btn');
+  if (!clearBtn) return;
+  if (input && input.value.length > 0) {
+    clearBtn.classList.remove('hidden');
+  } else {
+    clearBtn.classList.add('hidden');
+  }
+}
+function clearSearch() {
+  const input = document.getElementById('product-search');
+  if (input) {
+    input.value = '';
+    input.focus();
+  }
+  toggleSearchClear();
+  filterProducts();
+}
 function filterProducts() {
   const query = (document.getElementById('product-search')?.value || '').toLowerCase();
   const filtered = products.filter(p => {
