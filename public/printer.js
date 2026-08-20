@@ -93,7 +93,6 @@ async function printToThermal() {
         // --- Customer Info ---
         const waNumber = profileData.whatsapp || '6281234567890';
         commands.push(encoder.encode(`Pelanggan   : ${checkoutData.name}\n`));
-        commands.push(encoder.encode(`WhatsApp    : ${waNumber}\n`));
         commands.push(encoder.encode(`Tgl Ambil   : ${checkoutData.date_pickup}\n`));
         commands.push(encoder.encode(`Jam Ambil   : ${checkoutData.time_pickup}\n`));
         commands.push(encoder.encode("--------------------------------\n"));
@@ -131,7 +130,7 @@ async function printToThermal() {
         // Align Center
         commands.push(new Uint8Array([0x1B, 0x61, 0x01]));
         commands.push(encoder.encode("\nTERIMA KASIH\n"));
-        commands.push(encoder.encode("www.djandes.com\n\n\n"));
+        commands.push(encoder.encode("www.djandes15.vercel.app\n\n\n"));
         
         // Feed 3 lines
         commands.push(new Uint8Array([0x1B, 0x64, 0x03]));
