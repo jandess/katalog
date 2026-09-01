@@ -275,13 +275,14 @@
     {
       "id": 1761365658085,
       "name": "Kue thok",
-      "price": 160000,
+      "price": 165000,
       "cat": "Hantaran",
       "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426621990_wk3z0h_kuethok.jpg",
       "images": [
         "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426621990_wk3z0h_kuethok.jpg"
       ],
       "desc": "berbahan dasar tepung ketan dan isian kacang hijau kupas, dibentuk tebal dan padat dengan tekstur kenyal dan lembut.",
+      "isOutOfStock": false,
       "bestseller": false,
       "isNew": false,
       "isPromo": false
@@ -345,13 +346,14 @@
     {
       "id": 1761366457110,
       "name": "Puding susu clasic + Vla",
-      "price": 146000,
+      "price": 150000,
       "cat": "Hantaran",
       "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426389742_myd62h_pudingsusu.jpg",
       "images": [
         "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426389742_myd62h_pudingsusu.jpg"
       ],
       "desc": "terbuat dari susu murni, agar-agar, dan sedikit gula, menghasilkan rasa manis ringan dan creamy. Disajikan dengan vla vanila lembut di atasnya.",
+      "isOutOfStock": false,
       "bestseller": false,
       "isNew": false,
       "isPromo": false
@@ -359,13 +361,14 @@
     {
       "id": 1761366531770,
       "name": "Caramel",
-      "price": 120000,
+      "price": 125000,
       "cat": "Hantaran",
       "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426374775_0zuipb_caramel.jpg",
       "images": [
         "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426374775_0zuipb_caramel.jpg"
       ],
       "desc": "Terbuat dari gula yang dimasak hingga menjadi karamel, kemudian dicampur dengan adonan tepung dan telur.",
+      "isOutOfStock": false,
       "bestseller": false,
       "isNew": false,
       "isPromo": false
@@ -387,13 +390,14 @@
     {
       "id": 1761368682877,
       "name": "Pie brownies",
-      "price": 148000,
+      "price": 150000,
       "cat": "Hantaran",
       "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426329673_0aj599_piebrownies.jpg",
       "images": [
         "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426329673_0aj599_piebrownies.jpg"
       ],
       "desc": "Perpaduan lezat antara kulit pie renyah dan isian brownies cokelat lembut di dalamnya.",
+      "isOutOfStock": false,
       "bestseller": false,
       "isNew": false,
       "isPromo": false
@@ -408,7 +412,6 @@
         "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426263535_ajasrp_onde.jpg"
       ],
       "desc": "Jajanan tradisional berbentuk bulat yang terbuat dari tepung ketan, berisi kacang hijau manis, dan dilapisi taburan wijen di bagian luar.",
-      "isOutOfStock": true,
       "bestseller": false,
       "isNew": false,
       "isPromo": false
@@ -431,13 +434,14 @@
     {
       "id": 1761369459952,
       "name": "Dadar gulung mawar",
-      "price": 137500,
+      "price": 140000,
       "cat": "Hantaran",
       "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426155189_bnsov8_dadargulungmawar.jpg",
       "images": [
         "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426155189_bnsov8_dadargulungmawar.jpg"
       ],
       "desc": "dadar gulung pandan yang diisi kelapa parut manis dan dibentuk menyerupai bunga mawar cantik.",
+      "isOutOfStock": false,
       "bestseller": false,
       "isNew": false,
       "isPromo": false
@@ -571,17 +575,17 @@
     {
       "id": 1785811228412,
       "name": "Parcell Sembako",
-      "price": 165000,
+      "price": 170000,
       "cat": "Hantaran",
       "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/sembako.jpg",
       "images": [
         "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/sembako.jpg"
       ],
       "desc": "Rangkaian gula , kopi bubuk hitm, kopi bubuk putih, dan teh yang disusun cantik dalam keranjang atau kemasan elegan, cocok untuk hadiah, ucapan selamat, atau hampers acara spesial.",
+      "isOutOfStock": false,
       "bestseller": false,
       "isNew": false,
-      "isPromo": false,
-      "isOutOfStock": false
+      "isPromo": false
     },
     {
       "id": 1785811251530,
@@ -597,6 +601,21 @@
       "isNew": false,
       "isPromo": false,
       "isOutOfStock": false
+    },
+    {
+      "id": 1788232641632,
+      "name": "Kue marmer",
+      "price": 165000,
+      "cat": "Hantaran",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/marmer.jpg",
+      "images": [
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/marmer.jpg"
+      ],
+      "desc": "Kue bolu marmer",
+      "isOutOfStock": false,
+      "bestseller": false,
+      "isNew": false,
+      "isPromo": false
     }
   ],
   "profile": {
