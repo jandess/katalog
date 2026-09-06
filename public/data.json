@@ -192,7 +192,7 @@
       "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426821909_de48kr_bolen.jpg",
       "images": [
         "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426821909_de48kr_bolen.jpg",
-        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426824212_t8eqlm_bolen2.jpg"
+        "https://fezagsktkcwypytnxjmg.supabase.co/storage/v1/object/public/thumbnails/bolen2.jpg"
       ],
       "desc": "kue pastry berlapis renyah yang berisi irisan pisang dan cokelat atau keju di dalamnya.",
       "bestseller": false,
