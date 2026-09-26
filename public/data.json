@@ -187,7 +187,7 @@
     {
       "id": 1761330657461,
       "name": "Bolen pisang",
-      "price": 160000,
+      "price": 165000,
       "cat": "Hantaran",
       "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426821909_de48kr_bolen.jpg",
       "images": [
@@ -195,6 +195,7 @@
         "https://fezagsktkcwypytnxjmg.supabase.co/storage/v1/object/public/thumbnails/bolen2.jpg"
       ],
       "desc": "kue pastry berlapis renyah yang berisi irisan pisang dan cokelat atau keju di dalamnya.",
+      "isOutOfStock": false,
       "bestseller": false,
       "isNew": false,
       "isPromo": false
@@ -405,14 +406,14 @@
     {
       "id": 1761368763118,
       "name": "Onde - onde",
-      "price": 137500,
+      "price": 143000,
       "cat": "Hantaran",
       "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426263535_ajasrp_onde.jpg",
       "images": [
         "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426263535_ajasrp_onde.jpg"
       ],
       "desc": "Jajanan tradisional berbentuk bulat yang terbuat dari tepung ketan, berisi kacang hijau manis, dan dilapisi taburan wijen di bagian luar.",
-      "isOutOfStock": true,
+      "isOutOfStock": false,
       "bestseller": false,
       "isNew": false,
       "isPromo": false
@@ -492,13 +493,14 @@
     {
       "id": 1761370004874,
       "name": "Pastel",
-      "price": 125000,
+      "price": 130000,
       "cat": "Hantaran",
       "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426016732_nnk3pa6_pastel.jpg",
       "images": [
         "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/gal_1783426016732_nnk3pa6_pastel.jpg"
       ],
       "desc": "kue goreng berbentuk setengah lingkaran dengan kulit tipis renyah dan isi sayuran, telur, ayam berbumbu gurih.",
+      "isOutOfStock": false,
       "bestseller": false,
       "isNew": false,
       "isPromo": false
@@ -613,6 +615,21 @@
         "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/marmer.jpg"
       ],
       "desc": "Kue bolu marmer",
+      "isOutOfStock": false,
+      "bestseller": false,
+      "isNew": false,
+      "isPromo": false
+    },
+    {
+      "id": 1790411797921,
+      "name": "Spiekoe",
+      "price": 170000,
+      "cat": "Hantaran",
+      "img": "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/logo.png",
+      "images": [
+        "https://cdn.jsdelivr.net/gh/jandess/katalog@main/img/logo.png"
+      ],
+      "desc": "Spikoe",
       "isOutOfStock": false,
       "bestseller": false,
       "isNew": false,
